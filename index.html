@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Zombie Shooter 2</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  
+  <body>
+
+    <div id="game-container">
+
+      <div id="main-menu">
+        <h1>Zombie Shooter 2</h1>
+        
+        <div class="difficulty-selector">
+          <button id="btn-normal" class="active">Normal</button>
+          <button id="btn-hardcore">Hardcore</button>
+        </div>
+
+        <button id="btn-tuto">?</button>
+        <button id="btn-start">PLAY</button>
+      </div>
+
+      <div id="game-view" class="hidden">
+        <div id="info">
+          Score: <span id="score">0</span> | 
+          Vies: <span id="vies">3</span> | 
+          Temps: <span id="temps">0</span>
+        </div>
+        <canvas id="jeu" width="800" height="400"></canvas>
+      </div>
+
+      <div id="game-over-overlay" class="hidden">
+        <div class="mission-card game-over"> 
+          <h2>VOUS ÊTES MORT</h2>
+          
+          <p class="game-over-text">
+            Les zombies ont envahi la zone.<br>
+            Votre mission s'arrête ici, soldat.
+          </p>
+
+          <div class="stats-box">
+            <p class="stat-time">
+              TEMPS : <span id="final-time" class="stat-value">0</span> secondes
+            </p>
+            
+            <p class="stat-score">
+              SCORE : <span id="final-score" class="stat-value">0</span>
+            </p>
+          </div>
+
+          <div class="game-over-buttons">
+            <button id="btn-retry">RÉESSAYER</button>
+            <button id="btn-return-menu">RETOUR MENU</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="tutorial-overlay" class="hidden">
+        <div class="mission-card">
+          <h2>MISSION BRIEFING</h2>
+          
+          <div class="controls-grid">
+            <div class="control-row">
+              <div class="keys-container">
+                <div class="key">↑</div>
+                <div class="key">↓</div>
+              </div>
+              <span class="action-text">SE DÉPLACER</span>
+            </div>
+
+            <div class="control-row">
+              <div class="keys-container">
+                <div class="key key-space">ESPACE</div>
+              </div>
+              <span class="action-text">FEU À VOLONTÉ</span>
+            </div>
+
+            <div class="control-row">
+              <div class="keys-container">
+                <div class="key">B</div>
+              </div>
+              <span class="action-text">
+                ACHETER VIE
+                <span class="tuto-note">(SI SCORE VERT)</span>
+              </span>
+            </div>
+          </div>
+
+          <button id="btn-close-tuto">À L'ATTAQUE !</button>
+        </div>
+      </div>
+
+      <button id="btn-sound">🔊</button>
+
+    </div> 
+    
+    <script src="./menu.js" type="text/javascript"></script> 
+    <script src="./deplacement_joueur.js" type="text/javascript"></script>
+    <script src="./tir_joueur.js" type="text/javascript"></script>
+    <script src="./zombie.js" type="text/javascript"></script>
+    <script src="./main.js" type="text/javascript"></script>
+
+  </body>
+</html>
