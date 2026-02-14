@@ -24,14 +24,12 @@ let isGameRunning = false;
 /* GESTION DE LA SÉLECTION DE DIFFICULTÉ */
 btn_normal.addEventListener('click', () => {
     difficulte_choisie = 'normal';
-    // On met le style "active" (rouge) sur Normal et on l'enlève de Hardcore
     btn_normal.classList.add('active');
     btn_hardcore.classList.remove('active');
 });
 
 btn_hardcore.addEventListener('click', () => {
     difficulte_choisie = 'hardcore';
-    // On met le style "active" (rouge) sur Hardcore et on l'enlève de Normal
     btn_hardcore.classList.add('active');
     btn_normal.classList.remove('active');
 });
@@ -39,7 +37,6 @@ btn_hardcore.addEventListener('click', () => {
 
 /* DÉMARRAGE MUSIQUE MENU */
 document.addEventListener('click', function() {
-    // On ne lance la musique du menu QUE si le jeu n'a pas encore commencé
     if (sound_on && musique_menu.paused && !isGameRunning) {
         musique_menu.play().catch(e => console.log("Attente d'interaction..."));
     }
@@ -103,18 +100,10 @@ btn_fermer_tuto.addEventListener('click', () => {
 /* LANCEMENT DU JEU (START) */
 btn_start.addEventListener('click', (e) => {
     e.stopPropagation();
-
-    // 1. On signale que le jeu démarre (pour bloquer la musique du menu)
     isGameRunning = true;
-
-    // 2. On coupe définitivement la musique du menu
     musique_menu.pause();
     musique_menu.currentTime = 0;    
-    
-    // 3. Changement d'écran
     document.getElementById('main-menu').classList.add('hidden');
     document.getElementById('game-view').classList.remove('hidden');
-
-    // 4. Lancement du moteur avec les paramètres (Difficulté + État du son)
     initGame(difficulte_choisie, sound_on);
 });

@@ -52,9 +52,6 @@ var coutVie = 100;
    4. LOGIQUE D'ACHAT DE VIE
    ========================================================================= */
 function verifierCouleurScore() {
-    // DEBUG : Regarde la console (F12) pour voir si cette ligne s'affiche
-    // console.log("Check Couleur. Score:", score, "Cout:", coutVie);
-
     if (score >= coutVie) {
         if (!ui_score.classList.contains('score-ready')) {
             console.log(">>> VERT ACTIVÉ ! <<<");
@@ -140,7 +137,7 @@ function initGame(mode, isSoundOn) {
     ui_score.innerText = score;
     ui_temps.innerText = temps;
     
-    verifierCouleurScore(); // Reset couleur
+    verifierCouleurScore(); 
 
     if (timerInterval) clearInterval(timerInterval);
     timerInterval = setInterval(() => {

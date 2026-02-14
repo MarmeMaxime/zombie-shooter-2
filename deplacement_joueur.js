@@ -134,7 +134,7 @@ function updateJoueur(canvasHeight) {
 
 
 
-/* FONCTION DE DESSIN (DRAW) */
+/* FONCTION DE DESSIN */
 
 function drawJoueur(ctx) {
     ctx.drawImage(joueur.imgActuelle, joueur.x, joueur.y, joueur.largeur, joueur.hauteur);

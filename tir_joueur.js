@@ -9,16 +9,13 @@ son_tir_america.volume = 0.4;
    2. LOGIQUE DE TIR (HITSCAN CIBLÉ)
    ========================================================================= */
 function executerTir() {
-    // A. JOUER LE SON
     if (typeof isSoundEnabled !== 'undefined' && isSoundEnabled) {
         const bruit = son_tir_america.cloneNode();
         bruit.volume = 0.4;
         bruit.play();
     }
 
-    // B. RECHERCHE DU ZOMBIE LE PLUS PROCHE
     let margeY = 65; 
-    // Adaptation Hardcore
     if (typeof gameMode !== 'undefined' && gameMode === 'hardcore') {
         margeY = 50;
     }
