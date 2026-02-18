@@ -36,9 +36,10 @@ function resetZombies(mode) {
     currentDifficulty = mode;
 }
 
-function updateZombies(ctx, canvasWidth, canvasHeight) {
-    spawnTimer++;
-    const frequence = 150;
+// INTÉGRATION DU TIMESCALE
+function updateZombies(ctx, canvasWidth, canvasHeight, timeScale = 1) {
+    spawnTimer += timeScale;
+    const frequence = (currentDifficulty === 'hardcore') ? 180 : 230;
 
     if (spawnTimer > frequence) {
         spawnTimer = 0;
@@ -56,11 +57,10 @@ function updateZombies(ctx, canvasWidth, canvasHeight) {
 
     for (let i = zombies.length - 1; i >= 0; i--) {
         let z = zombies[i];
-        z.x -= z.vitesse;
-
-        z.frameTimer++;
+        z.x -= (z.vitesse * timeScale);
+        z.frameTimer += timeScale;
         if (z.frameTimer >= z.frameInterval) {
-            z.frameTimer = 0;
+            z.frameTimer -= z.frameInterval;
             z.animStep = (z.animStep + 1) % 6; 
         }
 
@@ -73,16 +73,16 @@ function updateZombies(ctx, canvasWidth, canvasHeight) {
     }
 }
 
-function updateZombiesTank(ctx, canvasWidth, canvasHeight) {
-    spawnTimerTank++;
-    const frequenceTank =  1000;
+function updateZombiesTank(ctx, canvasWidth, canvasHeight, timeScale = 1) {
+    spawnTimerTank += timeScale;
+    const frequenceTank = (currentDifficulty === 'hardcore') ? 800 : 1000;
 
     if (spawnTimerTank > frequenceTank) {
         spawnTimerTank = 0;
         zombiesTank.push({
             x: canvasWidth, 
             y: Math.random() * (canvasHeight - 100) + 20, 
-            vitesse: (Math.random() * 0.5 + 0.5), 
+            vitesse: (currentDifficulty === 'hardcore') ? (Math.random() * 0.3 + 1) : (Math.random() * 0.4 + 0.5), 
             largeur: 64,
             hauteur: 64,
             frameTimer: 0,
@@ -94,11 +94,10 @@ function updateZombiesTank(ctx, canvasWidth, canvasHeight) {
 
     for (let i = zombiesTank.length - 1; i >= 0; i--) {
         let z = zombiesTank[i];
-        z.x -= z.vitesse;
-
-        z.frameTimer++;
+        z.x -= (z.vitesse * timeScale);
+        z.frameTimer += timeScale;
         if (z.frameTimer >= z.frameInterval) {
-            z.frameTimer = 0;
+            z.frameTimer -= z.frameInterval;
             z.animStep = (z.animStep + 1) % 12; 
         }
 

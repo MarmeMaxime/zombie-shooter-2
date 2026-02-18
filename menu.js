@@ -32,7 +32,7 @@ let isGameRunning = false;
    INTERACTIONS
    ========================================================================= */
 
-// 1. Choix Difficulté
+// Choix Difficulté
 btn_normal.addEventListener('click', () => {
     difficulte_choisie = 'normal';
     btn_normal.classList.add('active');
@@ -45,7 +45,7 @@ btn_hardcore.addEventListener('click', () => {
     btn_normal.classList.remove('active');
 });
 
-// 2. Gestion Son (Global)
+// Gestion Son (Global)
 btn_sound.textContent = "🔊";
 btn_sound.addEventListener('click', () => {
     window.sound_on = !window.sound_on;
@@ -66,7 +66,7 @@ btn_sound.addEventListener('click', () => {
     }
 });
 
-// 3. Bruitage Boutons
+// Bruitage Boutons
 document.querySelectorAll('button').forEach(bouton => {
     bouton.addEventListener('click', () => {
         if (bouton.id !== 'btn-sound' && window.sound_on) {
@@ -76,11 +76,11 @@ document.querySelectorAll('button').forEach(bouton => {
     });
 });
 
-// 4. Tutoriel
+// Tutoriel
 btn_ouvrir_tuto.addEventListener('click', () => ecran_tuto.classList.remove('hidden'));
 btn_fermer_tuto.addEventListener('click', () => ecran_tuto.classList.add('hidden'));
 
-// 5. Lancer le jeu
+// Lancer le jeu
 btn_start.addEventListener('click', () => {
     musique_menu.pause();
     musique_menu.currentTime = 0;
@@ -94,7 +94,7 @@ btn_start.addEventListener('click', () => {
     }
 });
 
-// 6. Fonction de retour 
+// Fonction de retour 
 window.retourMenuPrincipal = function() {
     isGameRunning = false;
     div_game.classList.add('hidden');

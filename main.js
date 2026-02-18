@@ -1,3 +1,6 @@
+/* =========================================================================
+   SETUP & DOM
+   ========================================================================= */
 const canvas = document.getElementById('jeu');
 const ctx = canvas.getContext('2d'); 
 
@@ -14,6 +17,9 @@ const btn_menu = document.getElementById('btn-return-menu');
 const background_img = new Image();
 background_img.src = './assets/FOND.jpg';
 
+/* =========================================================================
+   SYSTÈME AUDIO
+   ========================================================================= */
 const music_normal = new Audio('./assets/son/background_sound.mp3');
 music_normal.loop = true; 
 music_normal.volume = 0.1;
@@ -43,6 +49,9 @@ function setGameMusicMute(isSoundOn) {
     }
 }
 
+/* =========================================================================
+   LOGIQUE DE JEU (GAME LOOP)
+   ========================================================================= */
 let jeu_lance = false;
 var score = 0; 
 var vies = 3;
@@ -51,6 +60,8 @@ let timerInterval = null;
 let gameMode = 'normal';   
 let isSoundEnabled = true;
 var coutVie = 100; 
+
+let lastTime = 0;
 
 function verifierCouleurScore() {
     if (score >= coutVie) ui_score.classList.add('score-ready');
@@ -87,21 +98,33 @@ function gameOver() {
     ecran_game_over.classList.remove('hidden');
 }
 
-function animate() {
+// Boucle d'animation avec DELTA TIME
+function animate(timestamp) {
     if (!jeu_lance) return; 
+    
+    if (!timestamp) timestamp = performance.now();
+    let deltaTime = timestamp - lastTime;
+    lastTime = timestamp;
+
+    if (deltaTime > 100) deltaTime = 100; 
+    let timeScale = deltaTime / (1000 / 144);
     
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(background_img, 0, 0, canvas.width, canvas.height);
     
-    if (typeof updateZombies === 'function') updateZombies(ctx, canvas.width, canvas.height);
-    if (typeof updateZombiesTank === 'function') updateZombiesTank(ctx, canvas.width, canvas.height);
-    if (typeof updateJoueur === 'function') updateJoueur(canvas.height);
-    if (typeof updateBalles === 'function') updateBalles(ctx, canvas.width);
+    // On transmet le multiplicateur temporel à toutes nos unités
+    if (typeof updateZombies === 'function') updateZombies(ctx, canvas.width, canvas.height, timeScale);
+    if (typeof updateZombiesTank === 'function') updateZombiesTank(ctx, canvas.width, canvas.height, timeScale);
+    if (typeof updateJoueur === 'function') updateJoueur(canvas.height, timeScale);
+    if (typeof updateBalles === 'function') updateBalles(ctx, canvas.width, timeScale);
     if (typeof drawJoueur === 'function') drawJoueur(ctx);
 
     requestAnimationFrame(animate);
 }
 
+/* =========================================================================
+   INITIALISATION
+   ========================================================================= */
 btn_retry.addEventListener('click', () => {
     ecran_game_over.classList.add('hidden');
     initGame(gameMode, isSoundEnabled);
@@ -164,5 +187,7 @@ function initGame(mode, isSoundOn) {
         current_music_track.play();
     }
 
-    animate();
+    // Réinitialisation de l'horloge au départ
+    lastTime = performance.now();
+    requestAnimationFrame(animate);
 }

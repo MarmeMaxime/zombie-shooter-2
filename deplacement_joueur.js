@@ -22,12 +22,10 @@ const joueur = {
     largeur: 64,
     hauteur: 64,
     
-    // Animation
     frameTimer: 0,
     frameInterval: 16, 
     marcheStep: 0,
     
-    // Tir
     estEnTrainDeTirer: false, 
     timerTir: 0,              
     peutTirer: true,          
@@ -37,24 +35,22 @@ const joueur = {
 
 const touches = { haut: false, bas: false };
 
-/* =========================================================================
-   LOGIQUE
-   ========================================================================= */
 function setPlayerSpeed(mode) {
     joueur.vitesse = (mode === 'hardcore') ? 2 : 2.5;
 }
 
-// Mise à jour frame par frame
-function updateJoueur(canvasHeight) {
+// INTÉGRATION DU TIMESCALE
+function updateJoueur(canvasHeight, timeScale = 1) {
+    // Timer Animation Tir
     if (joueur.estEnTrainDeTirer) {
-        joueur.timerTir--; 
+        joueur.timerTir -= timeScale; 
         if (joueur.timerTir <= 0) joueur.estEnTrainDeTirer = false;
     }
 
-    // Déplacement
+    // Déplacement compensé par le temps
     let bouge = false;
-    if (touches.haut) { joueur.y -= joueur.vitesse; bouge = true; }
-    if (touches.bas)  { joueur.y += joueur.vitesse; bouge = true; }
+    if (touches.haut) { joueur.y -= (joueur.vitesse * timeScale); bouge = true; }
+    if (touches.bas)  { joueur.y += (joueur.vitesse * timeScale); bouge = true; }
 
     // Limites écran
     if (joueur.y < 20) joueur.y = 20; 
@@ -64,9 +60,9 @@ function updateJoueur(canvasHeight) {
     if (joueur.estEnTrainDeTirer) {
         joueur.imgActuelle = img_joueur_tir;
     } else if (bouge) {
-        joueur.frameTimer++;
+        joueur.frameTimer += timeScale; 
         if (joueur.frameTimer >= joueur.frameInterval) {
-            joueur.frameTimer = 0;
+            joueur.frameTimer -= joueur.frameInterval;
             joueur.marcheStep = (joueur.marcheStep + 1) % 4; 
             joueur.imgActuelle = animMarche[joueur.marcheStep];
         }
@@ -87,7 +83,6 @@ document.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowUp') touches.haut = true;
     if (e.key === 'ArrowDown') touches.bas = true;
     
-    // Tir
     if (e.code === 'Space') {
         if (joueur.peutTirer && !joueur.estEnTrainDeTirer) {
             joueur.estEnTrainDeTirer = true;
@@ -97,7 +92,6 @@ document.addEventListener('keydown', (e) => {
         }
     }
 
-    // Achat Vie (V)
     if ((e.key === 'v' || e.key === 'V') && typeof acheterVie === "function") {
         acheterVie();
     }

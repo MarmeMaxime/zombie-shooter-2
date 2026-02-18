@@ -26,10 +26,11 @@ function executerTir() {
     });
 }
 
-function updateBalles(ctx, canvasWidth) {
+
+function updateBalles(ctx, canvasWidth, timeScale = 1) {
     for (let i = balles.length - 1; i >= 0; i--) {
         let b = balles[i];
-        b.x += b.vitesse;
+        b.x += (b.vitesse * timeScale);
         ctx.drawImage(img_bullet, b.x, b.y, b.largeur, b.hauteur);
 
         let aTouche = false;
@@ -68,7 +69,7 @@ function updateBalles(ctx, canvasWidth) {
                     if (z.pv <= 0) {
                         zombiesTank.splice(j, 1);
                         if (typeof score !== 'undefined') {
-                            score += 50; 
+                            score += 30; 
                             const ui = document.getElementById('score');
                             if(ui) ui.innerText = score;
                             if (typeof verifierCouleurScore === "function") verifierCouleurScore();
