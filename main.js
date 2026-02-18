@@ -1,6 +1,3 @@
-/* =========================================================================
-   1. SETUP DU CANVAS & UI
-   ========================================================================= */
 const canvas = document.getElementById('jeu');
 const ctx = canvas.getContext('2d'); 
 
@@ -17,27 +14,35 @@ const btn_menu = document.getElementById('btn-return-menu');
 const background_img = new Image();
 background_img.src = './assets/FOND.jpg';
 
-/* =========================================================================
-   2. SYSTÈME AUDIO GLOBAL
-   ========================================================================= */
 const music_normal = new Audio('./assets/son/background_sound.mp3');
-music_normal.loop = true; music_normal.volume = 0.05;
+music_normal.loop = true; 
+music_normal.volume = 0.1;
 
-const music_hardcore = new Audio('./assets/son/hardcore_gamer2.mp3');
-music_hardcore.loop = true; music_hardcore.volume = 0.05;
+const playlist_hardcore = [
+    new Audio('./assets/son/hardcore_gamer_music.mp3'),
+    new Audio('./assets/son/hardcore_gamer2.mp3')
+];
+playlist_hardcore.forEach(t => { t.volume = 0.05; t.loop = false; });
 
 let current_music_track = null;
+let hardcoreIndex = 0;
+
+function jouerSuivanteHardcore() {
+    if (!isSoundEnabled || !jeu_lance) return;
+    hardcoreIndex = (hardcoreIndex + 1) % playlist_hardcore.length;
+    current_music_track = playlist_hardcore[hardcoreIndex];
+    current_music_track.currentTime = 0;
+    current_music_track.play();
+    current_music_track.addEventListener('ended', jouerSuivanteHardcore, { once: true });
+}
 
 function setGameMusicMute(isSoundOn) {
+    isSoundEnabled = isSoundOn; 
     if (current_music_track) {
-        if (isSoundOn) current_music_track.play();
-        else current_music_track.pause();
+        isSoundOn ? (jeu_lance && current_music_track.play()) : current_music_track.pause();
     }
 }
 
-/* =========================================================================
-   3. ÉTAT DU JEU
-   ========================================================================= */
 let jeu_lance = false;
 var score = 0; 
 var vies = 3;
@@ -45,42 +50,23 @@ var temps = 0;
 let timerInterval = null;
 let gameMode = 'normal';   
 let isSoundEnabled = true;
-
 var coutVie = 100; 
 
-/* =========================================================================
-   4. LOGIQUE D'ACHAT DE VIE
-   ========================================================================= */
 function verifierCouleurScore() {
-    if (score >= coutVie) {
-        if (!ui_score.classList.contains('score-ready')) {
-            console.log(">>> VERT ACTIVÉ ! <<<");
-            ui_score.classList.add('score-ready');
-        }
-    } else {
-        ui_score.classList.remove('score-ready');
-    }
+    if (score >= coutVie) ui_score.classList.add('score-ready');
+    else ui_score.classList.remove('score-ready');
 }
 
 function acheterVie() {
-    if (!jeu_lance) return;
-
-    if (score >= coutVie) {
-        score -= coutVie;
-        vies++;
-        coutVie = Math.floor(coutVie * 1.5);
-        
-        ui_score.innerText = score;
-        ui_vies.innerText = vies;
-        
-        verifierCouleurScore();
-        console.log("Vie achetée !");
-    }
+    if (!jeu_lance || score < coutVie) return;
+    score -= coutVie;
+    vies++;
+    coutVie = Math.floor(coutVie * 1.5);
+    ui_score.innerText = score;
+    ui_vies.innerText = vies;
+    verifierCouleurScore();
 }
 
-/* =========================================================================
-   5. BOUCLE DE JEU
-   ========================================================================= */
 function perdreVie() {
     if (!jeu_lance) return;
     vies--;
@@ -94,6 +80,7 @@ function gameOver() {
     if (current_music_track) {
         current_music_track.pause();
         current_music_track.currentTime = 0;
+        current_music_track.removeEventListener('ended', jouerSuivanteHardcore);
     }
     ui_final_score.innerText = score;
     ui_final_time.innerText = temps;
@@ -102,61 +89,75 @@ function gameOver() {
 
 function animate() {
     if (!jeu_lance) return; 
+    
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(background_img, 0, 0, canvas.width, canvas.height);
-    updateZombies(ctx, canvas.width, canvas.height);
-    updateJoueur(canvas.height);
-    drawJoueur(ctx);
+    
+    if (typeof updateZombies === 'function') updateZombies(ctx, canvas.width, canvas.height);
+    if (typeof updateZombiesTank === 'function') updateZombiesTank(ctx, canvas.width, canvas.height);
+    if (typeof updateJoueur === 'function') updateJoueur(canvas.height);
+    if (typeof updateBalles === 'function') updateBalles(ctx, canvas.width);
+    if (typeof drawJoueur === 'function') drawJoueur(ctx);
+
     requestAnimationFrame(animate);
 }
 
-/* =========================================================================
-   6. INIT
-   ========================================================================= */
 btn_retry.addEventListener('click', () => {
     ecran_game_over.classList.add('hidden');
     initGame(gameMode, isSoundEnabled);
 });
 
 btn_menu.addEventListener('click', () => {
-    window.location.reload(); 
+    jeu_lance = false;
+    if (timerInterval) clearInterval(timerInterval);
+    if (current_music_track) {
+        current_music_track.pause();
+        current_music_track.currentTime = 0;
+        current_music_track.removeEventListener('ended', jouerSuivanteHardcore);
+    }
+    if (typeof window.retourMenuPrincipal === "function") {
+        window.retourMenuPrincipal();
+    } else {
+        window.location.reload(); 
+    }
 });
 
 function initGame(mode, isSoundOn) {
-    console.log("--- START GAME ---");
     jeu_lance = true;
     gameMode = mode;
     isSoundEnabled = isSoundOn;
 
-    vies = 3;
-    score = 0;
-    temps = 0;
-    coutVie = 100;
-
+    vies = 3; score = 0; temps = 0; coutVie = 100;
     ui_vies.innerText = vies;
     ui_score.innerText = score;
     ui_temps.innerText = temps;
-    
     verifierCouleurScore(); 
 
     if (timerInterval) clearInterval(timerInterval);
     timerInterval = setInterval(() => {
-        if (jeu_lance) {
-            temps++;
-            ui_temps.innerText = temps;
-        }
+        if (jeu_lance) { temps++; ui_temps.innerText = temps; }
     }, 1000);
 
     joueur.y = 200; 
     joueur.estEnTrainDeTirer = false;
     joueur.peutTirer = true;
     
-    resetZombies(mode); 
-
+    if (typeof resetZombies === 'function') resetZombies(mode); 
+    if (typeof resetBalles === 'function') resetBalles();
     if (typeof setPlayerSpeed === "function") setPlayerSpeed(mode);
 
-    if (mode === 'hardcore') current_music_track = music_hardcore;
-    else current_music_track = music_normal;
+    if (current_music_track) {
+        current_music_track.pause();
+        current_music_track.removeEventListener('ended', jouerSuivanteHardcore);
+    }
+
+    if (mode === 'hardcore') {
+        hardcoreIndex = Math.floor(Math.random() * playlist_hardcore.length);
+        current_music_track = playlist_hardcore[hardcoreIndex];
+        current_music_track.addEventListener('ended', jouerSuivanteHardcore, { once: true });
+    } else {
+        current_music_track = music_normal;
+    }
 
     if (isSoundEnabled) {
         current_music_track.currentTime = 0;

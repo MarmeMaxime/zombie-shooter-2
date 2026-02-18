@@ -1,13 +1,15 @@
-/* =========================================================================
-   1. CHARGEMENT AUDIO
-   ========================================================================= */
 const son_tir_america = new Audio('./assets/son/america.mp3');
 son_tir_america.volume = 0.4; 
 
+const img_bullet = new Image();
+img_bullet.src = './assets/bullet.jpg'; 
 
-/* =========================================================================
-   2. LOGIQUE DE TIR (HITSCAN CIBLÉ)
-   ========================================================================= */
+let balles = [];
+
+function resetBalles() {
+    balles = [];
+}
+
 function executerTir() {
     if (typeof isSoundEnabled !== 'undefined' && isSoundEnabled) {
         const bruit = son_tir_america.cloneNode();
@@ -15,39 +17,70 @@ function executerTir() {
         bruit.play();
     }
 
-    let margeY = 65; 
-    if (typeof gameMode !== 'undefined' && gameMode === 'hardcore') {
-        margeY = 50;
-    }
-    
-    let indexDuZombieLePlusProche = -1;
-    let plusPetiteDistance = Infinity;
+    balles.push({
+        x: joueur.x + 50,  
+        y: joueur.y + 28,  
+        largeur: 25,       
+        hauteur: 10,       
+        vitesse: 20        
+    });
+}
 
-    for (let i = 0; i < zombies.length; i++) {
-        let z = zombies[i];
+function updateBalles(ctx, canvasWidth) {
+    for (let i = balles.length - 1; i >= 0; i--) {
+        let b = balles[i];
+        b.x += b.vitesse;
+        ctx.drawImage(img_bullet, b.x, b.y, b.largeur, b.hauteur);
 
-        if (z.x > joueur.x && Math.abs(z.y - joueur.y) < margeY) {
-            let distance = z.x - joueur.x;
-            if (distance < plusPetiteDistance) {
-                plusPetiteDistance = distance;
-                indexDuZombieLePlusProche = i;
+        let aTouche = false;
+
+        // Collision Zombies Normaux
+        if (typeof zombies !== 'undefined') {
+            for (let j = zombies.length - 1; j >= 0; j--) {
+                let z = zombies[j];
+                if (b.x < z.x + z.largeur && b.x + b.largeur > z.x &&
+                    b.y < z.y + z.hauteur && b.y + b.hauteur > z.y) {
+                    
+                    zombies.splice(j, 1); 
+                    aTouche = true; 
+                    
+                    if (typeof score !== 'undefined') {
+                        score += 10;
+                        const ui = document.getElementById('score');
+                        if(ui) ui.innerText = score;
+                        if (typeof verifierCouleurScore === "function") verifierCouleurScore();
+                    }
+                    break; 
+                }
             }
         }
-    }
 
-    // C. APPLICATION DES DÉGÂTS
-    if (indexDuZombieLePlusProche !== -1) {
-        zombies.splice(indexDuZombieLePlusProche, 1);
+        // Collision Zombies Tanks
+        if (!aTouche && typeof zombiesTank !== 'undefined') {
+            for (let j = zombiesTank.length - 1; j >= 0; j--) {
+                let z = zombiesTank[j];
+                if (b.x < z.x + z.largeur && b.x + b.largeur > z.x &&
+                    b.y < z.y + z.hauteur && b.y + b.hauteur > z.y) {
+                    
+                    aTouche = true; 
+                    z.pv--; 
 
-        if (typeof score !== 'undefined') {
-            score += 10;
-            const ui_score = document.getElementById('score');
-            if (ui_score) ui_score.innerText = score;
-            
-            // On vérifie la couleur À CHAQUE FOIS qu'on marque des points
-            if (typeof verifierCouleurScore === "function") {
-                verifierCouleurScore();
+                    if (z.pv <= 0) {
+                        zombiesTank.splice(j, 1);
+                        if (typeof score !== 'undefined') {
+                            score += 50; 
+                            const ui = document.getElementById('score');
+                            if(ui) ui.innerText = score;
+                            if (typeof verifierCouleurScore === "function") verifierCouleurScore();
+                        }
+                    }
+                    break; 
+                }
             }
+        }
+
+        if (aTouche || b.x > canvasWidth) {
+            balles.splice(i, 1);
         }
     }
 }
