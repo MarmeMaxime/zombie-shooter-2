@@ -6,12 +6,12 @@ img_bullet.src = './assets/bullet.jpg';
 
 let balles = [];
 
-function resetBalles() {
+function reset_balles() {
     balles = [];
 }
 
-function executerTir() {
-    if (typeof isSoundEnabled !== 'undefined' && isSoundEnabled) {
+function executer_tir() {
+    if (isSoundEnabled) {
         const bruit = son_tir_america.cloneNode();
         bruit.volume = 0.4;
         bruit.play();
@@ -26,38 +26,34 @@ function executerTir() {
     });
 }
 
-
-function updateBalles(ctx, canvasWidth, timeScale = 1) {
+function update_balles(ctx, canvasWidth) {
     for (let i = balles.length - 1; i >= 0; i--) {
         let b = balles[i];
-        b.x += (b.vitesse * timeScale);
+        b.x += b.vitesse;
         ctx.drawImage(img_bullet, b.x, b.y, b.largeur, b.hauteur);
 
         let aTouche = false;
 
         // Collision Zombies Normaux
-        if (typeof zombies !== 'undefined') {
-            for (let j = zombies.length - 1; j >= 0; j--) {
-                let z = zombies[j];
-                if (b.x < z.x + z.largeur && b.x + b.largeur > z.x &&
-                    b.y < z.y + z.hauteur && b.y + b.hauteur > z.y) {
-                    
-                    zombies.splice(j, 1); 
-                    aTouche = true; 
-                    
-                    if (typeof score !== 'undefined') {
-                        score += 10;
-                        const ui = document.getElementById('score');
-                        if(ui) ui.innerText = score;
-                        if (typeof verifierCouleurScore === "function") verifierCouleurScore();
-                    }
-                    break; 
-                }
+        for (let j = zombies.length - 1; j >= 0; j--) {
+            let z = zombies[j];
+            if (b.x < z.x + z.largeur && b.x + b.largeur > z.x &&
+                b.y < z.y + z.hauteur && b.y + b.hauteur > z.y) {
+                
+                zombies.splice(j, 1); 
+                aTouche = true; 
+                
+                score += 10;
+                const ui = document.getElementById('score');
+                if(ui) ui.innerText = score;
+                verifier_couleur_score();
+                
+                break; 
             }
         }
 
         // Collision Zombies Tanks
-        if (!aTouche && typeof zombiesTank !== 'undefined') {
+        if (!aTouche) {
             for (let j = zombiesTank.length - 1; j >= 0; j--) {
                 let z = zombiesTank[j];
                 if (b.x < z.x + z.largeur && b.x + b.largeur > z.x &&
@@ -68,12 +64,10 @@ function updateBalles(ctx, canvasWidth, timeScale = 1) {
 
                     if (z.pv <= 0) {
                         zombiesTank.splice(j, 1);
-                        if (typeof score !== 'undefined') {
-                            score += 30; 
-                            const ui = document.getElementById('score');
-                            if(ui) ui.innerText = score;
-                            if (typeof verifierCouleurScore === "function") verifierCouleurScore();
-                        }
+                        score += 50; 
+                        const ui = document.getElementById('score');
+                        if(ui) ui.innerText = score;
+                        verifier_couleur_score();
                     }
                     break; 
                 }

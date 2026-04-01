@@ -22,10 +22,12 @@ const joueur = {
     largeur: 64,
     hauteur: 64,
     
+    // Animation
     frameTimer: 0,
     frameInterval: 16, 
     marcheStep: 0,
     
+    // Tir
     estEnTrainDeTirer: false, 
     timerTir: 0,              
     peutTirer: true,          
@@ -35,22 +37,24 @@ const joueur = {
 
 const touches = { haut: false, bas: false };
 
-function setPlayerSpeed(mode) {
-    joueur.vitesse = (mode === 'hardcore') ? 2 : 2.5;
+/* =========================================================================
+   LOGIQUE
+   ========================================================================= */
+function set_player_speed(mode) {
+    joueur.vitesse = (mode === 'hardcore') ? 1.7 : 2;
 }
 
-// INTÉGRATION DU TIMESCALE
-function updateJoueur(canvasHeight, timeScale = 1) {
-    // Timer Animation Tir
+// Mise à jour frame par frame
+function update_joueur(canvasHeight) {
     if (joueur.estEnTrainDeTirer) {
-        joueur.timerTir -= timeScale; 
+        joueur.timerTir--; 
         if (joueur.timerTir <= 0) joueur.estEnTrainDeTirer = false;
     }
 
-    // Déplacement compensé par le temps
+    // Déplacement
     let bouge = false;
-    if (touches.haut) { joueur.y -= (joueur.vitesse * timeScale); bouge = true; }
-    if (touches.bas)  { joueur.y += (joueur.vitesse * timeScale); bouge = true; }
+    if (touches.haut) { joueur.y -= joueur.vitesse; bouge = true; }
+    if (touches.bas)  { joueur.y += joueur.vitesse; bouge = true; }
 
     // Limites écran
     if (joueur.y < 20) joueur.y = 20; 
@@ -60,9 +64,9 @@ function updateJoueur(canvasHeight, timeScale = 1) {
     if (joueur.estEnTrainDeTirer) {
         joueur.imgActuelle = img_joueur_tir;
     } else if (bouge) {
-        joueur.frameTimer += timeScale; 
+        joueur.frameTimer++;
         if (joueur.frameTimer >= joueur.frameInterval) {
-            joueur.frameTimer -= joueur.frameInterval;
+            joueur.frameTimer = 0;
             joueur.marcheStep = (joueur.marcheStep + 1) % 4; 
             joueur.imgActuelle = animMarche[joueur.marcheStep];
         }
@@ -72,7 +76,7 @@ function updateJoueur(canvasHeight, timeScale = 1) {
     }
 }
 
-function drawJoueur(ctx) {
+function draw_joueur(ctx) {
     ctx.drawImage(joueur.imgActuelle, joueur.x, joueur.y, joueur.largeur, joueur.hauteur);
 }
 
@@ -83,17 +87,19 @@ document.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowUp') touches.haut = true;
     if (e.key === 'ArrowDown') touches.bas = true;
     
+    // Tir
     if (e.code === 'Space') {
         if (joueur.peutTirer && !joueur.estEnTrainDeTirer) {
             joueur.estEnTrainDeTirer = true;
             joueur.timerTir = 60; 
             joueur.peutTirer = false; 
-            if (typeof executerTir === "function") executerTir();
+            executer_tir(); 
         }
     }
 
-    if ((e.key === 'v' || e.key === 'V') && typeof acheterVie === "function") {
-        acheterVie();
+    // Achat Vie (V)
+    if (e.key === 'v' || e.key === 'V') {
+        acheter_vie();
     }
 });
 
@@ -102,3 +108,63 @@ document.addEventListener('keyup', (e) => {
     if (e.key === 'ArrowDown') touches.bas = false;
     if (e.code === 'Space') joueur.peutTirer = true;
 });
+
+
+/* =========================================================================
+   COMMANDES TACTILES (ÉCRANS MOBILES)
+   ========================================================================= */
+const btn_touch_up = document.getElementById('btn-touch-up');
+const btn_touch_down = document.getElementById('btn-touch-down');
+const btn_touch_shoot = document.getElementById('btn-touch-shoot');
+const btn_touch_buy = document.getElementById('btn-touch-buy');
+
+function lier_bouton_tactile(bouton, actionAppui, actionRelache) {
+    if (!bouton) return;
+    
+    bouton.addEventListener('touchstart', (e) => { 
+        e.preventDefault(); 
+        actionAppui(); 
+    }, { passive: false });
+    
+    bouton.addEventListener('touchend', (e) => { 
+        e.preventDefault(); 
+        actionRelache(); 
+    }, { passive: false });
+
+    bouton.addEventListener('touchcancel', (e) => { 
+        e.preventDefault(); 
+        actionRelache(); 
+    }, { passive: false });
+}
+
+// déplacement
+lier_bouton_tactile(btn_touch_up, 
+    () => touches.haut = true, 
+    () => touches.haut = false
+);
+
+lier_bouton_tactile(btn_touch_down, 
+    () => touches.bas = true, 
+    () => touches.bas = false
+);
+
+// tir
+lier_bouton_tactile(btn_touch_shoot, 
+    () => {
+        if (joueur.peutTirer && !joueur.estEnTrainDeTirer) {
+            joueur.estEnTrainDeTirer = true;
+            joueur.timerTir = 60; 
+            joueur.peutTirer = false; 
+            executer_tir(); 
+        }
+    }, 
+    () => { joueur.peutTirer = true; }
+);
+
+// achat de vie
+if (btn_touch_buy) {
+    btn_touch_buy.addEventListener('touchstart', (e) => { 
+        e.preventDefault(); 
+        acheter_vie(); 
+    }, { passive: false });
+}

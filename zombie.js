@@ -28,7 +28,7 @@ let spawnTimer = 0;
 let spawnTimerTank = 0; 
 let currentDifficulty = 'normal'; 
 
-function resetZombies(mode) {
+function reset_zombies(mode) {
     zombies = [];
     zombiesTank = [];
     spawnTimer = 0;
@@ -36,10 +36,9 @@ function resetZombies(mode) {
     currentDifficulty = mode;
 }
 
-// INTÉGRATION DU TIMESCALE
-function updateZombies(ctx, canvasWidth, canvasHeight, timeScale = 1) {
-    spawnTimer += timeScale;
-    const frequence = (currentDifficulty === 'hardcore') ? 180 : 230;
+function update_zombies(ctx, canvasWidth, canvasHeight) {
+    spawnTimer++;
+    const frequence = 150;
 
     if (spawnTimer > frequence) {
         spawnTimer = 0;
@@ -57,10 +56,11 @@ function updateZombies(ctx, canvasWidth, canvasHeight, timeScale = 1) {
 
     for (let i = zombies.length - 1; i >= 0; i--) {
         let z = zombies[i];
-        z.x -= (z.vitesse * timeScale);
-        z.frameTimer += timeScale;
+        z.x -= z.vitesse;
+
+        z.frameTimer++;
         if (z.frameTimer >= z.frameInterval) {
-            z.frameTimer -= z.frameInterval;
+            z.frameTimer = 0;
             z.animStep = (z.animStep + 1) % 6; 
         }
 
@@ -68,21 +68,21 @@ function updateZombies(ctx, canvasWidth, canvasHeight, timeScale = 1) {
 
         if (z.x + z.largeur < 0) {
             zombies.splice(i, 1); 
-            if (typeof perdreVie === 'function') perdreVie();         
+            perdre_vie();         
         }
     }
 }
 
-function updateZombiesTank(ctx, canvasWidth, canvasHeight, timeScale = 1) {
-    spawnTimerTank += timeScale;
-    const frequenceTank = (currentDifficulty === 'hardcore') ? 800 : 1000;
+function update_zombies_tank(ctx, canvasWidth, canvasHeight) {
+    spawnTimerTank++;
+    const frequenceTank =  800;
 
     if (spawnTimerTank > frequenceTank) {
         spawnTimerTank = 0;
         zombiesTank.push({
             x: canvasWidth, 
             y: Math.random() * (canvasHeight - 100) + 20, 
-            vitesse: (currentDifficulty === 'hardcore') ? (Math.random() * 0.3 + 1) : (Math.random() * 0.4 + 0.5), 
+            vitesse: (Math.random() * 0.5 + 0.5), 
             largeur: 64,
             hauteur: 64,
             frameTimer: 0,
@@ -94,10 +94,11 @@ function updateZombiesTank(ctx, canvasWidth, canvasHeight, timeScale = 1) {
 
     for (let i = zombiesTank.length - 1; i >= 0; i--) {
         let z = zombiesTank[i];
-        z.x -= (z.vitesse * timeScale);
-        z.frameTimer += timeScale;
+        z.x -= z.vitesse;
+
+        z.frameTimer++;
         if (z.frameTimer >= z.frameInterval) {
-            z.frameTimer -= z.frameInterval;
+            z.frameTimer = 0;
             z.animStep = (z.animStep + 1) % 12; 
         }
 
@@ -105,7 +106,7 @@ function updateZombiesTank(ctx, canvasWidth, canvasHeight, timeScale = 1) {
 
         if (z.x + z.largeur < 0) {
             zombiesTank.splice(i, 1); 
-            if (typeof perdreVie === 'function') perdreVie();         
+            perdre_vie();         
         }
     }
 }

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Zombie Shooter 2</title>
     <link rel="stylesheet" href="./styles.css" />
+    <link rel="icon" type="image/png" href="./assets/joueur_marche2.png" />
   </head>
   
   <body>
@@ -19,6 +20,8 @@
           <button id="btn-hardcore">Hardcore</button>
         </div>
 
+        <button id="btn-leaderboard">TABLEAU D'HONNEUR</button>
+
         <button id="btn-tuto">?</button>
         <button id="btn-start">PLAY</button>
       </div>
@@ -29,7 +32,43 @@
           Vies: <span id="vies">3</span> | 
           Temps: <span id="temps">0</span>
         </div>
+        
+        <div id="tactical-controls">
+          <div class="move-controls">
+            <button class="touch-btn" id="btn-touch-up">↑</button>
+            <button class="touch-btn" id="btn-touch-down">↓</button>
+          </div>
+          <div class="action-controls">
+            <button class="touch-btn" id="btn-touch-buy">V</button>
+            <button class="touch-btn" id="btn-touch-shoot">TIR</button>
+          </div>
+        </div>
+
         <canvas id="jeu" width="800" height="400"></canvas>
+      </div>
+
+      <div id="leaderboard-overlay" class="hidden">
+        <div class="mission-card">
+          <h2>ARCHIVES MILITAIRES</h2>
+          
+          <div class="table-container">
+            <table id="leaderboard-table">
+              <thead>
+                <tr>
+                  <th>RANG</th>
+                  <th>SOLDAT</th>
+                  <th>SCORE</th>
+                  <th>TEMPS</th>
+                  <th>ZONE</th>
+                </tr>
+              </thead>
+              <tbody id="leaderboard-body">
+                </tbody>
+            </table>
+          </div>
+
+          <button id="btn-close-leaderboard">RETOUR BASE</button>
+        </div>
       </div>
 
       <div id="game-over-overlay" class="hidden">
