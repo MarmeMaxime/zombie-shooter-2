@@ -1,170 +1,140 @@
 /* =========================================================================
-   ASSETS JOUEUR
+   JOUEUR : sprites, état, déplacement et animation
    ========================================================================= */
-const img_joueur_arret = new Image(); img_joueur_arret.src = './assets/joueur_arrêt.png';
-const img_joueur_tir = new Image();   img_joueur_tir.src = './assets/joueur_tir.png';
-
-const animMarche = [
-    new Image(), new Image(), new Image(), new Image()
-];
-animMarche[0].src = './assets/joueur_marche1.png';
-animMarche[1].src = './assets/joueur_marche2.png';
-animMarche[2].src = './assets/joueur_marche3.png';
-animMarche[3].src = './assets/joueur_marche4.png';
-
-/* =========================================================================
-   OBJET JOUEUR & ÉTAT
-   ========================================================================= */
-const joueur = {
-    x: 50,
-    y: 200,
-    vitesse: 2.5, 
-    largeur: 64,
-    hauteur: 64,
-    
-    // Animation
-    frameTimer: 0,
-    frameInterval: 16, 
-    marcheStep: 0,
-    
-    // Tir
-    estEnTrainDeTirer: false, 
-    timerTir: 0,              
-    peutTirer: true,          
-    
-    imgActuelle: img_joueur_arret
-};
-
-const touches = { haut: false, bas: false };
-
-/* =========================================================================
-   LOGIQUE
-   ========================================================================= */
-function set_player_speed(mode) {
-    joueur.vitesse = (mode === 'hardcore') ? 1.7 : 2;
+function chargerImage(src) {
+    const img = new Image();
+    img.src = src;
+    return img;
 }
 
-// Mise à jour frame par frame
-function update_joueur(canvasHeight) {
-    if (joueur.estEnTrainDeTirer) {
-        joueur.timerTir--; 
-        if (joueur.timerTir <= 0) joueur.estEnTrainDeTirer = false;
+const IMG_JOUEUR = {
+    arret: chargerImage('./assets/joueur_arrêt.png'),
+    tir: chargerImage('./assets/joueur_tir.png'),
+    marche: [1, 2, 3, 4].map(n => chargerImage(`./assets/joueur_marche${n}.png`))
+};
+
+const joueur = {
+    x: CONFIG.joueur.x,
+    y: 200,
+    taille: CONFIG.joueur.taille,
+    vitesse: CONFIG.joueur.vitesse.normal,
+
+    tempsImage: 0,
+    etapeMarche: 0,
+    bouge: false,
+
+    rechargeTir: 0,      // temps restant avant de pouvoir retirer
+    animTir: 0,          // temps restant d'affichage du sprite de tir
+    gachetteRelachee: true
+};
+
+// État des commandes (clavier et tactile écrivent au même endroit)
+const commandes = { haut: false, bas: false, tir: false };
+
+function reset_joueur(mode) {
+    joueur.y = 200;
+    joueur.vitesse = CONFIG.joueur.vitesse[mode];
+    joueur.tempsImage = 0;
+    joueur.etapeMarche = 0;
+    joueur.rechargeTir = 0;
+    joueur.animTir = 0;
+    joueur.gachetteRelachee = true;
+    relacher_commandes();
+}
+
+function relacher_commandes() {
+    commandes.haut = commandes.bas = commandes.tir = false;
+}
+
+function update_joueur(dt, hauteurCanvas) {
+    // Déplacement (haut + bas en même temps = immobile)
+    const direction = (commandes.bas ? 1 : 0) - (commandes.haut ? 1 : 0);
+    joueur.bouge = direction !== 0;
+    joueur.y += direction * joueur.vitesse * dt;
+    joueur.y = Math.max(CONFIG.margeHaut, Math.min(hauteurCanvas - CONFIG.margeBas, joueur.y));
+
+    // Tir : un tir par appui, limité par la cadence
+    joueur.rechargeTir = Math.max(0, joueur.rechargeTir - dt);
+    joueur.animTir = Math.max(0, joueur.animTir - dt);
+
+    if (!commandes.tir) {
+        joueur.gachetteRelachee = true;
+    } else if (joueur.gachetteRelachee && joueur.rechargeTir === 0) {
+        joueur.gachetteRelachee = false;
+        joueur.rechargeTir = CONFIG.joueur.delaiEntreTirs;
+        joueur.animTir = CONFIG.joueur.dureeAnimTir;
+        tirer(joueur);
     }
 
-    // Déplacement
-    let bouge = false;
-    if (touches.haut) { joueur.y -= joueur.vitesse; bouge = true; }
-    if (touches.bas)  { joueur.y += joueur.vitesse; bouge = true; }
-
-    // Limites écran
-    if (joueur.y < 20) joueur.y = 20; 
-    if (joueur.y > canvasHeight - 80) joueur.y = canvasHeight - 80;
-
-    // Gestion de l'image
-    if (joueur.estEnTrainDeTirer) {
-        joueur.imgActuelle = img_joueur_tir;
-    } else if (bouge) {
-        joueur.frameTimer++;
-        if (joueur.frameTimer >= joueur.frameInterval) {
-            joueur.frameTimer = 0;
-            joueur.marcheStep = (joueur.marcheStep + 1) % 4; 
-            joueur.imgActuelle = animMarche[joueur.marcheStep];
+    // Animation de marche
+    if (joueur.bouge) {
+        joueur.tempsImage += dt;
+        if (joueur.tempsImage >= CONFIG.joueur.dureeImageMarche) {
+            joueur.tempsImage -= CONFIG.joueur.dureeImageMarche;
+            joueur.etapeMarche = (joueur.etapeMarche + 1) % IMG_JOUEUR.marche.length;
         }
     } else {
-        joueur.imgActuelle = img_joueur_arret;
-        joueur.frameTimer = 0;
+        joueur.tempsImage = 0;
     }
 }
 
 function draw_joueur(ctx) {
-    ctx.drawImage(joueur.imgActuelle, joueur.x, joueur.y, joueur.largeur, joueur.hauteur);
+    let img = IMG_JOUEUR.arret;
+    if (joueur.animTir > 0) img = IMG_JOUEUR.tir;
+    else if (joueur.bouge) img = IMG_JOUEUR.marche[joueur.etapeMarche];
+    ctx.drawImage(img, joueur.x, joueur.y, joueur.taille, joueur.taille);
 }
 
 /* =========================================================================
-   INPUTS
+   CLAVIER
    ========================================================================= */
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowUp') touches.haut = true;
-    if (e.key === 'ArrowDown') touches.bas = true;
-    
-    // Tir
-    if (e.code === 'Space') {
-        if (joueur.peutTirer && !joueur.estEnTrainDeTirer) {
-            joueur.estEnTrainDeTirer = true;
-            joueur.timerTir = 60; 
-            joueur.peutTirer = false; 
-            executer_tir(); 
-        }
-    }
+const TOUCHES = {
+    ArrowUp: 'haut', KeyW: 'haut', KeyZ: 'haut',
+    ArrowDown: 'bas', KeyS: 'bas',
+    Space: 'tir'
+};
 
-    // Achat Vie (V)
-    if (e.key === 'v' || e.key === 'V') {
+function gerer_touche(e, appui) {
+    if (!partie_en_cours()) return;
+
+    const action = TOUCHES[e.code];
+    if (action) {
+        // Empêche le défilement de la page et l'activation du bouton qui a le focus
+        e.preventDefault();
+        commandes[action] = appui;
+    } else if (appui && e.code === 'KeyV' && !e.repeat) {
         acheter_vie();
     }
-});
+}
 
-document.addEventListener('keyup', (e) => {
-    if (e.key === 'ArrowUp') touches.haut = false;
-    if (e.key === 'ArrowDown') touches.bas = false;
-    if (e.code === 'Space') joueur.peutTirer = true;
-});
+document.addEventListener('keydown', e => gerer_touche(e, true));
+document.addEventListener('keyup', e => gerer_touche(e, false));
 
+// Si la fenêtre perd le focus, on relâche tout (sinon le joueur continue de bouger)
+window.addEventListener('blur', relacher_commandes);
 
 /* =========================================================================
-   COMMANDES TACTILES (ÉCRANS MOBILES)
+   COMMANDES TACTILES (pointer events : fonctionne au doigt et à la souris)
    ========================================================================= */
-const btn_touch_up = document.getElementById('btn-touch-up');
-const btn_touch_down = document.getElementById('btn-touch-down');
-const btn_touch_shoot = document.getElementById('btn-touch-shoot');
-const btn_touch_buy = document.getElementById('btn-touch-buy');
+function lier_bouton_maintenu(id, action) {
+    const bouton = document.getElementById(id);
+    const relacher = () => { commandes[action] = false; };
 
-function lier_bouton_tactile(bouton, actionAppui, actionRelache) {
-    if (!bouton) return;
-    
-    bouton.addEventListener('touchstart', (e) => { 
-        e.preventDefault(); 
-        actionAppui(); 
-    }, { passive: false });
-    
-    bouton.addEventListener('touchend', (e) => { 
-        e.preventDefault(); 
-        actionRelache(); 
-    }, { passive: false });
-
-    bouton.addEventListener('touchcancel', (e) => { 
-        e.preventDefault(); 
-        actionRelache(); 
-    }, { passive: false });
+    bouton.addEventListener('pointerdown', e => {
+        e.preventDefault();
+        bouton.setPointerCapture(e.pointerId);
+        commandes[action] = true;
+    });
+    bouton.addEventListener('pointerup', relacher);
+    bouton.addEventListener('pointercancel', relacher);
+    bouton.addEventListener('lostpointercapture', relacher);
 }
 
-// déplacement
-lier_bouton_tactile(btn_touch_up, 
-    () => touches.haut = true, 
-    () => touches.haut = false
-);
+lier_bouton_maintenu('btn-touch-up', 'haut');
+lier_bouton_maintenu('btn-touch-down', 'bas');
+lier_bouton_maintenu('btn-touch-shoot', 'tir');
 
-lier_bouton_tactile(btn_touch_down, 
-    () => touches.bas = true, 
-    () => touches.bas = false
-);
-
-// tir
-lier_bouton_tactile(btn_touch_shoot, 
-    () => {
-        if (joueur.peutTirer && !joueur.estEnTrainDeTirer) {
-            joueur.estEnTrainDeTirer = true;
-            joueur.timerTir = 60; 
-            joueur.peutTirer = false; 
-            executer_tir(); 
-        }
-    }, 
-    () => { joueur.peutTirer = true; }
-);
-
-// achat de vie
-if (btn_touch_buy) {
-    btn_touch_buy.addEventListener('touchstart', (e) => { 
-        e.preventDefault(); 
-        acheter_vie(); 
-    }, { passive: false });
-}
+document.getElementById('btn-touch-buy').addEventListener('pointerdown', e => {
+    e.preventDefault();
+    acheter_vie();
+});

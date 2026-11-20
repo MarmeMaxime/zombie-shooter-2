@@ -20,8 +20,6 @@
           <button id="btn-hardcore">Hardcore</button>
         </div>
 
-        <button id="btn-leaderboard">TABLEAU D'HONNEUR</button>
-
         <button id="btn-tuto">?</button>
         <button id="btn-start">PLAY</button>
       </div>
@@ -30,7 +28,8 @@
         <div id="info">
           Score: <span id="score">0</span> | 
           Vies: <span id="vies">3</span> | 
-          Temps: <span id="temps">0</span>
+          Temps: <span id="temps">0</span> |
+          Vie (V) : <span id="prix-vie">100</span>
         </div>
         
         <div id="tactical-controls">
@@ -45,30 +44,6 @@
         </div>
 
         <canvas id="jeu" width="800" height="400"></canvas>
-      </div>
-
-      <div id="leaderboard-overlay" class="hidden">
-        <div class="mission-card">
-          <h2>ARCHIVES MILITAIRES</h2>
-          
-          <div class="table-container">
-            <table id="leaderboard-table">
-              <thead>
-                <tr>
-                  <th>RANG</th>
-                  <th>SOLDAT</th>
-                  <th>SCORE</th>
-                  <th>TEMPS</th>
-                  <th>ZONE</th>
-                </tr>
-              </thead>
-              <tbody id="leaderboard-body">
-                </tbody>
-            </table>
-          </div>
-
-          <button id="btn-close-leaderboard">RETOUR BASE</button>
-        </div>
       </div>
 
       <div id="game-over-overlay" class="hidden">
@@ -133,11 +108,13 @@
 
     </div> 
     
-    <script src="./menu.js" type="text/javascript"></script> 
-    <script src="./deplacement_joueur.js" type="text/javascript"></script>
-    <script src="./tir_joueur.js" type="text/javascript"></script>
-    <script src="./zombie.js" type="text/javascript"></script>
-    <script src="./main.js" type="text/javascript"></script>
+    <script src="./config.js"></script>
+    <script src="./audio.js"></script>
+    <script src="./deplacement_joueur.js"></script>
+    <script src="./tir_joueur.js"></script>
+    <script src="./zombie.js"></script>
+    <script src="./main.js"></script>
+    <script src="./menu.js"></script>
 
   </body>
 </html>
