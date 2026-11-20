@@ -70,11 +70,14 @@ const Son = (() => {
         else musique.pause();
     }
 
-    function jouerEffet(audio) {
+    // vitesse < 1 : son plus grave (chaque arme a ainsi sa propre détonation)
+    function jouerEffet(audio, vitesse = 1) {
         if (!actif) return;
         // cloneNode permet de superposer plusieurs tirs rapprochés
         const copie = audio.cloneNode();
         copie.volume = audio.volume;
+        copie.preservesPitch = false;
+        copie.playbackRate = vitesse;
         lire(copie);
     }
 
@@ -83,7 +86,7 @@ const Son = (() => {
         arreterMusique,
         setActif,
         estActif: () => actif,
-        tir: () => jouerEffet(sonTir),
+        tir: (vitesse) => jouerEffet(sonTir, vitesse),
         bouton: () => jouerEffet(sonBouton)
     };
 })();

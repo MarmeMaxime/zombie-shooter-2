@@ -7,17 +7,33 @@ function chargerImage(src) {
     return img;
 }
 
-const IMG_JOUEUR = {
-    arret: chargerImage('./assets/joueur_arrêt.png'),
-    tir: chargerImage('./assets/joueur_tir.png'),
-    marche: [1, 2, 3, 4].map(n => chargerImage(`./assets/joueur_marche${n}.png`))
-};
+// Sprites de chaque personnage (le soldat garde les noms de fichiers d'origine)
+function charger_sprites(prefixe) {
+    if (!prefixe) {
+        return {
+            arret: chargerImage('./assets/joueur_arrêt.png'),
+            tir: chargerImage('./assets/joueur_tir.png'),
+            marche: [1, 2, 3, 4].map(n => chargerImage(`./assets/joueur_marche${n}.png`))
+        };
+    }
+    return {
+        arret: chargerImage(`./assets/${prefixe}_arret.png`),
+        tir: chargerImage(`./assets/${prefixe}_tir.png`),
+        marche: [1, 2, 3, 4].map(n => chargerImage(`./assets/${prefixe}_marche${n}.png`))
+    };
+}
+
+const SPRITES_PERSO = {};
+for (const id in CONFIG.personnages) SPRITES_PERSO[id] = charger_sprites(CONFIG.personnages[id].sprites);
 
 const joueur = {
     x: CONFIG.joueur.x,
     y: 200,
     taille: CONFIG.joueur.taille,
     vitesse: CONFIG.joueur.vitesse.normal,
+    perso: 'soldat',
+    arme: CONFIG.armes.fusil,
+    sprites: SPRITES_PERSO.soldat,
 
     tempsImage: 0,
     etapeMarche: 0,
@@ -31,7 +47,10 @@ const joueur = {
 // État des commandes (clavier et tactile écrivent au même endroit)
 const commandes = { haut: false, bas: false, tir: false };
 
-function reset_joueur(mode) {
+function reset_joueur(mode, perso) {
+    joueur.perso = perso;
+    joueur.arme = CONFIG.armes[CONFIG.personnages[perso].arme];
+    joueur.sprites = SPRITES_PERSO[perso];
     joueur.y = 200;
     joueur.vitesse = CONFIG.joueur.vitesse[mode];
     joueur.tempsImage = 0;
@@ -61,7 +80,7 @@ function update_joueur(dt, hauteurCanvas) {
         joueur.gachetteRelachee = true;
     } else if (joueur.gachetteRelachee && joueur.rechargeTir === 0) {
         joueur.gachetteRelachee = false;
-        joueur.rechargeTir = CONFIG.joueur.delaiEntreTirs;
+        joueur.rechargeTir = joueur.arme.delai;
         joueur.animTir = CONFIG.joueur.dureeAnimTir;
         tirer(joueur);
     }
@@ -71,7 +90,7 @@ function update_joueur(dt, hauteurCanvas) {
         joueur.tempsImage += dt;
         if (joueur.tempsImage >= CONFIG.joueur.dureeImageMarche) {
             joueur.tempsImage -= CONFIG.joueur.dureeImageMarche;
-            joueur.etapeMarche = (joueur.etapeMarche + 1) % IMG_JOUEUR.marche.length;
+            joueur.etapeMarche = (joueur.etapeMarche + 1) % joueur.sprites.marche.length;
         }
     } else {
         joueur.tempsImage = 0;
@@ -79,9 +98,9 @@ function update_joueur(dt, hauteurCanvas) {
 }
 
 function draw_joueur(ctx) {
-    let img = IMG_JOUEUR.arret;
-    if (joueur.animTir > 0) img = IMG_JOUEUR.tir;
-    else if (joueur.bouge) img = IMG_JOUEUR.marche[joueur.etapeMarche];
+    let img = joueur.sprites.arret;
+    if (joueur.animTir > 0) img = joueur.sprites.tir;
+    else if (joueur.bouge) img = joueur.sprites.marche[joueur.etapeMarche];
     ctx.drawImage(img, joueur.x, joueur.y, joueur.taille, joueur.taille);
 }
 

@@ -133,8 +133,8 @@ function ajouter_effet(x, y) {
 }
 
 /* ---------- Dégâts ---------- */
-function toucher_zombie(z) {
-    z.pv--;
+function toucher_zombie(z, degats = 1) {
+    z.pv -= degats;
     if (z.pv > 0) return;
     zombies.splice(zombies.indexOf(z), 1);
     ajouter_score(TYPES_ZOMBIE[z.type].config.points);

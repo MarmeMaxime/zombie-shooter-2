@@ -19,6 +19,7 @@ const ui = {
 const etat = {
     enCours: false,
     mode: 'normal',
+    perso: 'soldat',
     score: 0,
     vies: CONFIG.viesDepart,
     temps: 0,            // secondes écoulées (calculé avec le delta time, pas setInterval)
@@ -73,7 +74,7 @@ function boucle(instant) {
 
     // Mise à jour
     update_joueur(dt, canvas.height);
-    update_balles(dt, canvas.width);
+    update_balles(dt, canvas.width, canvas.height);
     update_zombies(dt, canvas.width, canvas.height, etat.temps);
 
     // Dessin
@@ -92,12 +93,13 @@ function arreter_boucle() {
 }
 
 /* ---------- Début / fin de partie ---------- */
-function init_game(mode) {
+function init_game(mode, perso) {
     arreter_boucle(); // garantit qu'une seule boucle tourne à la fois
 
     Object.assign(etat, {
         enCours: true,
         mode,
+        perso,
         score: 0,
         vies: CONFIG.viesDepart,
         temps: 0,
@@ -105,7 +107,7 @@ function init_game(mode) {
     });
     maj_hud();
 
-    reset_joueur(mode);
+    reset_joueur(mode, perso);
     reset_zombies(mode);
     reset_balles();
 
@@ -131,7 +133,7 @@ function game_over() {
     ui.gameOver.classList.remove('hidden');
 }
 
-document.getElementById('btn-retry').addEventListener('click', () => init_game(etat.mode));
+document.getElementById('btn-retry').addEventListener('click', () => init_game(etat.mode, etat.perso));
 document.getElementById('btn-return-menu').addEventListener('click', () => {
     quitter_partie();
     retour_menu_principal();

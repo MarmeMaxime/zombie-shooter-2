@@ -19,17 +19,41 @@ const CONFIG = {
         taille: 64,
         // En dessous de 120 en hardcore, les zombies rapides deviennent impossibles à suivre
         vitesse: { normal: 120, hardcore: 120 },
-        delaiEntreTirs: 0.5,      // cadence de tir
         dureeAnimTir: 0.3,        // durée d'affichage du sprite de tir
         dureeImageMarche: 0.27
     },
 
-    balle: {
-        vitesse: 1200,
-        largeur: 25,
-        hauteur: 10,
-        decalageX: 50,            // position du canon par rapport au joueur
-        decalageY: 28
+    // Position du canon par rapport au coin haut-gauche du joueur
+    canon: { x: 50, y: 28 },
+
+    /* ---------- Personnages jouables ----------
+       Pour en ajouter un : une entrée ici (sprites = préfixe des images
+       <prefixe>_arret.png, _tir.png, _marche1..4.png) + une arme ci-dessous. */
+    personnages: {
+        soldat: {
+            nom: 'Soldat',
+            arme: 'fusil',
+            description: 'Balle rapide à longue portée. Une balle, une cible : il faut bien viser.'
+        },
+        brute: {
+            nom: 'Brutus',
+            arme: 'pompe',
+            sprites: 'brute',
+            description: '5 plombs en éventail : pas besoin de viser juste, mais portée limitée.'
+        },
+        grenadier: {
+            nom: 'Mira',
+            arme: 'grenade',
+            sprites: 'grenadier',
+            description: 'Explose au contact et blesse tout autour. Idéal contre les groupes.'
+        }
+    },
+
+    armes: {
+        fusil: { nom: 'Fusil', delai: 0.5, vitesse: 1200, degats: 1, son: 1 },
+        // Équilibrées par simulation : les 3 armes tiennent indéfiniment dans les 2 modes
+        pompe: { nom: 'Fusil à pompe', delai: 0.7, vitesse: 900, degats: 1, plombs: 5, ecartDegres: 10, portee: 460, son: 0.75 },
+        grenade: { nom: 'Lance-grenades', delai: 0.7, vitesse: 750, degats: 2, rayon: 95, portee: 650, son: 0.55 }
     },
 
     zombie: {
