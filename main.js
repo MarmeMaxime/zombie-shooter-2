@@ -48,7 +48,7 @@ function acheter_vie() {
     if (!etat.enCours || etat.score < etat.prixVie) return;
     etat.score -= etat.prixVie;
     etat.vies++;
-    etat.prixVie = Math.floor(etat.prixVie * CONFIG.multiplicateurPrixVie);
+    etat.prixVie = Math.min(CONFIG.prixVieMax, Math.floor(etat.prixVie * CONFIG.multiplicateurPrixVie));
     maj_hud();
 }
 
@@ -63,7 +63,8 @@ function perdre_vie() {
 function boucle(instant) {
     if (!etat.enCours) return;
 
-    const dt = Math.min((instant - dernierInstant) / 1000, CONFIG.dtMax);
+    // Le 1er horodatage de requestAnimationFrame peut précéder performance.now() : on borne à 0
+    const dt = Math.max(0, Math.min((instant - dernierInstant) / 1000, CONFIG.dtMax));
     dernierInstant = instant;
 
     const secondesAvant = Math.floor(etat.temps);

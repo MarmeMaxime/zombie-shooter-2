@@ -1,6 +1,9 @@
 /* =========================================================================
-   ZOMBIES (normaux et tanks dans une seule liste)
+   ZOMBIES : normaux, tanks et magical girls dans une seule liste
    ========================================================================= */
+const imagesNumerotees = (prefixe, nombre) =>
+    Array.from({ length: nombre }, (_, i) => chargerImage(`./assets/${prefixe}${i + 1}.png`));
+
 const TYPES_ZOMBIE = {
     normal: {
         config: CONFIG.zombie,
@@ -9,20 +12,24 @@ const TYPES_ZOMBIE = {
     },
     tank: {
         config: CONFIG.tank,
-        images: Array.from({ length: 12 }, (_, i) => chargerImage(`./assets/marche_tank${i + 1}.png`))
+        images: imagesNumerotees('marche_tank', 12)
+    },
+    magicalgirl: {
+        config: CONFIG.magicalgirl,
+        images: imagesNumerotees('marche_magicalgirl', 12)
     }
 };
 
 let zombies = [];
+let effets = [];        // étincelles de téléportation
 let difficulte = 'normal';
-let chronoZombie = 0;
-let chronoTank = 0;
+const chronos = {};     // temps écoulé depuis la dernière apparition, par type
 
 function reset_zombies(mode) {
     zombies = [];
+    effets = [];
     difficulte = mode;
-    chronoZombie = 0;
-    chronoTank = 0;
+    for (const type in TYPES_ZOMBIE) chronos[type] = 0;
 }
 
 /* ---------- Collisions ---------- */
@@ -48,28 +55,81 @@ function trouver_cible(zone) {
 }
 
 /* ---------- Apparition ---------- */
-function creer_zombie(type, largeurCanvas, hauteurCanvas) {
-    const cfg = TYPES_ZOMBIE[type].config;
-    const vitesseMin = typeof cfg.vitesseMin === 'object' ? cfg.vitesseMin[difficulte] : cfg.vitesseMin;
+const parMode = valeur => (typeof valeur === 'object' ? valeur[difficulte] : valeur);
+
+function y_aleatoire(hauteurCanvas) {
     const yMin = CONFIG.margeHaut;
     const yMax = hauteurCanvas - CONFIG.margeBas;
+    return yMin + Math.random() * (yMax - yMin);
+}
 
-    zombies.push({
+function creer_zombie(type, largeurCanvas, hauteurCanvas) {
+    const cfg = TYPES_ZOMBIE[type].config;
+    const z = {
         type,
         x: largeurCanvas,
-        y: yMin + Math.random() * (yMax - yMin),
+        y: y_aleatoire(hauteurCanvas),
         taille: cfg.taille,
-        vitesse: vitesseMin + Math.random() * cfg.vitesseAleatoire,
+        vitesse: parMode(cfg.vitesseMin) + Math.random() * cfg.vitesseAleatoire,
         pv: cfg.pv || 1,
         pvMax: cfg.pv || 1,
         tempsImage: 0,
         etape: 0
-    });
+    };
+    if (cfg.delaiTeleport) z.teleport = { chrono: cfg.delaiTeleport, annonce: false, y: z.y };
+    zombies.push(z);
 }
 
-function intervalle_zombie(tempsJeu) {
-    const z = CONFIG.zombie;
-    return Math.max(z.intervalleMin, z.intervalleDepart - tempsJeu * z.accelerationParSeconde);
+function intervalle_apparition(type, tempsJeu) {
+    const cfg = TYPES_ZOMBIE[type].config;
+    if (type !== 'normal') return cfg.intervalle;
+    return Math.max(parMode(cfg.intervalleMin), cfg.intervalleDepart - tempsJeu * cfg.accelerationParSeconde);
+}
+
+function gerer_apparitions(dt, largeurCanvas, hauteurCanvas, tempsJeu) {
+    for (const type in TYPES_ZOMBIE) {
+        const cfg = TYPES_ZOMBIE[type].config;
+        if (cfg.modes && !cfg.modes.includes(difficulte)) continue;
+        if (tempsJeu < (cfg.premiereApparition || 0)) continue;
+
+        chronos[type] += dt;
+        if (chronos[type] >= intervalle_apparition(type, tempsJeu)) {
+            chronos[type] = 0;
+            creer_zombie(type, largeurCanvas, hauteurCanvas);
+        }
+    }
+}
+
+/* ---------- Téléportation (magical girl) ---------- */
+function gerer_teleport(z, dt, hauteurCanvas) {
+    const cfg = TYPES_ZOMBIE[z.type].config;
+    const t = z.teleport;
+
+    // Trop proche du joueur : elle arrête de se téléporter (sinon ce serait injuste)
+    if (z.x < cfg.xMinTeleport) {
+        t.annonce = false;
+        return;
+    }
+
+    t.chrono -= dt;
+
+    // Annonce : on choisit la destination et on affiche le cercle magique
+    if (!t.annonce && t.chrono <= cfg.dureeAnnonce) {
+        do { t.y = y_aleatoire(hauteurCanvas); } while (Math.abs(t.y - z.y) < cfg.distanceTeleportMin);
+        t.annonce = true;
+    }
+
+    if (t.chrono <= 0) {
+        ajouter_effet(z.x, z.y);
+        z.y = t.y;
+        ajouter_effet(z.x, z.y);
+        t.annonce = false;
+        t.chrono = cfg.delaiTeleport;
+    }
+}
+
+function ajouter_effet(x, y) {
+    effets.push({ x: x + 32, y: y + 32, age: 0 });
 }
 
 /* ---------- Dégâts ---------- */
@@ -82,17 +142,7 @@ function toucher_zombie(z) {
 
 /* ---------- Mise à jour ---------- */
 function update_zombies(dt, largeurCanvas, hauteurCanvas, tempsJeu) {
-    chronoZombie += dt;
-    if (chronoZombie >= intervalle_zombie(tempsJeu)) {
-        chronoZombie = 0;
-        creer_zombie('normal', largeurCanvas, hauteurCanvas);
-    }
-
-    chronoTank += dt;
-    if (chronoTank >= CONFIG.tank.intervalle) {
-        chronoTank = 0;
-        creer_zombie('tank', largeurCanvas, hauteurCanvas);
-    }
+    gerer_apparitions(dt, largeurCanvas, hauteurCanvas, tempsJeu);
 
     const zoneJoueur = hitbox(joueur.x, joueur.y, joueur.taille);
 
@@ -100,6 +150,7 @@ function update_zombies(dt, largeurCanvas, hauteurCanvas, tempsJeu) {
         const z = zombies[i];
         const type = TYPES_ZOMBIE[z.type];
         z.x -= z.vitesse * dt;
+        if (z.teleport) gerer_teleport(z, dt, hauteurCanvas);
 
         z.tempsImage += dt;
         if (z.tempsImage >= type.config.dureeImage) {
@@ -113,13 +164,71 @@ function update_zombies(dt, largeurCanvas, hauteurCanvas, tempsJeu) {
             perdre_vie();
         }
     }
+
+    for (const e of effets) e.age += dt;
+    effets = effets.filter(e => e.age < 0.35);
+}
+
+/* ---------- Dessin ---------- */
+function dessiner_etoile(ctx, x, y, r) {
+    ctx.beginPath();
+    ctx.moveTo(x, y - r);
+    ctx.lineTo(x + r * 0.3, y - r * 0.3);
+    ctx.lineTo(x + r, y);
+    ctx.lineTo(x + r * 0.3, y + r * 0.3);
+    ctx.lineTo(x, y + r);
+    ctx.lineTo(x - r * 0.3, y + r * 0.3);
+    ctx.lineTo(x - r, y);
+    ctx.lineTo(x - r * 0.3, y - r * 0.3);
+    ctx.closePath();
+    ctx.fill();
+}
+
+// Cercle magique à l'endroit où la magical girl va apparaître
+function dessiner_annonce(ctx, z) {
+    const cfg = TYPES_ZOMBIE[z.type].config;
+    const progression = 1 - Math.max(0, z.teleport.chrono) / cfg.dureeAnnonce; // 0 -> 1
+    const cx = z.x + z.taille / 2;
+    const cy = z.teleport.y + z.taille - 6;
+
+    ctx.save();
+    ctx.globalAlpha = 0.6 + 0.4 * progression;
+    ctx.fillStyle = 'rgba(255, 110, 199, 0.35)';
+    ctx.strokeStyle = '#ff6ec7';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, 30, 9, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#ffe14d';
+    for (let k = 0; k < 4; k++) {
+        const angle = progression * Math.PI * 2 + k * Math.PI / 2;
+        dessiner_etoile(ctx, cx + Math.cos(angle) * 30, cy + Math.sin(angle) * 9 - 6, 5);
+    }
+    ctx.restore();
+}
+
+function dessiner_effets(ctx) {
+    ctx.save();
+    ctx.fillStyle = '#ff9ad5';
+    for (const e of effets) {
+        const r = 6 + e.age * 80;
+        ctx.globalAlpha = 1 - e.age / 0.35;
+        for (let k = 0; k < 6; k++) {
+            const angle = k * Math.PI / 3;
+            dessiner_etoile(ctx, e.x + Math.cos(angle) * r, e.y + Math.sin(angle) * r, 4);
+        }
+    }
+    ctx.restore();
 }
 
 function draw_zombies(ctx) {
     for (const z of zombies) {
+        if (z.teleport && z.teleport.annonce) dessiner_annonce(ctx, z);
+
         ctx.drawImage(TYPES_ZOMBIE[z.type].images[z.etape], z.x, z.y, z.taille, z.taille);
 
-        // Barre de vie des tanks blessés
+        // Barre de vie des zombies blessés
         if (z.pv < z.pvMax) {
             const largeur = z.taille - 16;
             ctx.fillStyle = '#400';
@@ -128,4 +237,5 @@ function draw_zombies(ctx) {
             ctx.fillRect(z.x + 8, z.y - 6, largeur * z.pv / z.pvMax, 4);
         }
     }
+    dessiner_effets(ctx);
 }
