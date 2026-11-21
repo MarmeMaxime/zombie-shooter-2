@@ -29,6 +29,7 @@ const Sauvegarde = (() => {
         succes: [],
         missions: [],
         persosDebloques: ['soldat'],
+        bestiaire: [],
         titre: ''
     });
 

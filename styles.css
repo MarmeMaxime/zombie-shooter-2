@@ -37,10 +37,10 @@ body {
 #main-menu { gap: calc(20px * var(--ui)); }
 
 /* Gestion des couches (Z-Index) */
-#main-menu, #game-view, #tutorial-overlay, #perso-overlay, #loot-overlay, #vestiaire-overlay, #save-overlay, #succes-overlay, #missions-overlay, #pause-overlay, #game-over-overlay {
+#main-menu, #game-view, #tutorial-overlay, #perso-overlay, #loot-overlay, #vestiaire-overlay, #save-overlay, #succes-overlay, #missions-overlay, #bestiaire-overlay, #pause-overlay, #game-over-overlay {
   position: absolute; top: 0; left: 0; width: 100%; height: 100%;
 }
-#main-menu, #tutorial-overlay, #perso-overlay, #loot-overlay, #vestiaire-overlay, #save-overlay, #succes-overlay, #missions-overlay, #pause-overlay, #game-over-overlay {
+#main-menu, #tutorial-overlay, #perso-overlay, #loot-overlay, #vestiaire-overlay, #save-overlay, #succes-overlay, #missions-overlay, #bestiaire-overlay, #pause-overlay, #game-over-overlay {
   display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10; 
 }
 #game-view { display: block; z-index: 1; }
@@ -117,7 +117,7 @@ span#score.score-ready {
 /* =========================================================================
    6. MODALES (TUTO & GAME OVER)
    ========================================================================= */
-#tutorial-overlay, #perso-overlay, #loot-overlay, #vestiaire-overlay, #save-overlay, #succes-overlay, #missions-overlay, #pause-overlay, #game-over-overlay { 
+#tutorial-overlay, #perso-overlay, #loot-overlay, #vestiaire-overlay, #save-overlay, #succes-overlay, #missions-overlay, #bestiaire-overlay, #pause-overlay, #game-over-overlay { 
   background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(5px); z-index: 100; 
 }
 #game-over-overlay { background: rgba(50, 0, 0, 0.9); z-index: 200; }
@@ -560,6 +560,21 @@ span#score.score-ready {
 /* =========================================================================
    14. MISSIONS
    ========================================================================= */
+/* Bestiaire : une fiche par monstre, silhouette noire tant qu'il n'est pas découvert */
+#btn-bestiaire { font-size: 0.95rem; padding: 6px 14px; border-color: #3aa86a; color: #8fe0b0; }
+#btn-bestiaire:hover { background: #3aa86a; color: #fff; }
+#bestiaire-compte { color: #8fe0b0; font-size: 0.8rem; margin: 0 0 8px; }
+#bestiaire-liste { display: flex; flex-direction: column; gap: 6px; max-height: 260px; overflow-y: auto; margin-bottom: 10px; text-align: left; }
+.bestiaire-fiche { display: flex; align-items: flex-start; gap: 10px; padding: 6px 8px; border: 1px solid #333; background: #151515; color: #ddd; }
+.bestiaire-fiche.boss { border-color: #6a2a2a; background: #1e1212; }
+.bestiaire-sprite { width: 56px; height: 56px; flex: none; image-rendering: pixelated; background: #222; border: 1px solid #3a3a3a; }
+.bestiaire-sprite.inconnu { filter: brightness(0); opacity: 0.6; }
+.bestiaire-texte strong { color: #fff; font-size: 0.85rem; }
+.bestiaire-texte p { margin: 3px 0; font-size: 0.72rem; line-height: 1.35; color: #ccc; }
+.bestiaire-texte small { color: #ffd23c; font-size: 0.68rem; }
+.bestiaire-fiche.inconnu .bestiaire-texte strong, .bestiaire-fiche.inconnu p { color: #777; font-style: italic; }
+.bestiaire-tag { font-size: 0.6rem; padding: 1px 4px; border: 1px solid #ff3333; color: #ff6a6a; vertical-align: middle; }
+
 #btn-missions { font-size: 0.95rem; padding: 6px 14px; border-color: #3a8dff; color: #8fc0ff; }
 #btn-missions:hover { background: #3a8dff; color: #fff; }
 #missions-onglets { display: flex; gap: 6px; margin-bottom: 8px; }

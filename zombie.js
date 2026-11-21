@@ -223,6 +223,8 @@ function update_zombies(dt, largeurCanvas, hauteurCanvas, tempsJeu) {
         z.etourdi = Math.max(0, (z.etourdi || 0) - dt);
         const etourdi = z.etourdi > 0;
         const comp = comportement(z);
+        // Première apparition de ce monstre : il entre au bestiaire
+        if (!z.vu) { z.vu = true; if (typeof Bestiaire !== 'undefined') Bestiaire.rencontre(z.type); }
         if (z.joggeur && !etourdi) gerer_joggeur(z, dt);
         if (comp.maj && !etourdi) comp.maj(z, dt);
         z.vitesseActuelle = etourdi ? 0 : z.joggeur ? vitesse_joggeur(z) : z.emeute ? vitesse_emeute(z) : comp.vitesse ? comp.vitesse(z) : z.vitesse;
