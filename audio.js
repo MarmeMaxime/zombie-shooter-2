@@ -66,9 +66,14 @@ const Son = (() => {
     function setActif(valeur) {
         actif = valeur;
         if (!ambiance) return;
-        if (actif) lire(musique);
+        if (actif && !suspendue) lire(musique);
         else musique.pause();
     }
+
+    // Silence temporaire (écran des caisses) : la musique reprend là où elle s'était arrêtée
+    let suspendue = false;
+    function suspendreMusique() { suspendue = true; musique.pause(); }
+    function reprendreMusique() { suspendue = false; if (actif && ambiance) lire(musique); }
 
     // vitesse < 1 : son plus grave (chaque arme a ainsi sa propre détonation)
     function jouerEffet(audio, vitesse = 1) {
@@ -85,6 +90,8 @@ const Son = (() => {
         jouerAmbiance,
         arreterMusique,
         setActif,
+        suspendreMusique,
+        reprendreMusique,
         estActif: () => actif,
         tir: (vitesse) => jouerEffet(sonTir, vitesse),
         bouton: () => jouerEffet(sonBouton)

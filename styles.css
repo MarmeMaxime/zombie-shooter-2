@@ -361,3 +361,53 @@ span#score.score-ready {
 .save-ligne { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 4px; border-bottom: 1px solid #262626; }
 .save-ligne:last-child { border-bottom: none; }
 .save-ligne button { flex: 0 0 auto; font-size: 0.7rem; padding: 3px 8px; }
+
+/* =========================================================================
+   11. EFFETS DE LOOTBOX (lumière, tremblements, confettis)
+   ========================================================================= */
+#loot-flash {
+  position: absolute; inset: 0; pointer-events: none; z-index: 150; opacity: 0;
+  background: radial-gradient(circle at 50% 45%, var(--couleur-loot, #fff) 0%, transparent 65%);
+}
+#loot-flash.actif.niveau-0 { animation: flash-loot 0.5s ease-out; --pic: 0.15; }
+#loot-flash.actif.niveau-1 { animation: flash-loot 0.7s ease-out; --pic: 0.35; }
+#loot-flash.actif.niveau-2 { animation: flash-loot 0.9s ease-out; --pic: 0.55; }
+#loot-flash.actif.niveau-3 { animation: flash-loot 1.4s ease-out, rayons 1.4s linear; --pic: 0.8; }
+#loot-flash.actif.niveau-4 { animation: flash-loot 1.8s ease-out, rayons 1.8s linear; --pic: 1; }
+#loot-flash.niveau-3, #loot-flash.niveau-4 {
+  background:
+    radial-gradient(circle at 50% 45%, var(--couleur-loot) 0%, transparent 60%),
+    repeating-conic-gradient(from 0deg at 50% 45%, rgba(255,255,255,0.18) 0deg 10deg, transparent 10deg 30deg);
+}
+@keyframes flash-loot { 0% { opacity: var(--pic); } 100% { opacity: 0; } }
+@keyframes rayons { from { filter: hue-rotate(0deg); } to { filter: hue-rotate(40deg); } }
+
+/* Cadre de la roulette et case gagnante à la couleur de la rareté */
+#loot-fenetre.loot-revele { border-color: var(--couleur-loot); box-shadow: 0 0 18px var(--couleur-loot), inset 0 0 14px var(--couleur-loot); transition: box-shadow 0.3s; }
+.loot-case.loot-gagnante { transform: scale(1.12); box-shadow: 0 0 16px var(--couleur-loot, #fff); animation: gagnante 0.6s ease-in-out 3; }
+@keyframes gagnante { 50% { transform: scale(1.22); } }
+
+/* Tremblements de l'écran, du léger au séisme */
+.tremble-1 { animation: tremble 0.25s linear 2; --amp: 2px; }
+.tremble-2 { animation: tremble 0.2s linear 3; --amp: 4px; }
+.tremble-3 { animation: tremble 0.15s linear 5; --amp: 7px; }
+.tremble-4 { animation: tremble 0.12s linear 7; --amp: 11px; }
+@keyframes tremble {
+  0%, 100% { transform: translate(0, 0) rotate(0); }
+  20% { transform: translate(calc(var(--amp) * -1), var(--amp)) rotate(-0.6deg); }
+  40% { transform: translate(var(--amp), calc(var(--amp) * -0.5)) rotate(0.5deg); }
+  60% { transform: translate(calc(var(--amp) * -0.6), calc(var(--amp) * -1)) rotate(-0.3deg); }
+  80% { transform: translate(var(--amp), calc(var(--amp) * 0.6)) rotate(0.4deg); }
+}
+
+.confetti {
+  position: absolute; top: -12px; width: 7px; height: 11px; z-index: 160; pointer-events: none;
+  animation-name: confetti; animation-timing-function: ease-in; animation-fill-mode: forwards;
+}
+@keyframes confetti {
+  to { transform: translate(var(--derive), 440px) rotate(720deg); opacity: 0.2; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tremble-1, .tremble-2, .tremble-3, .tremble-4, .confetti, .loot-case.loot-gagnante { animation: none; }
+}

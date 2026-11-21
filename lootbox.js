@@ -152,6 +152,117 @@ const Loot = (() => {
 })();
 
 /* =========================================================================
+   SONS DE LOOTBOX (synthétisés avec Web Audio : aucun fichier à charger)
+   ========================================================================= */
+const SonLoot = (() => {
+    let ac = null;
+    const contexte = () => {
+        if (!ac) { const AC = window.AudioContext || window.webkitAudioContext; if (AC) ac = new AC(); }
+        if (ac && ac.state === 'suspended') ac.resume();
+        return ac;
+    };
+
+    // Une note : fréquence (ou glissando de f1 à f2), départ et durée en secondes
+    function note(f1, debut, duree, { type = 'square', vol = 0.08, f2 = null } = {}) {
+        const c = contexte();
+        if (!c || !Son.estActif()) return;
+        const t = c.currentTime + debut;
+        const osc = c.createOscillator();
+        const gain = c.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(f1, t);
+        if (f2) osc.frequency.exponentialRampToValueAtTime(f2, t + duree);
+        gain.gain.setValueAtTime(0.0001, t);
+        gain.gain.exponentialRampToValueAtTime(vol, t + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + duree);
+        osc.connect(gain).connect(c.destination);
+        osc.start(t);
+        osc.stop(t + duree + 0.02);
+    }
+
+    const arpege = (freqs, pas, duree, opts) => freqs.forEach((f, i) => note(f, i * pas, duree, opts));
+
+    const REVELATIONS = {
+        // Trombone triste
+        commun: () => { note(330, 0, 0.25, { type: 'triangle', vol: 0.12 }); note(262, 0.25, 0.5, { type: 'triangle', vol: 0.12, f2: 220 }); },
+        rare: () => arpege([660, 880, 1320], 0.09, 0.3, { type: 'sine', vol: 0.12 }),
+        epique: () => { arpege([523, 659, 784, 1047], 0.07, 0.25, { vol: 0.07 }); note(1047, 0.3, 0.6, { type: 'sine', vol: 0.1 }); },
+        legendaire: () => {
+            arpege([523, 659, 784], 0.12, 0.2, { vol: 0.08 });
+            [1047, 1319, 1568].forEach(f => note(f, 0.4, 1.2, { vol: 0.05 }));
+            arpege([2093, 2637, 3136, 2637, 3136, 4186], 0.08, 0.15, { type: 'sine', vol: 0.04 });
+        },
+        mythique: () => {
+            note(120, 0, 0.9, { type: 'sawtooth', vol: 0.08, f2: 1800 });
+            [523, 659, 784, 1047].forEach(f => note(f, 0.9, 1.6, { type: 'sawtooth', vol: 0.035 }));
+            for (let r = 0; r < 3; r++) arpege([1047, 1319, 1568, 2093], 0.06, 0.12, { type: 'sine', vol: 0.05 });
+            note(55, 0.9, 1.4, { type: 'sine', vol: 0.25 });
+        }
+    };
+
+    return {
+        // Clic de la roulette, un peu plus aigu quand ça ralentit (suspense)
+        tick: (progression) => note(1400 + progression * 900 + Math.random() * 80, 0, 0.03, { vol: 0.05 }),
+        ouverture: () => { note(90, 0, 0.25, { type: 'sawtooth', vol: 0.1, f2: 45 }); note(400, 0.05, 0.15, { type: 'square', vol: 0.04, f2: 1200 }); },
+        revelation: rarete => (REVELATIONS[rarete] || REVELATIONS.commun)()
+    };
+})();
+
+/* =========================================================================
+   EFFETS VISUELS : lumière, tremblement de l'écran, confettis
+   ========================================================================= */
+const EffetsLoot = (() => {
+    const conteneur = () => document.getElementById('game-container');
+    const INTENSITE = { commun: 0, rare: 1, epique: 2, legendaire: 3, mythique: 4 };
+
+    function relancer(el, classe) {
+        el.classList.remove(classe);
+        void el.offsetWidth;   // force le navigateur à rejouer l'animation
+        el.classList.add(classe);
+    }
+
+    function trembler(niveau) {
+        if (!niveau) return;
+        const c = conteneur();
+        c.classList.remove('tremble-1', 'tremble-2', 'tremble-3', 'tremble-4');
+        relancer(c, `tremble-${niveau}`);
+        setTimeout(() => c.classList.remove(`tremble-${niveau}`), 900);
+    }
+
+    function lumiere(couleur, niveau) {
+        const flash = document.getElementById('loot-flash');
+        flash.style.setProperty('--couleur-loot', couleur);
+        flash.className = `niveau-${niveau}`;
+        relancer(flash, 'actif');
+    }
+
+    function confettis(couleurs, nombre) {
+        const c = conteneur();
+        for (let i = 0; i < nombre; i++) {
+            const p = document.createElement('div');
+            p.className = 'confetti';
+            p.style.left = `${Math.random() * 100}%`;
+            p.style.background = couleurs[i % couleurs.length];
+            p.style.animationDuration = `${1.2 + Math.random() * 1.3}s`;
+            p.style.animationDelay = `${Math.random() * 0.4}s`;
+            p.style.setProperty('--derive', `${(Math.random() - 0.5) * 160}px`);
+            c.appendChild(p);
+            setTimeout(() => p.remove(), 3000);
+        }
+    }
+
+    function revelation(rarete) {
+        const niveau = INTENSITE[rarete.id] || 0;
+        lumiere(rarete.couleur, niveau);
+        trembler(niveau);
+        if (niveau >= 3) confettis([rarete.couleur, '#ffe14d', '#ffffff', '#ff6ec7', '#3cf0ff'], niveau === 4 ? 90 : 50);
+        if (niveau === 4) setTimeout(() => { trembler(3); lumiere(rarete.couleur, 4); }, 700);
+    }
+
+    return { revelation, trembler };
+})();
+
+/* =========================================================================
    INTERFACE : écran des caisses (roulette) et vestiaire
    ========================================================================= */
 const LootUI = (() => {
@@ -213,12 +324,34 @@ const LootUI = (() => {
         }
         zone.append(titre, detail);
 
-        if (o.rarete.id === 'legendaire' || o.rarete.id === 'mythique') {
-            const fenetre = $l('loot-fenetre');
-            fenetre.classList.remove('loot-jackpot');
-            void fenetre.offsetWidth; // relance l'animation
-            fenetre.classList.add('loot-jackpot');
+        // Le cadre prend la couleur de la rareté, la case gagnante s'illumine
+        const fenetre = $l('loot-fenetre');
+        fenetre.style.setProperty('--couleur-loot', o.rarete.couleur);
+        fenetre.classList.remove('loot-revele');
+        void fenetre.offsetWidth;
+        fenetre.classList.add('loot-revele');
+        const gagnante = $l('loot-bande').children[INDEX_GAGNANT];
+        if (gagnante) gagnante.classList.add('loot-gagnante');
+
+        SonLoot.revelation(o.rarete.id);
+        EffetsLoot.revelation(o.rarete);
+    }
+
+    // Cliquetis à chaque case qui passe sous le curseur
+    function suivre_roulette(bande, largeurFenetre, debut) {
+        let derniere = -1;
+        const centre = largeurFenetre / 2;
+        function boucle_tick() {
+            if (!enCours) return;
+            const m = new DOMMatrixReadOnly(getComputedStyle(bande).transform);
+            const index = Math.floor((centre - m.m41 - 4) / LARGEUR_CASE);
+            if (index !== derniere && index >= 0) {
+                derniere = index;
+                SonLoot.tick(Math.min(1, (performance.now() - debut) / 4200));
+            }
+            requestAnimationFrame(boucle_tick);
         }
+        requestAnimationFrame(boucle_tick);
     }
 
     function ouvrir_caisse() {
@@ -228,6 +361,9 @@ const LootUI = (() => {
         enCours = true;
         maj_soldes();
         $l('loot-resultat').replaceChildren();
+        $l('loot-fenetre').classList.remove('loot-revele');
+        SonLoot.ouverture();
+        EffetsLoot.trembler(1);
 
         // Bande de faux objets, avec le vrai à l'index gagnant
         const bande = $l('loot-bande');
@@ -250,11 +386,11 @@ const LootUI = (() => {
             const cible = INDEX_GAGNANT * LARGEUR_CASE - largeurFenetre / 2 + LARGEUR_CASE / 2 + 4 + decalage;
             bande.style.transition = 'transform 4.2s cubic-bezier(0.08, 0.6, 0.12, 1)';
             bande.style.transform = `translateX(${-cible}px)`;
+            suivre_roulette(bande, largeurFenetre, performance.now());
         }));
 
         setTimeout(() => {
             try {
-                Son.bouton();
                 afficher_resultat(res);
                 if (typeof rafraichir_cartes_persos === 'function') rafraichir_cartes_persos();
             } finally {
@@ -301,10 +437,15 @@ const LootUI = (() => {
     }
 
     /* ---------- Branchements ---------- */
-    $l('btn-caisses').addEventListener('click', () => { maj_soldes(); $l('loot-overlay').classList.remove('hidden'); });
+    $l('btn-caisses').addEventListener('click', () => {
+        maj_soldes();
+        Son.suspendreMusique();   // silence total : place au suspense
+        $l('loot-overlay').classList.remove('hidden');
+    });
     $l('btn-close-loot').addEventListener('click', () => {
         if (enCours) return;
         $l('loot-overlay').classList.add('hidden');
+        Son.reprendreMusique();
         Sauvegarde.point_de_restauration('Après les caisses');
     });
     $l('btn-ouvrir').addEventListener('click', ouvrir_caisse);
