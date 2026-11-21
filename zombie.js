@@ -28,6 +28,7 @@ const chronos = {};     // temps écoulé depuis la dernière apparition, par ty
 function reset_zombies(mode) {
     zombies = [];
     effets = [];
+    cadavres = [];
     difficulte = mode;
     for (const type in TYPES_ZOMBIE) chronos[type] = 0;
 }
@@ -134,10 +135,64 @@ function ajouter_effet(x, y) {
 
 /* ---------- Dégâts ---------- */
 function toucher_zombie(z, degats = 1) {
+    const index = zombies.indexOf(z);
+    if (index < 0) return;   // déjà mort (sinon splice(-1) retirerait le dernier zombie de la liste)
     z.pv -= degats;
     if (z.pv > 0) return;
-    zombies.splice(zombies.indexOf(z), 1);
+    zombies.splice(index, 1);
+    ajouter_cadavre(z);
     ajouter_score(TYPES_ZOMBIE[z.type].config.points);
+}
+
+/* ---------- Animation de mort ----------
+   Le zombie tué flashe en blanc, bascule en arrière, s'effondre et disparaît
+   dans une gerbe de sang (ou d'étoiles roses pour la magical girl). */
+const DUREE_MORT = 0.9;
+let cadavres = [];
+
+function ajouter_cadavre(z) {
+    const couleurs = z.type === 'magicalgirl' ? ['#ff6ec7', '#ffe14d', '#ffffff'] : ['#8a0f0f', '#b01818', '#5a0808'];
+    const nombre = z.type === 'tank' ? 18 : 12;
+    const particules = Array.from({ length: nombre }, () => ({
+        x: z.x + z.taille / 2, y: z.y + z.taille * 0.4,
+        vx: 40 + Math.random() * 160, vy: -60 - Math.random() * 140,
+        taille: 2 + Math.random() * 3,
+        couleur: couleurs[Math.floor(Math.random() * couleurs.length)]
+    }));
+    cadavres.push({ image: TYPES_ZOMBIE[z.type].images[z.etape], x: z.x, y: z.y, taille: z.taille, age: 0, particules, etoiles: z.type === 'magicalgirl' });
+}
+
+function update_cadavres(dt) {
+    for (const c of cadavres) {
+        c.age += dt;
+        c.x += 25 * dt;   // l'impact les repousse un peu en arrière
+        for (const p of c.particules) { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 420 * dt; }
+    }
+    cadavres = cadavres.filter(c => c.age < DUREE_MORT);
+}
+
+function draw_cadavres(ctx) {
+    for (const c of cadavres) {
+        const t = c.age / DUREE_MORT;                      // 0 -> 1
+        const chute = Math.min(1, c.age / 0.35);           // bascule pendant 0,35 s
+        ctx.save();
+        ctx.globalAlpha = t < 0.55 ? 1 : 1 - (t - 0.55) / 0.45;
+        // Pivot aux pieds : il tombe en arrière (vers la droite)
+        ctx.translate(c.x + c.taille / 2, c.y + c.taille);
+        ctx.rotate(chute * chute * Math.PI / 2);
+        if (c.age < 0.08) ctx.filter = 'brightness(3)';     // flash blanc à l'impact
+        ctx.drawImage(c.image, -c.taille / 2, -c.taille, c.taille, c.taille);
+        ctx.restore();
+
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, 1 - t * 1.2);
+        for (const p of c.particules) {
+            ctx.fillStyle = p.couleur;
+            if (c.etoiles) dessiner_etoile(ctx, p.x, p.y, p.taille + 1);
+            else ctx.fillRect(p.x, p.y, p.taille, p.taille);
+        }
+        ctx.restore();
+    }
 }
 
 /* ---------- Mise à jour ---------- */
@@ -167,6 +222,7 @@ function update_zombies(dt, largeurCanvas, hauteurCanvas, tempsJeu) {
 
     for (const e of effets) e.age += dt;
     effets = effets.filter(e => e.age < 0.35);
+    update_cadavres(dt);
 }
 
 /* ---------- Dessin ---------- */
@@ -223,6 +279,7 @@ function dessiner_effets(ctx) {
 }
 
 function draw_zombies(ctx) {
+    draw_cadavres(ctx);
     for (const z of zombies) {
         if (z.teleport && z.teleport.annonce) dessiner_annonce(ctx, z);
 

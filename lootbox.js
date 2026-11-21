@@ -163,10 +163,10 @@ const SonLoot = (() => {
     };
 
     // Une note : fréquence (ou glissando de f1 à f2), départ et durée en secondes
-    function note(f1, debut, duree, { type = 'square', vol = 0.08, f2 = null } = {}) {
+    function note(f1, debut, duree, { type = 'square', vol = 0.08, f2 = null, sortie = null, absolu = false } = {}) {
         const c = contexte();
         if (!c || !Son.estActif()) return;
-        const t = c.currentTime + debut;
+        const t = absolu ? debut : c.currentTime + debut;
         const osc = c.createOscillator();
         const gain = c.createGain();
         osc.type = type;
@@ -175,7 +175,7 @@ const SonLoot = (() => {
         gain.gain.setValueAtTime(0.0001, t);
         gain.gain.exponentialRampToValueAtTime(vol, t + 0.01);
         gain.gain.exponentialRampToValueAtTime(0.0001, t + duree);
-        osc.connect(gain).connect(c.destination);
+        osc.connect(gain).connect(sortie || c.destination);
         osc.start(t);
         osc.stop(t + duree + 0.02);
     }
@@ -200,7 +200,71 @@ const SonLoot = (() => {
         }
     };
 
+    /* ---------- Musiques ----------
+       Chaque musique passe par son propre volume (GainNode) : pour l'arrêter,
+       on baisse ce volume et on le débranche, même les notes déjà programmées. */
+    let bus = null, minuterie = null;
+
+    function couper(fondu = 0.3) {
+        clearInterval(minuterie);
+        minuterie = null;
+        if (bus && ac) {
+            const b = bus;
+            b.gain.setTargetAtTime(0.0001, ac.currentTime, fondu / 4);
+            setTimeout(() => b.disconnect(), fondu * 1000 + 100);
+        }
+        bus = null;
+    }
+
+    function nouveau_bus(volume) {
+        const c = contexte();
+        if (!c) return null;
+        couper(0.15);
+        bus = c.createGain();
+        bus.gain.value = volume;
+        bus.connect(c.destination);
+        return bus;
+    }
+
+    // Ambiance « boutique » : petite boucle C - Am - F - G, basse + arpège + clochette
+    const ACCORDS = [[262, 330, 392], [220, 262, 330], [175, 220, 262], [196, 247, 294]];
+    function musique_boutique() {
+        const sortie = nouveau_bus(1);
+        if (!sortie) return;
+        const croche = 0.27;
+        let prochain = ac.currentTime + 0.1, pas = 0;
+        const programmer = () => {
+            while (prochain < ac.currentTime + 0.6) {
+                const accord = ACCORDS[Math.floor(pas / 8) % 4];
+                const temps = pas % 8;
+                if (temps === 0 || temps === 4) note(accord[0] / 2, prochain, croche * 3.5, { type: 'triangle', vol: 0.07, sortie, absolu: true });
+                note(accord[[0, 1, 2, 1, 0, 1, 2, 1][temps]] * 2, prochain, croche * 0.9, { type: 'sine', vol: 0.03, sortie, absolu: true });
+                if (pas % 32 === 0) note(2093, prochain, 0.6, { type: 'sine', vol: 0.025, sortie, absolu: true });
+                prochain += croche;
+                pas++;
+            }
+        };
+        programmer();
+        minuterie = setInterval(programmer, 150);
+    }
+
+    // Suspense de l'ouverture : roulement qui accélère + basse qui monte, calé sur la roulette
+    function musique_suspense(duree) {
+        const sortie = nouveau_bus(1);
+        if (!sortie) return;
+        const t0 = ac.currentTime;
+        note(55, t0, duree, { type: 'sawtooth', vol: 0.035, f2: 220, sortie, absolu: true });
+        note(880, t0 + duree * 0.5, duree * 0.5, { type: 'sine', vol: 0.015, f2: 1760, sortie, absolu: true });
+        for (let t = 0; t < duree - 0.05;) {
+            note(150, t0 + t, 0.05, { type: 'square', vol: 0.045, f2: 70, sortie, absolu: true });
+            t += 0.18 - 0.14 * (t / duree);
+        }
+    }
+
     return {
+        boutique: musique_boutique,
+        suspense: musique_suspense,
+        couper,
         // Clic de la roulette, un peu plus aigu quand ça ralentit (suspense)
         tick: (progression) => note(1400 + progression * 900 + Math.random() * 80, 0, 0.03, { vol: 0.05 }),
         ouverture: () => { note(90, 0, 0.25, { type: 'sawtooth', vol: 0.1, f2: 45 }); note(400, 0.05, 0.15, { type: 'square', vol: 0.04, f2: 1200 }); },
@@ -363,6 +427,7 @@ const LootUI = (() => {
         $l('loot-resultat').replaceChildren();
         $l('loot-fenetre').classList.remove('loot-revele');
         SonLoot.ouverture();
+        SonLoot.suspense(4.2);
         EffetsLoot.trembler(1);
 
         // Bande de faux objets, avec le vrai à l'index gagnant
@@ -392,6 +457,10 @@ const LootUI = (() => {
         setTimeout(() => {
             try {
                 afficher_resultat(res);
+                // La musique de la boutique revient une fois la fanfare passée
+                setTimeout(() => {
+                    if (!enCours && !$l('loot-overlay').classList.contains('hidden')) SonLoot.boutique();
+                }, 2600);
                 if (typeof rafraichir_cartes_persos === 'function') rafraichir_cartes_persos();
             } finally {
                 enCours = false;   // quoi qu'il arrive, on ne bloque pas le bouton
@@ -439,12 +508,14 @@ const LootUI = (() => {
     /* ---------- Branchements ---------- */
     $l('btn-caisses').addEventListener('click', () => {
         maj_soldes();
-        Son.suspendreMusique();   // silence total : place au suspense
+        Son.suspendreMusique();   // la musique du jeu laisse la place à celle de la boutique
+        SonLoot.boutique();
         $l('loot-overlay').classList.remove('hidden');
     });
     $l('btn-close-loot').addEventListener('click', () => {
         if (enCours) return;
         $l('loot-overlay').classList.add('hidden');
+        SonLoot.couper();
         Son.reprendreMusique();
         Sauvegarde.point_de_restauration('Après les caisses');
     });
