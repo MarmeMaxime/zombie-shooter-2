@@ -81,12 +81,27 @@ function commande(action) {
     return `[${Touches.libelle(action)}]`;
 }
 
+/* ---------- Le zombie attaché (cible de l'étape 2, sprites : attache_sprite.js) ----------
+   Il se débat au poteau ; abattu, son corps tombe et le poteau reste debout. */
+let poteaux = [];
+TYPES_ZOMBIE.attache = {
+    config: { invoque: true, taille: 64, points: 10, pv: 1, vitesseMin: 0, vitesseAleatoire: 0, dureeImage: 0.11 },
+    images: SPRITES_ATTACHE.lutte,
+    imagesMort: SPRITES_ATTACHE.libre,
+    comportement: { mort(z) { poteaux.push({ x: z.x, y: z.y }); } }
+};
+EXTENSIONS.push({
+    reset() { poteaux = []; },
+    maj() {},
+    dessiner(ctx) { for (const p of poteaux) ctx.drawImage(SPRITES_ATTACHE.poteau, p.x, p.y, 64, 64); }
+});
+
 /* ---------- Entraînement ---------- */
 const Tutoriel = (() => {
     let etape = -1, suivi = {};
 
-    function zombie(fractionX, y, vitesse) {
-        const z = creer_zombie('normal', MONDE.largeur, MONDE.hauteur);
+    function zombie(fractionX, y, vitesse, type = 'normal') {
+        const z = creer_zombie(type, MONDE.largeur, MONDE.hauteur);
         z.x = MONDE.largeur * fractionX;
         z.y = y;
         z.vitesse = vitesse;
@@ -108,7 +123,7 @@ const Tutoriel = (() => {
         },
         {   // 2. Tirer sur une cible immobile
             texte: () => T('Ce zombie est attaché : il ne bougera pas. Il est plus discipliné que toi. Aligne-toi et tire avec {tir} !', { tir: commande('tir') }),
-            debut() { suivi.cibles = [zombie(0.6, joueur.y < 200 ? 260 : 110, 0)]; },
+            debut() { suivi.cibles = [zombie(0.6, joueur.y < 200 ? 260 : 110, 0, 'attache')]; },
             fini: () => !vivants(suivi.cibles).length
         },
         {   // 3. Changer de ligne

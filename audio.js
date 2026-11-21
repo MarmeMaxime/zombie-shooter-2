@@ -264,58 +264,116 @@ const Son = (() => {
     }
 
     /* ---------- Marche militaire de l'entraînement (générée, en boucle) ----------
-       4 mesures à 112 battements par minute : grosse caisse sur 1 et 3, caisse
-       claire sur 2 et 4 (roulement en fin de boucle), basse fondamentale/quinte,
-       mélodie de clairon (que des notes de l'accord, comme un vrai clairon).
+       Sonorité « orchestre » plutôt que « console » : cuivres (plusieurs voix en
+       dents de scie légèrement désaccordées, filtrées, attaque douce), nappe de
+       cordes, contrebasse ronde, caisse claire et grosse caisse, le tout dans
+       une réverbération de salle. 4 mesures à 100 battements par minute.
        Les notes sont programmées un peu à l'avance : la marche ne dépend pas de
        la boucle du jeu et continue quand la partie est figée (le Sergent parle). */
-    const NOTES = { G4: 392, B4: 493.9, C5: 523.3, D5: 587.3, E5: 659.3, G5: 784 };
-    const CLAIRON = [
-        'G4', 'G4', 'C5', '-', 'E5', '-', 'C5', '-',
-        'B4', 'B4', 'D5', '-', 'G5', '-', 'D5', '-',
-        'G4', 'G4', 'C5', '-', 'E5', '-', 'G5', '-',
-        'D5', 'B4', 'G4', '-', 'C5', '-', '-', '-'
+    const NOTES = { G3: 196, B3: 246.9, C4: 261.6, D4: 293.7, E4: 329.6, F4: 349.2, G4: 392, A4: 440, B4: 493.9, C5: 523.3, D5: 587.3, E5: 659.3, F5: 698.5 };
+    // Mélodie des cuivres, en croches : une note, '-' la prolonge, '.' un silence
+    const CUIVRES = [
+        'G4', '-', 'C5', 'D5', 'E5', '-', 'C5', '-',
+        'D5', '-', 'B4', 'C5', 'D5', '-', 'G4', '-',
+        'E5', '-', 'F5', 'E5', 'D5', '-', 'C5', 'B4',
+        'C5', '-', 'D5', 'B4', 'C5', '-', '-', '.'
     ];
-    const BASSES = [[130.8, 196], [98, 146.8], [130.8, 196], [98, 146.8]];   // do, sol, do, sol : fondamentale, quinte
+    const ACCORDS = [['C4', 'E4', 'G4'], ['B3', 'D4', 'G4'], ['C4', 'E4', 'A4'], ['B3', 'D4', 'F4']];   // do, sol, la m, sol 7
+    const BASSES = [[65.4, 98], [49, 73.4], [55, 82.4], [49, 73.4]];                                     // fondamentale, quinte
     let marche = null;
+
+    // Réverbération de salle : réponse impulsionnelle de bruit qui s'éteint
+    function salle(c) {
+        const duree = 2.2, n = Math.floor(c.sampleRate * duree);
+        const ir = c.createBuffer(2, n, c.sampleRate);
+        for (let canal = 0; canal < 2; canal++) {
+            const d = ir.getChannelData(canal);
+            for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 3);
+        }
+        const conv = c.createConvolver();
+        conv.buffer = ir;
+        return conv;
+    }
 
     function demarrer_marche() {
         if (marche || !actif) return;
         const c = contexte(); if (!c) return;
-        marche = { prochain: c.currentTime + 0.1, pas: 0, minuterie: setInterval(programmer_marche, 50) };
+        // Bus de la marche : son direct + réverbération, vers le volume de la musique
+        const bus = c.createGain();
+        const reverb = salle(c), mouille = c.createGain();
+        mouille.gain.value = 0.35;
+        bus.connect(sortieMusique);
+        bus.connect(reverb).connect(mouille).connect(sortieMusique);
+        marche = { bus, prochain: c.currentTime + 0.1, pas: 0, minuterie: setInterval(programmer_marche, 50) };
         programmer_marche();
     }
     function arreter_marche() {
         if (!marche) return;
         clearInterval(marche.minuterie);
+        const bus = marche.bus, c = contexte();
+        if (c) { bus.gain.setTargetAtTime(0, c.currentTime, 0.08); setTimeout(() => bus.disconnect(), 1500); }
         marche = null;
     }
     function programmer_marche() {
         const c = contexte(); if (!c || !marche) return;
-        const croche = 60 / 112 / 2;
+        const croche = 60 / 100 / 2;
         while (marche.prochain < c.currentTime + 0.3) {
             jouer_croche(marche.pas, marche.prochain, croche);
             marche.prochain += croche;
-            marche.pas = (marche.pas + 1) % CLAIRON.length;
+            marche.pas = (marche.pas + 1) % CUIVRES.length;
         }
     }
+
+    // Une voix « instrument » : oscillateurs désaccordés, filtre passe-bas, enveloppe douce
+    function voix(f, t, duree, { vol, type = 'sawtooth', filtre = 1400, attaque = 0.05, sortie = 0.18, desaccord = [-6, 6], brillance = 1.6 }) {
+        const c = contexte();
+        const g = c.createGain();
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(vol, t + attaque);
+        g.gain.setValueAtTime(vol, t + Math.max(attaque, duree - sortie));
+        g.gain.exponentialRampToValueAtTime(0.0001, t + duree + sortie);
+        const fl = c.createBiquadFilter();
+        fl.type = 'lowpass';
+        fl.frequency.setValueAtTime(filtre * 0.6, t);
+        fl.frequency.exponentialRampToValueAtTime(filtre * brillance, t + attaque * 2);   // le cuivre « s'ouvre »
+        fl.frequency.exponentialRampToValueAtTime(filtre, t + attaque * 4);
+        fl.connect(g).connect(marche.bus);
+        for (const cents of desaccord) {
+            const o = c.createOscillator();
+            o.type = type;
+            o.frequency.value = f;
+            o.detune.value = cents;
+            o.connect(fl);
+            o.start(t);
+            o.stop(t + duree + sortie + 0.05);
+        }
+    }
+
     function jouer_croche(i, t, d) {
-        const o = { sortie: sortieMusique, absolu: true };
+        const o = { sortie: marche.bus, absolu: true };
         const temps = Math.floor(i / 2) % 4, mesure = Math.floor(i / 8);
         if (i % 2 === 0) {
-            if (temps === 0 || temps === 2) ton(70, t, 0.2, { vol: 0.4, f2: 40, ...o });                                    // grosse caisse
-            else bruit(t, 0.12, { vol: 0.22, filtre: 1800, type: 'highpass', ...o });                                        // caisse claire
-            ton(BASSES[mesure][temps % 2], t, d * 1.7, { type: 'triangle', vol: 0.2, ...o });                                 // basse
-        } else {
-            bruit(t, 0.05, { vol: 0.05, filtre: 3000, type: 'highpass', ...o });                                              // « ra-ta » léger
+            if (temps === 0 || temps === 2) {
+                ton(80, t, 0.45, { vol: 0.32, f2: 42, ...o });                                                // grosse caisse
+                bruit(t, 0.06, { vol: 0.05, filtre: 500, ...o });
+            } else {
+                bruit(t, 0.22, { vol: 0.16, filtre: 2200, filtreFin: 900, type: 'bandpass', ...o });           // caisse claire : timbre
+                ton(190, t, 0.1, { type: 'triangle', vol: 0.08, f2: 150, ...o });                             // et fût
+            }
+            // Contrebasse : fondamentale puis quinte, ronde
+            voix(BASSES[mesure][temps % 2], t, d * 1.6, { vol: 0.14, type: 'triangle', filtre: 500, attaque: 0.02, sortie: 0.12, desaccord: [0], brillance: 1.2 });
+        } else if (temps === 3) {
+            bruit(t, 0.08, { vol: 0.06, filtre: 2500, type: 'bandpass', ...o });                            // petit coup de caisse claire
         }
-        if (i >= 28) bruit(t + d / 2, 0.06, { vol: 0.14, filtre: 2200, type: 'highpass', ...o });                            // roulement final
-        const n = CLAIRON[i];
-        if (n !== '-') {
+        if (i >= 28 && i < 31) bruit(t + d / 2, 0.1, { vol: 0.08, filtre: 2400, type: 'bandpass', ...o });   // roulement final
+        // Nappe de cordes : l'accord de la mesure, tenu
+        if (i % 8 === 0) for (const n of ACCORDS[mesure]) voix(NOTES[n], t, d * 7.5, { vol: 0.018, filtre: 900, attaque: 0.35, sortie: 0.5, brillance: 1.1 });
+        // Cuivres : la mélodie
+        const n = CUIVRES[i];
+        if (n !== '-' && n !== '.') {
             let tenue = 1;
-            while (CLAIRON[(i + tenue) % CLAIRON.length] === '-' && tenue < 4) tenue++;
-            ton(NOTES[n], t, d * tenue * 0.92, { type: 'square', vol: 0.045, attaque: 0.015, ...o });
-            ton(NOTES[n], t, d * tenue * 0.92, { type: 'triangle', vol: 0.07, attaque: 0.015, ...o });
+            while (CUIVRES[(i + tenue) % CUIVRES.length] === '-' && tenue < 6) tenue++;
+            voix(NOTES[n], t, d * tenue * 0.9, { vol: 0.045, filtre: 1300, attaque: 0.06, sortie: 0.15, desaccord: [-7, 0, 7] });
         }
     }
 
