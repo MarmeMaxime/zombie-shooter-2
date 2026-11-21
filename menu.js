@@ -88,13 +88,34 @@ document.querySelectorAll('button').forEach(bouton => {
 });
 
 /* ---------- Son ---------- */
+/* Le bouton 🔊 ouvre un petit panneau : son activé ou coupé, volume de la
+   musique et des effets (gardés dans la sauvegarde, voir audio.js). */
+const panneau_son = $('panneau-son');
+const curseurs = { musique: $('vol-musique'), effets: $('vol-effets') };
+
 function maj_bouton_son() {
-    btn_sound.textContent = Son.estActif() ? '🔊' : '🔇';
+    const muet = !Son.estActif() || (Son.volume('musique') === 0 && Son.volume('effets') === 0);
+    btn_sound.textContent = muet ? '🔇' : '🔊';
+    $('btn-son-actif').textContent = Son.estActif() ? 'Son : activé' : 'Son : coupé';
+    for (const quoi in curseurs) curseurs[quoi].value = Math.round(Son.volume(quoi) * 100);
 }
 
 btn_sound.addEventListener('click', () => {
+    maj_bouton_son();
+    panneau_son.classList.toggle('hidden');
+});
+$('btn-son-actif').addEventListener('click', () => {
     Son.setActif(!Son.estActif());
     maj_bouton_son();
+});
+for (const [quoi, curseur] of Object.entries(curseurs)) {
+    curseur.addEventListener('input', () => { Son.setVolume(quoi, curseur.value / 100); maj_bouton_son(); });
+    // Un petit son pour entendre le nouveau volume des effets ; puis on rend les flèches au jeu
+    curseur.addEventListener('change', () => { if (quoi === 'effets') Son.bouton(); curseur.blur(); });
+}
+// Un clic ailleurs referme le panneau
+document.addEventListener('pointerdown', e => {
+    if (!panneau_son.classList.contains('hidden') && !panneau_son.contains(e.target) && e.target !== btn_sound) panneau_son.classList.add('hidden');
 });
 
 /* ---------- Difficulté ---------- */

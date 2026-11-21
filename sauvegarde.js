@@ -29,6 +29,7 @@ const Sauvegarde = (() => {
         succes: [],
         missions: [],
         persosDebloques: ['soldat'],
+        son: { actif: true, musique: 0.8, effets: 0.8 },   // réglages du son (activé de base)
         bestiaire: [],
         titre: ''
     });

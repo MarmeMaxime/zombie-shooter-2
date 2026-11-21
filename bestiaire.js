@@ -13,8 +13,8 @@ const FICHES = [
     },
     {
         type: 'tank', nom: 'Le Tank',
-        description: 'Ancien videur de boîte de nuit. Il ne laisse toujours entrer personne, sauf que maintenant il te mange aussi. Il faut trois balles pour qu\'il remarque qu\'il saigne.',
-        conseil: '3 PV : à viser tôt, avant qu\'il soit sur toi.'
+        description: 'Ancienne videuse de boîte de nuit. Elle ne laisse toujours entrer personne, sauf que maintenant elle te mange aussi. Il faut trois balles pour qu\'elle remarque qu\'elle saigne. Et elle déteste qu\'on l\'appelle « le » Tank : c\'est une question de respect.',
+        conseil: '3 PV : vise-la tôt, avant qu\'elle soit sur toi.'
     },
     {
         type: 'magicalgirl', nom: 'La Magical Girl', hardcore: true,

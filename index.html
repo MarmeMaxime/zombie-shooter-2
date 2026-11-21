@@ -250,7 +250,12 @@
 
       <div id="loot-flash"></div>
 
-      <button id="btn-sound">🔊</button>
+      <button id="btn-sound" title="Son">🔊</button>
+      <div id="panneau-son" class="hidden">
+        <button id="btn-son-actif">Son : activé</button>
+        <label>🎵 Musique <input type="range" id="vol-musique" min="0" max="100" step="5"></label>
+        <label>💥 Effets <input type="range" id="vol-effets" min="0" max="100" step="5"></label>
+      </div>
 
     </div> 
     

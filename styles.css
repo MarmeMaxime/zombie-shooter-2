@@ -91,6 +91,16 @@ button.active { background: #ff3333; border-color: #ff3333; }
   border: 2px solid rgba(255, 255, 255, 0.5);
 }
 #btn-sound:hover { background: white; border-color: white; transform: scale(1.1); }
+/* Panneau du son, sous le bouton 🔊 */
+#panneau-son {
+  position: absolute; top: 68px; right: 20px; z-index: 30; zoom: var(--ui);
+  display: flex; flex-direction: column; gap: 8px; padding: 10px 12px;
+  background: rgba(20, 20, 20, 0.95); border: 2px solid #555; border-radius: 6px; color: #ddd; font-size: 0.8rem;
+}
+#panneau-son.hidden { display: none; }
+#panneau-son label { display: flex; align-items: center; justify-content: space-between; gap: 10px; white-space: nowrap; }
+#panneau-son input[type=range] { width: 110px; accent-color: #ff3333; }
+#btn-son-actif { font-size: 0.8rem; padding: 4px 8px; }
 
 /* =========================================================================
    5. HUD (IN-GAME)

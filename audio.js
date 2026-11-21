@@ -25,7 +25,12 @@ const Son = (() => {
     const sonTir = new Audio('./assets/son/america.mp3');
     sonTir.volume = 0.4;
 
-    let actif = false;          // coupé par défaut (les navigateurs bloquent l'autoplay)
+    // Réglages gardés dans la sauvegarde : son activé de base, volumes de 0 à 1.
+    // Les navigateurs bloquent le son tant que la page n'a pas été touchée :
+    // la musique démarre à la première touche ou au premier clic (écran titre).
+    const reglages = Sauvegarde.donnees.son;
+    let actif = reglages.actif;
+    let volumeBase = 0.1;       // volume propre au morceau en cours (avant le réglage « musique »)
     let ambiance = null;        // 'menu' | 'normal' | 'hardcore' | null
     let indexHardcore = 0;
 
@@ -34,7 +39,8 @@ const Son = (() => {
 
     function chargerPiste(src, volume, enBoucle) {
         musique.src = src;
-        musique.volume = volume;
+        volumeBase = volume;
+        musique.volume = volume * reglages.musique;
         musique.loop = enBoucle;
         musique.currentTime = 0;
     }
@@ -65,6 +71,8 @@ const Son = (() => {
 
     function setActif(valeur) {
         actif = valeur;
+        reglages.actif = valeur;
+        Sauvegarde.sauver();
         if (!ambiance) return;
         if (actif && !suspendue) lire(musique);
         else musique.pause();
@@ -80,14 +88,14 @@ const Son = (() => {
         if (!actif) return;
         // cloneNode permet de superposer plusieurs tirs rapprochés
         const copie = audio.cloneNode();
-        copie.volume = audio.volume;
+        copie.volume = audio.volume * reglages.effets;
         copie.preservesPitch = false;
         copie.playbackRate = vitesse;
         lire(copie);
     }
 
     /* ---------- Bruitages synthétisés (Web Audio, aucun fichier) ---------- */
-    let ac = null, bruitBlanc = null;
+    let ac = null, bruitBlanc = null, sortieEffets = null, sortieMusique = null;
     function contexte() {
         if (!ac) {
             const AC = window.AudioContext || window.webkitAudioContext;
@@ -97,6 +105,13 @@ const Son = (() => {
             bruitBlanc = ac.createBuffer(1, ac.sampleRate, ac.sampleRate);
             const d = bruitBlanc.getChannelData(0);
             for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+            // Deux volumes généraux : les bruitages, et les musiques jouées en Web Audio (caisses)
+            sortieEffets = ac.createGain();
+            sortieEffets.gain.value = reglages.effets;
+            sortieEffets.connect(ac.destination);
+            sortieMusique = ac.createGain();
+            sortieMusique.gain.value = reglages.musique;
+            sortieMusique.connect(ac.destination);
         }
         if (ac.state === 'suspended') ac.resume();
         return ac;
@@ -113,7 +128,7 @@ const Son = (() => {
         const g = c.createGain();
         g.gain.setValueAtTime(vol, t);
         g.gain.exponentialRampToValueAtTime(0.0001, t + duree);
-        src.connect(f).connect(g).connect(c.destination);
+        src.connect(f).connect(g).connect(sortieEffets);
         src.start(t, Math.random() * 0.5); src.stop(t + duree + 0.05);
     }
 
@@ -135,7 +150,7 @@ const Son = (() => {
             g.gain.setValueAtTime(vol, t);
         }
         g.gain.exponentialRampToValueAtTime(0.0001, t + duree);
-        o.connect(g).connect(sortie || c.destination);
+        o.connect(g).connect(sortie || sortieEffets);
         o.start(t); o.stop(t + duree + 0.05);
     }
 
@@ -224,8 +239,30 @@ const Son = (() => {
         degat: () => { ton(220, 0, 0.25, { type: 'square', vol: 0.12, f2: 90 }); bruit(0, 0.15, { vol: 0.15, filtre: 800 }); }
     };
 
+    // Réglage d'un volume ('musique' ou 'effets', de 0 à 1), gardé dans la sauvegarde
+    function setVolume(quoi, valeur) {
+        reglages[quoi] = Math.max(0, Math.min(1, valeur));
+        if (quoi === 'musique') {
+            musique.volume = volumeBase * reglages.musique;
+            if (sortieMusique) sortieMusique.gain.value = reglages.musique;
+        } else if (sortieEffets) {
+            sortieEffets.gain.value = reglages.effets;
+        }
+        Sauvegarde.sauver();
+    }
+
+    // Première interaction avec la page : le navigateur autorise enfin le son
+    function debloquer() {
+        if (actif && ambiance && !suspendue) lire(musique);
+        if (actif) contexte();
+    }
+    for (const evt of ['pointerdown', 'keydown']) document.addEventListener(evt, debloquer, { once: true, capture: true });
+
     return {
         jouerAmbiance,
+        setVolume,
+        volume: quoi => reglages[quoi],
+        sortieMusique: () => (contexte(), sortieMusique),
         effet: nom => { if (BRUITAGES[nom]) BRUITAGES[nom](); },
         arreterMusique,
         setActif,

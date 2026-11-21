@@ -208,7 +208,7 @@ const SonLoot = (() => {
         couper(0.15);
         bus = c.createGain();
         bus.gain.value = volume;
-        bus.connect(c.destination);
+        bus.connect(Son.sortieMusique());   // suit le réglage du volume de la musique
         return bus;
     }
 
