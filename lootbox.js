@@ -155,27 +155,10 @@ const Loot = (() => {
    SONS DE LOOTBOX (synthétisés avec Web Audio : aucun fichier à charger)
    ========================================================================= */
 const SonLoot = (() => {
-    // Même contexte audio que le reste du jeu (audio.js)
+    // Même contexte audio et même générateur de notes que le reste du jeu (audio.js)
     let ac = null;
     const contexte = () => (ac = Son.contexte());
-
-    // Une note : fréquence (ou glissando de f1 à f2), départ et durée en secondes
-    function note(f1, debut, duree, { type = 'square', vol = 0.08, f2 = null, sortie = null, absolu = false } = {}) {
-        const c = contexte();
-        if (!c || !Son.estActif()) return;
-        const t = absolu ? debut : c.currentTime + debut;
-        const osc = c.createOscillator();
-        const gain = c.createGain();
-        osc.type = type;
-        osc.frequency.setValueAtTime(f1, t);
-        if (f2) osc.frequency.exponentialRampToValueAtTime(f2, t + duree);
-        gain.gain.setValueAtTime(0.0001, t);
-        gain.gain.exponentialRampToValueAtTime(vol, t + 0.01);
-        gain.gain.exponentialRampToValueAtTime(0.0001, t + duree);
-        osc.connect(gain).connect(sortie || c.destination);
-        osc.start(t);
-        osc.stop(t + duree + 0.02);
-    }
+    const note = (f1, debut, duree, options = {}) => Son.ton(f1, debut, duree, { type: 'square', vol: 0.08, attaque: 0.01, ...options });
 
     const arpege = (freqs, pas, duree, opts) => freqs.forEach((f, i) => note(f, i * pas, duree, opts));
 

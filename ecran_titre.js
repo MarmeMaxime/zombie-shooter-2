@@ -4,7 +4,7 @@
    avancent dans le décor et le personnage choisi (avec son skin) les abat.
    Elle s'arrête pendant les parties pour ne rien coûter.
    ========================================================================= */
-const FondAnime = (() => {
+(() => {
     const toile = document.getElementById('fond-anime');
     const c = toile.getContext('2d');
     const H = 400;                      // même hauteur de référence que le jeu

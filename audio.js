@@ -117,16 +117,25 @@ const Son = (() => {
         src.start(t, Math.random() * 0.5); src.stop(t + duree + 0.05);
     }
 
-    function ton(f1, debut, duree, { type = 'sine', vol = 0.2, f2 = null } = {}) {
+    /* Une note : fréquence f1 (ou glissando de f1 à f2), départ et durée en secondes.
+       Options : type d'onde, volume, attaque (montée en douceur, en s), sortie
+       (un nœud audio, par exemple le volume d'une musique), absolu (départ = heure
+       du contexte audio au lieu de « dans X secondes »). Partagée avec lootbox.js. */
+    function ton(f1, debut, duree, { type = 'sine', vol = 0.2, f2 = null, attaque = 0, sortie = null, absolu = false } = {}) {
         const c = contexte(); if (!c || !actif) return;
-        const t = c.currentTime + debut;
+        const t = absolu ? debut : c.currentTime + debut;
         const o = c.createOscillator(); o.type = type;
         o.frequency.setValueAtTime(f1, t);
         if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + duree);
         const g = c.createGain();
-        g.gain.setValueAtTime(vol, t);
+        if (attaque > 0) {
+            g.gain.setValueAtTime(0.0001, t);
+            g.gain.exponentialRampToValueAtTime(vol, t + attaque);
+        } else {
+            g.gain.setValueAtTime(vol, t);
+        }
         g.gain.exponentialRampToValueAtTime(0.0001, t + duree);
-        o.connect(g).connect(c.destination);
+        o.connect(g).connect(sortie || c.destination);
         o.start(t); o.stop(t + duree + 0.05);
     }
 
@@ -190,6 +199,7 @@ const Son = (() => {
         reprendreMusique,
         estActif: () => actif,
         contexte,   // contexte Web Audio partagé (aussi utilisé par les sons de lootbox)
+        ton,
         bouton: () => jouerEffet(sonBouton)
     };
 })();
