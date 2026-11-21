@@ -81,7 +81,9 @@ function exploser(p) {
 /* ---------- Mise à jour ---------- */
 function update_balles(dt, largeurCanvas, hauteurCanvas) {
     projectiles = projectiles.filter(p => {
-        const dx = p.vx * dt;
+        // Vitesse horizontale à l'échelle de la largeur du monde (voir MONDE dans main.js)
+        const k = MONDE.echelleX;
+        const dx = p.vx * k * dt;
         const dy = p.vy * dt;
 
         // Test sur toute la trajectoire de la frame pour ne jamais "traverser" un zombie
@@ -91,7 +93,7 @@ function update_balles(dt, largeurCanvas, hauteurCanvas) {
         };
         p.x += dx;
         p.y += dy;
-        p.portee -= Math.hypot(dx, dy);
+        p.portee -= Math.hypot(dx / k, dy);   // portée comptée en unités de référence
         if (p.rotation !== undefined) p.rotation += dt * 12;
 
         const cible = trouver_cible(trajet);

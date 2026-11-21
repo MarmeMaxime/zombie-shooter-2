@@ -181,7 +181,7 @@ function gerer_boss(dt, largeurCanvas, hauteurCanvas, tempsJeu) {
 function update_crachats(dt) {
     const zoneJoueur = hitbox(joueur.x, joueur.y, joueur.taille);
     crachats = crachats.filter(c => {
-        c.x -= CONFIG.boss.vitesseCrachat * dt;
+        c.x -= CONFIG.boss.vitesseCrachat * MONDE.echelleX * dt;
         if (collision(zoneJoueur, { x: c.x, y: c.y, largeur: c.taille, hauteur: c.taille })) {
             perdre_vie();
             return false;
@@ -210,7 +210,7 @@ function gerer_teleport(z, dt, hauteurCanvas) {
     const t = z.teleport;
 
     // Trop proche du joueur : elle arrête de se téléporter (sinon ce serait injuste)
-    if (z.x < cfg.xMinTeleport) {
+    if (z.x < cfg.xMinTeleport * MONDE.echelleX) {
         t.annonce = false;
         return;
     }
@@ -318,7 +318,7 @@ function update_zombies(dt, largeurCanvas, hauteurCanvas, tempsJeu) {
     for (let i = zombies.length - 1; i >= 0; i--) {
         const z = zombies[i];
         const type = TYPES_ZOMBIE[z.type];
-        z.x -= z.vitesse * dt;
+        z.x -= z.vitesse * MONDE.echelleX * dt;   // même temps de traversée sur tout écran
         if (z.teleport) gerer_teleport(z, dt, hauteurCanvas);
 
         z.tempsImage += dt;

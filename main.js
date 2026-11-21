@@ -6,6 +6,57 @@ const ctx = canvas.getContext('2d');
 
 const img_fond = chargerImage('./assets/FOND.jpg');
 
+/* ---------- Monde de jeu et plein écran ----------
+   Le canvas couvre toute la page et est dessiné à la résolution réelle de
+   l'écran (net, pas d'image étirée). Le monde garde une hauteur de référence
+   de 400 unités ; sa largeur suit la forme de l'écran.
+   echelleX = largeur du monde / 800 (largeur de référence) : les vitesses et
+   portées horizontales sont multipliées par ce facteur, donc un zombie met le
+   même temps à traverser l'écran quelle que soit sa taille. L'équilibrage
+   (vérifié par simulation sur 800×400) reste valable. */
+const REFERENCE = { largeur: 800, hauteur: 400, largeurMin: 600 };
+const MONDE = { largeur: 800, hauteur: 400, echelleX: 1, echelle: 1, decalageY: 0 };
+
+function redimensionner() {
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    if (!w || !h) return;   // canvas caché (menu) : on garde les dernières dimensions
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.round(w * dpr);
+    canvas.height = Math.round(h * dpr);
+    // Écran trop étroit (portrait) : bandes noires en haut et en bas plutôt qu'un monde écrasé
+    MONDE.echelle = Math.min(canvas.height / REFERENCE.hauteur, canvas.width / REFERENCE.largeurMin);
+    MONDE.largeur = canvas.width / MONDE.echelle;
+    MONDE.decalageY = (canvas.height - REFERENCE.hauteur * MONDE.echelle) / 2;
+    MONDE.echelleX = MONDE.largeur / REFERENCE.largeur;
+    if (etat.enCours) dessiner();
+}
+// Échelle de l'interface (menus, HUD, boutons) : 1 pour un écran de 800×400
+function maj_echelle_ui() {
+    const ui = Math.max(0.8, Math.min(window.innerHeight / 400, window.innerWidth / 800, 2.6));
+    document.documentElement.style.setProperty('--ui', ui.toFixed(3));
+}
+maj_echelle_ui();
+window.addEventListener('resize', () => { maj_echelle_ui(); redimensionner(); });
+
+function dessiner() {
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    if (MONDE.decalageY > 0) {
+        // Écran plus haut que le monde : le décor remplit aussi les bandes, assombri
+        ctx.imageSmoothingEnabled = true;
+        ctx.drawImage(img_fond, 0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+    ctx.setTransform(MONDE.echelle, 0, 0, MONDE.echelle, 0, MONDE.decalageY);
+
+    ctx.imageSmoothingEnabled = true;     // le décor (photo) est lissé
+    ctx.drawImage(img_fond, 0, 0, MONDE.largeur, MONDE.hauteur);
+    ctx.imageSmoothingEnabled = false;    // le pixel art reste net, sans flou
+    draw_zombies(ctx);
+    draw_balles(ctx);
+    draw_joueur(ctx);
+}
+
 const ui = {
     score: document.getElementById('score'),
     vies: document.getElementById('vies'),
@@ -113,15 +164,11 @@ function boucle(instant) {
     }
 
     // Mise à jour
-    update_joueur(dt, canvas.height);
-    update_balles(dt, canvas.width, canvas.height);
-    update_zombies(dt, canvas.width, canvas.height, etat.temps);
+    update_joueur(dt, MONDE.hauteur);
+    update_balles(dt, MONDE.largeur, MONDE.hauteur);
+    update_zombies(dt, MONDE.largeur, MONDE.hauteur, etat.temps);
 
-    // Dessin
-    ctx.drawImage(img_fond, 0, 0, canvas.width, canvas.height);
-    draw_zombies(ctx);
-    draw_balles(ctx);
-    draw_joueur(ctx);
+    dessiner();
 
     if (etat.enCours) idAnimation = requestAnimationFrame(boucle);
 }
@@ -157,6 +204,7 @@ function init_game(mode, perso) {
     Son.reprendreMusique();
     Son.jouerAmbiance(mode);
 
+    redimensionner();   // le canvas vient de s'afficher : on prend la taille de l'écran
     dernierInstant = performance.now();
     idAnimation = requestAnimationFrame(boucle);
 }
