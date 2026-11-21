@@ -146,13 +146,17 @@ foreach ($fr in $frames) {
         # Fan of thinner tails spreading out behind the hips, each curling a little upward
         $boules = @()
         $rayons = @(1.7, 2.0, 2.2, 2.2, 2.0, 1.6, 1.2)
+        # The fan must fit between the hips and the left edge of the 64 px sprite:
+        # it is squeezed horizontally to the room there is (and spreads up and down instead)
+        $place = $xl - 1
+        $kx = [Math]::Min(1.0, ($place - 2.5) / 19.5)
         for ($n = 0; $n -lt $queues; $n++) {
-            $angle = (-80 + 160 * $n / ($queues - 1)) * [Math]::PI / 180      # 0 = straight back
+            $angle = (-85 + 170 * $n / ($queues - 1)) * [Math]::PI / 180      # 0 = straight back
             for ($b = 0; $b -lt 7; $b++) {
                 $a = $angle + $b * 0.06
                 $d = 1.5 + $b * 3.0
-                $bx = ($xl + 1) - [Math]::Cos($a) * $d + $sw * $b / 6
-                $by = 42 - [Math]::Sin($a) * $d
+                $bx = ($xl + 1) - [Math]::Cos($a) * $d * $kx + $sw * $b / 6
+                $by = 42 - [Math]::Sin($a) * $d * $(if ($a -gt 0) { 1.3 } else { 0.9 })   # upper tails reach higher, along her back; lower ones stay above the bottom edge
                 $boules += , @($bx, $by, $rayons[$b], $(if ($b -ge 5) { 'w' } else { 'r' }), $n)
             }
         }
