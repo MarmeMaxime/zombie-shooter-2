@@ -52,7 +52,8 @@ function reset_joueur(mode, perso) {
     joueur.arme = CONFIG.armes[CONFIG.personnages[perso].arme];
     joueur.sprites = Loot.sprites(perso);   // tenue équipée (lootbox) ou sprites de base
     joueur.y = 200;
-    joueur.vitesse = CONFIG.joueur.vitesse[mode];
+    // Vitesse de base du mode, multipliée par celle du personnage (le Soldat est le plus mobile)
+    joueur.vitesse = CONFIG.joueur.vitesse[mode] * (CONFIG.personnages[perso].vitesse || 1);
     joueur.tempsImage = 0;
     joueur.etapeMarche = 0;
     joueur.rechargeTir = 0;

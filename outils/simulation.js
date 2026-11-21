@@ -30,7 +30,7 @@ const ctx = vm.createContext({
     performance: { now: () => 0 }, requestAnimationFrame: () => 1, cancelAnimationFrame() {},
     Math: Object.assign(Object.create(Math), { random: rand }), console, localStorage: { getItem() {}, setItem() {} }
 });
-for (const f of ['config.js', 'sauvegarde.js', 'audio.js', 'deplacement_joueur.js', 'tir_joueur.js', 'boss_sprite.js', 'zombie.js', 'main.js', 'lootbox.js', 'succes.js', 'missions.js', 'menu.js']) {
+for (const f of ['config.js', 'sauvegarde.js', 'audio.js', 'deplacement_joueur.js', 'tir_joueur.js', 'pixel_art.js', 'boss_sprite.js', 'joggeur_sprite.js', 'zombie.js', 'main.js', 'lootbox.js', 'succes.js', 'missions.js', 'menu.js']) {
     vm.runInContext(fs.readFileSync(path.join(dir, f), 'utf8'), ctx, { filename: f });
 }
 
@@ -67,7 +67,7 @@ const resultat = vm.runInContext(`
     }; // centre de la fenêtre de tir
     const avant = joueur.x + joueur.taille;
 
-    function urgence(z) { return (z.x - avant) / (z.vitesse * MONDE.echelleX); }
+    function urgence(z) { const v = z.joggeur ? Math.max(z.vitesse, z.vitesseActuelle || 0) : z.vitesse; return (z.x - avant) / (v * MONDE.echelleX); }
 
     function choisir() {
         let meilleur = null, meilleurScore = Infinity;
@@ -113,7 +113,8 @@ const resultat = vm.runInContext(`
         const proches = zombies.filter(z => z.x < avant + 80 && z.x + z.taille > joueur.x);
         const danger = y => {
             const hb = hitbox(joueur.x, y, joueur.taille);
-            return proches.some(z => collision(hb, hitbox(z.x - z.vitesse * 0.25, z.y, z.taille)))
+            return proches.some(z => collision(hb, hitbox(z.x - (z.vitesseActuelle || z.vitesse) * 0.25, z.y, z.taille)))
+                || zombies.some(z => z.joggeur && z.joggeur.etat !== 'marche' && z.joggeur.etat !== 'essouffle' && collision(hb, { x: 0, y: z.y + 10, largeur: 2000, hauteur: z.taille - 20 }))
                 || crachats.some(c => c.x > joueur.x && c.x - joueur.x < 700 && collision(hb, { x: c.x - 700, y: c.y - 4, largeur: c.taille + 700, hauteur: c.taille + 8 }));
         };
         const dir = commandes.bas ? 1 : commandes.haut ? -1 : 0;
@@ -140,7 +141,7 @@ const resultat = vm.runInContext(`
             pertesMinute = pertes;
         }
     }
-    return { missionsRatees: MISSIONS[perso].filter(m => !Sauvegarde.donnees.missions.includes(m.id)).map(m => m.nom + ' ' + m.valeur(statsPerso(perso)) + '/' + m.objectif).join(' | '), coupMax: statsPerso(perso).coupMax, crachatsRecus, bossPasses, dureesBoss: dureesBoss.join(','), boss: Sauvegarde.donnees.stats.bossTues, bossApparus, causes, survie: Math.round(etat.temps), vivant: etat.enCours, vies: etat.vies, pertes, achats, pertesParMinute: pertesParMinute.join('') };
+    return { joggeurs: (Sauvegarde.donnees.stats.tues.joggeur || 0) + ' tués, ' + Sauvegarde.donnees.stats.esquives + ' esquives, ' + Sauvegarde.donnees.stats.sprintsStoppes + ' sprints stoppés', missionsRatees: MISSIONS[perso].filter(m => !Sauvegarde.donnees.missions.includes(m.id)).map(m => m.nom + ' ' + m.valeur(statsPerso(perso)) + '/' + m.objectif).join(' | '), coupMax: statsPerso(perso).coupMax, crachatsRecus, bossPasses, dureesBoss: dureesBoss.join(','), boss: Sauvegarde.donnees.stats.bossTues, bossApparus, causes, survie: Math.round(etat.temps), vivant: etat.enCours, vies: etat.vies, pertes, achats, pertesParMinute: pertesParMinute.join('') };
 })`, ctx)(mode, Number(minutes) * 60, Number(reaction), process.env.PERSO || 'soldat');
 
 console.log(JSON.stringify({ perso: process.env.PERSO || 'soldat', mode, reaction: Number(reaction), ...resultat }));

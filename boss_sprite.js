@@ -23,27 +23,15 @@ const SPRITES_BOSS = (() => {
         W: '#ddcebf',   // dents
         K: '#050403'    // contour
     };
-    // Parties du corps : plus le rang est haut, plus la partie est devant
-    const PEAU = { G: 0, H: 1, A: 2 };          // torse, tête, bras-massue
-    const TISSU = { T: 0 };
-
-    const grille = () => Array.from({ length: N }, () => Array(N).fill(null));
-    const poser = (g, x, y, c) => { x = Math.round(x); y = Math.round(y); if (x >= 0 && y >= 0 && x < N && y < N) g[y][x] = c; };
-    // Ellipse aux bords légèrement irréguliers (chair bosselée plutôt que forme parfaite)
-    function ellipse(g, cx, cy, rx, ry, c, bosses = 0.07) {
-        for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
-            const dx = (x + 0.5 - cx) / rx, dy = (y + 0.5 - cy) / ry;
-            const angle = Math.atan2(dy, dx);
-            const bord = 1 + bosses * Math.sin(angle * 5 + cx) + bosses * 0.5 * Math.sin(angle * 9 + cy);
-            if (dx * dx + dy * dy <= bord * bord) g[y][x] = c;
-        }
-    }
-    // Trait d'un pixel entre deux points (plis de chair, muscles)
-    function trait(g, x0, y0, x1, y1, c) {
-        const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0));
-        for (let k = 0; k <= n; k++) poser(g, x0 + (x1 - x0) * k / n, y0 + (y1 - y0) * k / n, c);
-    }
-    function rect(g, x0, y0, x1, y1, c) { for (let y = Math.round(y0); y <= y1; y++) for (let x = Math.round(x0); x <= x1; x++) poser(g, x, y, c); }
+    // Parties du corps (voir PixelArt.finir) : torse < tête < bras-massue ; pantalon sans trait interne
+    const PARTIES = {
+        G: { rang: 0, base: 'G', ombre: 'g', bande: 'large' },
+        H: { rang: 1, base: 'G', ombre: 'g', bande: 'large' },
+        A: { rang: 2, base: 'G', ombre: 'g', bande: 'large' },
+        T: { rang: -1, base: 'T', ombre: 't', bande: 'fine' }
+    };
+    const { poser, ellipse, rect, trait } = PixelArt;
+    const grille = () => PixelArt.grille(N);
     function pointe(g, x, base, hauteur, largeur) {     // pointe d'os qui s'affine vers le haut
         for (let i = 0; i < hauteur; i++) {
             const l = Math.max(1, Math.round(largeur * (1 - i / hauteur)));
@@ -134,43 +122,8 @@ const SPRITES_BOSS = (() => {
         return finir(g);
     }
 
-    // Contours internes, ombres à deux tons (lumière en haut à gauche), contour extérieur
-    function finir(g) {
-        const vide = (x, y) => x < 0 || y < 0 || x >= N || y >= N || !g[y][x];
-        const rangPeau = (x, y) => (vide(x, y) ? -1 : (PEAU[g[y][x]] ?? -1));
-        const res = g.map(l => l.slice());
-        for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
-            const c = g[y][x];
-            if (c in PEAU) {
-                const r = PEAU[c];
-                if ([[x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]].some(([vx, vy]) => rangPeau(vx, vy) > r)) { res[y][x] = 'K'; continue; }
-                // Côté ombre : une bande de 3-4 pixels sur le bord bas/droit, comme sur les zombies
-                const ombre = vide(x + 4, y + 2) || vide(x + 2, y + 3) || vide(x + 3, y) || vide(x + 1, y + 3)
-                    || rangPeau(x + 3, y + 1) > r || rangPeau(x + 1, y + 3) > r;
-                res[y][x] = ombre ? 'g' : 'G';
-            } else if (c in TISSU) {
-                res[y][x] = vide(x + 2, y + 1) || vide(x + 1, y + 2) ? 't' : 'T';
-            }
-        }
-        const contour = res.map(l => l.slice());
-        for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
-            if (res[y][x]) continue;
-            if (!vide(x - 1, y) || !vide(x + 1, y) || !vide(x, y - 1) || !vide(x, y + 1)) contour[y][x] = 'K';
-        }
-        return contour;
-    }
-
-    function en_image(g) {
-        const toile = document.createElement('canvas');
-        toile.width = toile.height = N * ZOOM;
-        const c = toile.getContext('2d');
-        for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
-            if (!g[y][x]) continue;
-            c.fillStyle = COULEURS[g[y][x]];
-            c.fillRect(x * ZOOM, y * ZOOM, ZOOM, ZOOM);
-        }
-        return toile;
-    }
+    const finir = g => PixelArt.finir(g, PARTIES);
+    const en_image = g => PixelArt.en_image(g, COULEURS, ZOOM);
 
     return {
         marche: Array.from({ length: IMAGES }, (_, i) => en_image(dessiner_corps(i, false))),

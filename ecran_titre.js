@@ -24,7 +24,7 @@ const FondAnime = (() => {
 
     function apparition() {
         const r = Math.random();
-        const type = r < 0.75 ? 'normal' : r < 0.92 ? 'tank' : 'magicalgirl';
+        const type = r < 0.65 ? 'normal' : r < 0.8 ? 'tank' : r < 0.92 ? 'joggeur' : 'magicalgirl';
         zombiesDemo.push({
             type, x: L + 20, y: 50 + Math.random() * 270, taille: 64,
             vitesse: 25 + Math.random() * 30, etape: 0, tempsImage: 0, pv: type === 'tank' ? 3 : 1

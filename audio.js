@@ -161,6 +161,12 @@ const Son = (() => {
             ton(80, 0, 1.5, { type: 'sawtooth', vol: 0.2, f2: 25 });
             [523, 659, 784, 1047].forEach((f, i) => ton(f, 0.9 + i * 0.12, 0.5, { type: 'square', vol: 0.06 }));
         },
+        // Cri aigu du Joggeur avant sa charge
+        cri: () => {
+            ton(950, 0, 0.4, { type: 'sawtooth', vol: 0.12, f2: 380 });
+            ton(1400, 0.02, 0.3, { type: 'square', vol: 0.05, f2: 700 });
+            bruit(0, 0.3, { vol: 0.15, filtre: 2500, type: 'bandpass' });
+        },
         succes: () => [784, 988, 1175, 1568].forEach((f, i) => ton(f, i * 0.09, 0.35, { type: 'triangle', vol: 0.15 })),
         degat: () => { ton(220, 0, 0.25, { type: 'square', vol: 0.12, f2: 90 }); bruit(0, 0.15, { vol: 0.15, filtre: 800 }); }
     };

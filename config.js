@@ -33,7 +33,8 @@ const CONFIG = {
         soldat: {
             nom: 'Soldat',
             arme: 'fusil',
-            description: 'Balle rapide à longue portée. Une balle, une cible : il faut bien viser.'
+            vitesse: 1.25,      // plus rapide que les autres : compense son arme à une seule cible
+            description: 'Le plus rapide. Balle à longue portée, une seule cible : il faut bien viser.'
         },
         brute: {
             nom: 'Brutus',
@@ -96,6 +97,26 @@ const CONFIG = {
         dureeAnnonce: 0.6,
         distanceTeleportMin: 80,
         xMinTeleport: 300         // ne se téléporte plus quand elle est trop proche du joueur
+    },
+
+    // Le Joggeur (normal et hardcore) : quand il se retrouve sur la ligne du joueur,
+    // il crie, sprinte, puis s'arrête essoufflé (c'est le moment de l'abattre).
+    joggeur: {
+        taille: 64,
+        points: 30,
+        pv: 1,
+        vitesseMin: { normal: 75, hardcore: 95 },
+        vitesseAleatoire: 20,
+        vitesseSprint: { normal: 300, hardcore: 360 },
+        dureeImage: 0.08,          // 12 images par pas (joggeur_sprite.js)
+        intervalle: 12,
+        premiereApparition: 25,
+        alignement: 16,            // écart vertical max avec le joueur pour déclencher la charge
+        distanceMin: 140,          // ne charge pas s'il est déjà collé au joueur
+        dureeCri: 0.5,             // le « ! » au-dessus de sa tête : le temps de réagir
+        dureeSprint: 1.0,
+        dureeEssoufflement: 1.6,
+        recharge: 2.5              // délai avant de pouvoir recharger
     },
 
     // Boss « Le Mastodonte » : arrive toutes les 3 minutes, plus résistant à chaque fois.

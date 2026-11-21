@@ -1,5 +1,6 @@
 /* =========================================================================
-   ZOMBIES : normaux, tanks et magical girls dans une seule liste
+   ZOMBIES : normaux, tanks, magical girls, joggeurs (et le boss) dans une
+   seule liste
    ========================================================================= */
 const imagesNumerotees = (prefixe, nombre) =>
     Array.from({ length: nombre }, (_, i) => chargerImage(`./assets/${prefixe}${i + 1}.png`));
@@ -17,6 +18,11 @@ const TYPES_ZOMBIE = {
     magicalgirl: {
         config: CONFIG.magicalgirl,
         images: imagesNumerotees('marche_magicalgirl', 12)
+    },
+    // Sprite dessiné dans joggeur_sprite.js (marche, course, essoufflé)
+    joggeur: {
+        config: CONFIG.joggeur,
+        images: SPRITES_JOGGEUR.marche
     }
 };
 
@@ -79,6 +85,7 @@ function creer_zombie(type, largeurCanvas, hauteurCanvas) {
         etape: 0
     };
     if (cfg.delaiTeleport) z.teleport = { chrono: cfg.delaiTeleport, annonce: false, y: z.y };
+    if (type === 'joggeur') z.joggeur = { etat: 'marche', chrono: 0, recharge: 0 };
     zombies.push(z);
 }
 
@@ -205,6 +212,91 @@ function draw_crachats(ctx) {
     }
 }
 
+/* ---------- Charge du Joggeur ----------
+   marche -> (aligné avec le joueur) cri -> course -> essoufflé -> marche */
+function gerer_joggeur(z, dt) {
+    const cfg = CONFIG.joggeur;
+    const j = z.joggeur;
+    j.recharge = Math.max(0, j.recharge - dt);
+    j.chrono -= dt;
+
+    if (j.etat === 'marche') {
+        const aligne = Math.abs(z.y - joueur.y) < cfg.alignement;
+        const loin = z.x - (joueur.x + joueur.taille) > cfg.distanceMin * MONDE.echelleX;
+        if (aligne && loin && j.recharge === 0 && z.x < MONDE.largeur - 20) {
+            j.etat = 'cri';
+            j.chrono = cfg.dureeCri;
+            Son.effet('cri');
+        }
+    } else if (j.chrono <= 0) {
+        if (j.etat === 'cri') {
+            j.etat = 'course';
+            j.chrono = cfg.dureeSprint;
+        } else if (j.etat === 'course') {
+            // Fin du sprint sans avoir touché le joueur : charge esquivée
+            j.etat = 'essouffle';
+            j.chrono = cfg.dureeEssoufflement;
+            if (typeof Succes !== 'undefined') Succes.compter('esquives');
+        } else if (j.etat === 'essouffle') {
+            j.etat = 'marche';
+            j.recharge = cfg.recharge;
+        }
+    }
+}
+
+function vitesse_joggeur(z) {
+    switch (z.joggeur.etat) {
+        case 'course': return parMode(CONFIG.joggeur.vitesseSprint);
+        case 'marche': return z.vitesse;
+        default: return 0;   // il crie ou reprend son souffle : immobile
+    }
+}
+
+function dessiner_joggeur(ctx, z) {
+    const j = z.joggeur;
+    const images = j.etat === 'course' ? SPRITES_JOGGEUR.course
+        : j.etat === 'essouffle' ? SPRITES_JOGGEUR.essouffle : SPRITES_JOGGEUR.marche;
+    const img = images[z.etape % images.length];
+
+    if (j.etat === 'course') {
+        // Traînée derrière lui (il fonce vers la gauche)
+        ctx.save();
+        for (const [decalage, alpha] of [[22, 0.15], [11, 0.3]]) {
+            ctx.globalAlpha = alpha;
+            ctx.drawImage(img, z.x + decalage, z.y, z.taille, z.taille);
+        }
+        ctx.restore();
+    }
+    // Il tremble en criant
+    const tremble = j.etat === 'cri' ? (Math.random() - 0.5) * 3 : 0;
+    ctx.drawImage(img, z.x + tremble, z.y, z.taille, z.taille);
+
+    if (j.etat === 'cri') {
+        // Le « ! » d'alerte au-dessus de sa tête
+        ctx.save();
+        ctx.font = 'bold 22px "Courier New", monospace';
+        ctx.textAlign = 'center';
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = '#000';
+        ctx.fillStyle = '#ff3333';
+        ctx.strokeText('!', z.x + 26, z.y - 2);
+        ctx.fillText('!', z.x + 26, z.y - 2);
+        ctx.restore();
+    } else if (j.etat === 'essouffle') {
+        // Petits nuages de souffle
+        ctx.save();
+        ctx.globalAlpha = 0.6;
+        ctx.fillStyle = '#fff';
+        const t = performance.now() / 300;
+        for (let k = 0; k < 2; k++) {
+            ctx.beginPath();
+            ctx.arc(z.x + 10 - ((t + k * 0.5) % 1) * 12, z.y + 30 - k * 4, 3, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.restore();
+    }
+}
+
 /* ---------- Téléportation (magical girl) ---------- */
 function gerer_teleport(z, dt, hauteurCanvas) {
     const cfg = TYPES_ZOMBIE[z.type].config;
@@ -246,6 +338,7 @@ function toucher_zombie(z, degats = 1) {
     zombies.splice(index, 1);
     ajouter_cadavre(z);
     ajouter_score(TYPES_ZOMBIE[z.type].config.points);
+    if (z.joggeur && z.joggeur.etat === 'course' && typeof Succes !== 'undefined') Succes.compter('sprintsStoppes');
     Son.effet('mort');
     if (z === boss) {
         fin_boss();
@@ -318,10 +411,13 @@ function update_zombies(dt, largeurCanvas, hauteurCanvas, tempsJeu) {
     for (let i = zombies.length - 1; i >= 0; i--) {
         const z = zombies[i];
         const type = TYPES_ZOMBIE[z.type];
-        z.x -= z.vitesse * MONDE.echelleX * dt;   // même temps de traversée sur tout écran
+        if (z.joggeur) gerer_joggeur(z, dt);
+        z.vitesseActuelle = z.joggeur ? vitesse_joggeur(z) : z.vitesse;
+        z.x -= z.vitesseActuelle * MONDE.echelleX * dt;   // même temps de traversée sur tout écran
         if (z.teleport) gerer_teleport(z, dt, hauteurCanvas);
 
-        z.tempsImage += dt;
+        // En course, ses jambes vont deux fois et demie plus vite
+        z.tempsImage += dt * (z.joggeur && z.joggeur.etat === 'course' ? 2.5 : 1);
         if (z.tempsImage >= type.config.dureeImage) {
             z.tempsImage -= type.config.dureeImage;
             z.etape = (z.etape + 1) % type.images.length;
@@ -424,7 +520,8 @@ function draw_zombies(ctx) {
             ctx.drawImage(img, z.x - (t - z.taille) / 2, z.y - (t - z.taille), t, t);
             continue;   // sa barre de vie est en haut de l'écran
         }
-        ctx.drawImage(TYPES_ZOMBIE[z.type].images[z.etape], z.x, z.y, z.taille, z.taille);
+        if (z.joggeur) dessiner_joggeur(ctx, z);
+        else ctx.drawImage(TYPES_ZOMBIE[z.type].images[z.etape], z.x, z.y, z.taille, z.taille);
 
         // Barre de vie des zombies blessés
         if (z.pv < z.pvMax) {

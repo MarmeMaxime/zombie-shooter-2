@@ -28,7 +28,14 @@ const SUCCES = [
     { id: 'veteran_soldat', nom: 'Vétéran : Soldat', desc: 'Terminer les 10 missions du Soldat', titre: 'Sergent', recompense: 500, objectif: 10, valeur: () => (typeof Missions === 'undefined' ? 0 : Missions.terminees('soldat')) },
     { id: 'veteran_brute', nom: 'Vétéran : Brutus', desc: 'Terminer les 10 missions de Brutus', titre: 'Boucher', recompense: 500, objectif: 10, valeur: () => (typeof Missions === 'undefined' ? 0 : Missions.terminees('brute')) },
     { id: 'veteran_mira', nom: 'Vétéran : Mira', desc: 'Terminer les 10 missions de Mira', titre: 'Artificière', recompense: 500, objectif: 10, valeur: () => (typeof Missions === 'undefined' ? 0 : Missions.terminees('grenadier')) },
-    { id: 'legende', nom: 'Légende vivante', desc: 'Terminer les 30 missions', titre: 'Légende vivante', recompense: 1500, objectif: 30, valeur: () => (typeof Missions === 'undefined' ? 0 : Missions.terminees()) }
+    { id: 'legende', nom: 'Légende vivante', desc: 'Terminer les 30 missions', titre: 'Légende vivante', recompense: 1500, objectif: 30, valeur: () => (typeof Missions === 'undefined' ? 0 : Missions.terminees()) },
+    // Le Joggeur
+    { id: 'premier_footing', nom: 'Fin du footing', desc: 'Tuer un Joggeur', titre: 'Coach sportif', recompense: 30, objectif: 1, valeur: () => SV().stats.tues.joggeur || 0 },
+    { id: 'marathon', nom: 'Marathonien', desc: 'Tuer 50 Joggeurs', titre: 'Marathonien', recompense: 150, objectif: 50, valeur: () => SV().stats.tues.joggeur || 0 },
+    { id: 'carton_rouge', nom: 'Carton rouge', desc: 'Abattre un Joggeur en plein sprint', titre: 'Arbitre', recompense: 80, objectif: 1, valeur: () => SV().stats.sprintsStoppes },
+    { id: 'torero', nom: 'Torero', desc: 'Esquiver 10 charges de Joggeur', titre: 'Torero', recompense: 150, objectif: 10, valeur: () => SV().stats.esquives },
+    { id: 'bestiaire', nom: 'Bestiaire complet', desc: 'Tuer au moins un monstre de chaque espèce', titre: 'Zoologiste', recompense: 250, objectif: 5,
+        valeur: () => ['normal', 'tank', 'magicalgirl', 'joggeur', 'boss'].filter(t => (SV().stats.tues[t] || 0) > 0).length }
 ];
 
 const Succes = (() => {
@@ -100,6 +107,12 @@ const Succes = (() => {
         Sauvegarde.sauver();
     }
 
+    // Compteur générique de la sauvegarde (esquives, sprints stoppés…)
+    function compter(stat) {
+        SV().stats[stat] = (Number(SV().stats[stat]) || 0) + 1;
+        verifier();
+    }
+
     function apres_caisse(objet) {
         if (objet.rarete.id === 'mythique') SV().stats.mythiques++;
         verifier();
@@ -156,5 +169,5 @@ const Succes = (() => {
     maj_titre();
     verifier();   // succès déjà mérités avec une ancienne sauvegarde (caisses, skins…)
 
-    return { zombie_tue, seconde, fin_partie, apres_caisse, titre_actuel, notifier, verifier };
+    return { zombie_tue, seconde, fin_partie, apres_caisse, titre_actuel, notifier, verifier, compter };
 })();
