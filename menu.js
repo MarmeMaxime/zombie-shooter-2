@@ -97,6 +97,7 @@ function maj_bouton_son() {
     const muet = !Son.estActif() || (Son.volume('musique') === 0 && Son.volume('effets') === 0);
     btn_sound.textContent = muet ? '🔇' : '🔊';
     $('btn-son-actif').textContent = Son.estActif() ? 'Son : activé' : 'Son : coupé';
+    $('btn-vibrations').textContent = Son.vibrations() ? 'Vibrations : activées' : 'Vibrations : coupées';
     for (const quoi in curseurs) curseurs[quoi].value = Math.round(Son.volume(quoi) * 100);
 }
 
@@ -107,6 +108,11 @@ btn_sound.addEventListener('click', () => {
 $('btn-son-actif').addEventListener('click', () => {
     Son.setActif(!Son.estActif());
     maj_bouton_son();
+});
+$('btn-vibrations').addEventListener('click', () => {
+    Son.setVibrations(!Son.vibrations());
+    maj_bouton_son();
+    Son.vibrer(0.5, 120);   // pour sentir que c'est activé
 });
 for (const [quoi, curseur] of Object.entries(curseurs)) {
     curseur.addEventListener('input', () => { Son.setVolume(quoi, curseur.value / 100); maj_bouton_son(); });

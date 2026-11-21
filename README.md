@@ -10,13 +10,16 @@ Ouvre `index.html` dans un navigateur récent (aucune installation, aucun serveu
 La progression est enregistrée dans le navigateur ; elle peut être téléchargée et
 réimportée depuis le menu 💾.
 
-| Action | Clavier | Tactile |
-|---|---|---|
-| Monter / descendre | ↑ ↓, Z / W, S | joystick |
-| Tirer | Espace | TIR (maintenu : tir auto) |
-| Pouvoir spécial | E ou Maj | ★ |
-| Acheter une vie | V | V |
-| Pause | Échap ou P | ⏸ |
+| Action | Clavier | Tactile | Manette |
+|---|---|---|---|
+| Monter / descendre | ↑ ↓, Z / W, S | joystick | stick gauche, croix |
+| Tirer | Espace | TIR (maintenu : tir auto) | A ou gâchette droite (maintenu : tir auto) |
+| Pouvoir spécial | E ou Maj | ★ | X, LB ou RB |
+| Acheter une vie | V | V | Y |
+| Pause | Échap ou P | ⏸ | Start |
+
+Dans les menus, à la manette : A pour jouer ou valider, B pour revenir.
+Vibrations (téléphone Android et manette) : réglables dans le panneau 🔊.
 
 ## Personnages
 

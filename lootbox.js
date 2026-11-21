@@ -276,6 +276,7 @@ const EffetsLoot = (() => {
         const c = conteneur();
         c.classList.remove('tremble-1', 'tremble-2', 'tremble-3', 'tremble-4');
         relancer(c, `tremble-${niveau}`);
+        Son.vibrer(Math.min(1, niveau / 4), 60 + niveau * 50);   // le tremblement se sent aussi dans les mains
         setTimeout(() => c.classList.remove(`tremble-${niveau}`), 900);
     }
 

@@ -100,7 +100,7 @@ button.active { background: #ff3333; border-color: #ff3333; }
 #panneau-son.hidden { display: none; }
 #panneau-son label { display: flex; align-items: center; justify-content: space-between; gap: 10px; white-space: nowrap; }
 #panneau-son input[type=range] { width: 110px; accent-color: #ff3333; }
-#btn-son-actif { font-size: 0.8rem; padding: 4px 8px; }
+#btn-son-actif, #btn-vibrations { font-size: 0.8rem; padding: 4px 8px; }
 
 /* =========================================================================
    5. HUD (IN-GAME)
@@ -175,6 +175,18 @@ span#score.score-ready {
 .stat-time { color: #ff3333; font-size: 1.5rem; font-weight: bold; margin-bottom: 5px; }
 .stat-score { color: #aaa; font-size: 1rem; }
 .stat-value { color: white; }
+
+/* Bilan de la partie : records, victimes par espèce, missions et succès obtenus */
+#bilan-records { color: #ffd23c; font-weight: bold; margin-top: 6px; font-size: 0.85rem; }
+#bilan-records:empty, #bilan-missions:empty, #bilan-succes:empty { display: none; }
+.bilan { text-align: left; margin: -10px 0 18px; max-height: 170px; overflow-y: auto; }
+#bilan-tues-titre { color: #ccc; font-size: 0.8rem; margin: 0 0 6px; }
+#bilan-tues { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.bilan-espece { display: flex; align-items: center; gap: 3px; padding: 2px 6px 2px 2px; background: #2a2a2a; border: 1px solid #444; border-radius: 4px; color: #fff; font-size: 0.75rem; }
+.bilan-espece.boss { border-color: #ff3333; background: #3a1414; }
+.bilan-espece canvas { width: 28px; height: 28px; image-rendering: pixelated; }
+#bilan-missions, #bilan-succes { font-size: 0.72rem; color: #bde0bd; margin: 4px 0; line-height: 1.35; }
+#bilan-succes { color: #ffe38a; }
 
 /* Boutons Communs */
 #btn-close-tuto, #btn-retry, #btn-close-perso, #btn-ouvrir, #btn-close-vestiaire, #btn-close-save, #btn-close-succes, #btn-close-missions, #btn-reprendre {

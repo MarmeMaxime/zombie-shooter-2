@@ -116,6 +116,7 @@ function exploser(p) {
     }
     explosions.push({ x: cx, y: cy, rayon, age: 0 });
     Son.effet('explosion');
+    Son.vibrer(0.35, 50);
 }
 
 /* ---------- Mise à jour ---------- */

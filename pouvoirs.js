@@ -37,6 +37,7 @@ function activer_pouvoir() {
     pouvoir.charge = 0;
     maj_hud_pouvoir();
     POUVOIRS[pouvoir.id](cfg_pouvoir());
+    Son.vibrer(0.6, 120);
     if (typeof Succes !== 'undefined') Succes.compter('pouvoirs');
     if (typeof statsPerso !== 'undefined') statsPerso(etat.perso).pouvoirs++;   // missions « utiliser N fois »
 }

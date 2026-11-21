@@ -193,6 +193,7 @@ function toucher_zombie(z, degats = 1, tir) {
         return;
     }
     zombies.splice(index, 1);
+    if (etat.tues) etat.tues[z.type] = (etat.tues[z.type] || 0) + 1;   // bilan de fin de partie
     ajouter_cadavre(z);
     if (comportement(z).mort) comportement(z).mort(z);
     ajouter_score(TYPES_ZOMBIE[z.type].config.points);

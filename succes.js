@@ -113,6 +113,7 @@ const Succes = (() => {
             SV().succes.push(s.id);
             SV().loot.cranes += s.recompense;
             fileToasts.push(`🏆 Succès débloqué : ${s.nom} · +${s.recompense} 💀 · titre « ${s.titre} »`);
+            if (typeof etat !== 'undefined' && etat.succes) etat.succes.push(s.nom);   // bilan de fin de partie
             nouveau = true;
         }
         if (nouveau) {

@@ -141,6 +141,7 @@ const Missions = (() => {
             faites().push(m.id);
             Sauvegarde.donnees.loot.cranes += m.recompense;
             Succes.notifier(`📋 Mission accomplie (${CONFIG.personnages[m.perso].nom}) : ${m.nom} · +${m.recompense} 💀`);
+            if (etat.missions) etat.missions.push(m.nom);   // bilan de fin de partie
             nouvelle = true;
         }
         if (nouvelle) {
