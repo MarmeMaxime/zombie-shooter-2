@@ -50,7 +50,7 @@ const commandes = { haut: false, bas: false, tir: false };
 function reset_joueur(mode, perso) {
     joueur.perso = perso;
     joueur.arme = CONFIG.armes[CONFIG.personnages[perso].arme];
-    joueur.sprites = SPRITES_PERSO[perso];
+    joueur.sprites = Loot.sprites(perso);   // tenue équipée (lootbox) ou sprites de base
     joueur.y = 200;
     joueur.vitesse = CONFIG.joueur.vitesse[mode];
     joueur.tempsImage = 0;

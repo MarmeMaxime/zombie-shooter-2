@@ -17,16 +17,29 @@ const LOOT = {
         { id: 'mythique', nom: 'Mythique', couleur: '#ff2e4d', poids: 0.5 }
     ],
 
-    // Skins = filtres de couleur appliqués au sprite (même syntaxe en CSS et sur le canvas)
+    /* Skins
+       - Tenues dédiées à un perso (« perso ») : de vrais sprites redessinés,
+         fichiers assets/skin_<id>_arret.png, _tir.png, _marche1..4.png
+       - Skins universels (sans « perso ») : un filtre de couleur sur n'importe quel perso */
     skins: {
-        delave: { nom: 'Délavé', rarete: 'commun', filtre: 'saturate(0.35)' },
-        poussiere: { nom: 'Poussiéreux', rarete: 'commun', filtre: 'sepia(0.6)' },
-        nuit: { nom: 'Opération Nuit', rarete: 'rare', filtre: 'brightness(0.55) contrast(1.3)' },
-        desert: { nom: 'Tempête du désert', rarete: 'rare', filtre: 'sepia(0.9) saturate(1.6)' },
-        hiver: { nom: 'Hiver nucléaire', rarete: 'rare', filtre: 'hue-rotate(180deg) saturate(0.7) brightness(1.15)' },
-        neon: { nom: 'Néon 2077', rarete: 'epique', filtre: 'hue-rotate(90deg) saturate(3)' },
-        toxique: { nom: 'Déchet toxique', rarete: 'epique', filtre: 'hue-rotate(50deg) saturate(4) brightness(1.1)' },
-        negatif: { nom: 'Négatif', rarete: 'epique', filtre: 'invert(1)' },
+        soldat_urbain: { nom: 'Gris urbain', rarete: 'commun', perso: 'soldat' },
+        soldat_neige: { nom: 'Commando des neiges', rarete: 'rare', perso: 'soldat' },
+        soldat_jungle: { nom: 'Jungle', rarete: 'rare', perso: 'soldat' },
+        soldat_apparat: { nom: 'Tenue d\'apparat', rarete: 'epique', perso: 'soldat' },
+        soldat_cyber: { nom: 'Cyber-soldat', rarete: 'legendaire', perso: 'soldat' },
+
+        brute_marcel: { nom: 'Marcel blanc', rarete: 'commun', perso: 'brute' },
+        brute_fonce: { nom: 'Brutus Black Edition', rarete: 'rare', perso: 'brute' },
+        brute_hawai: { nom: 'Vacances à Hawaï', rarete: 'epique', perso: 'brute' },
+        brute_noel: { nom: 'Père Noël en colère', rarete: 'epique', perso: 'brute' },
+        brute_catch: { nom: 'Légende du catch', rarete: 'legendaire', perso: 'brute' },
+
+        mira_rousse: { nom: 'Rousse incendiaire', rarete: 'commun', perso: 'grenadier' },
+        mira_treillis: { nom: 'Treillis', rarete: 'rare', perso: 'grenadier' },
+        mira_gothique: { nom: 'Gothique', rarete: 'epique', perso: 'grenadier' },
+        mira_plage: { nom: 'Tenue de plage', rarete: 'epique', perso: 'grenadier' },
+        mira_cyber: { nom: 'Néon Runner', rarete: 'legendaire', perso: 'grenadier' },
+
         or: { nom: 'Or massif', rarete: 'legendaire', filtre: 'sepia(1) saturate(5) brightness(1.1)' },
         fantome: { nom: 'Fantôme', rarete: 'legendaire', filtre: 'grayscale(1) brightness(1.8) opacity(0.55)' },
         arcenciel: { nom: 'Arc-en-ciel RGB', rarete: 'mythique', anime: true }
@@ -68,7 +81,8 @@ const Loot = (() => {
             return { ...LOOT.dechets[id], type: 'dechet', id, rarete: r };
         }
         const skinId = hasard(Object.keys(LOOT.skins).filter(id => LOOT.skins[id].rarete === r.id));
-        const perso = hasard(Object.keys(CONFIG.personnages));
+        // Tenue dédiée : son perso ; skin universel : un perso au hasard
+        const perso = LOOT.skins[skinId].perso || hasard(Object.keys(CONFIG.personnages));
         // Le spread d'abord : sa propriété « rarete » (texte) ne doit pas écraser l'objet rareté
         return { ...LOOT.skins[skinId], type: 'skin', id: `${perso}:${skinId}`, perso, skin: skinId, rarete: r };
     }
@@ -112,13 +126,22 @@ const Loot = (() => {
     // Filtre à appliquer au sprite du perso (t en secondes, pour l'arc-en-ciel animé)
     function filtre(perso, t = 0) {
         const skin = LOOT.skins[L().equipes[perso]];
-        if (!skin) return '';
+        if (!skin || skin.perso) return '';
         if (skin.anime) return `hue-rotate(${Math.round((t * 120) % 360)}deg) saturate(1.8)`;
-        return skin.filtre;
+        return skin.filtre || '';
     }
 
+    // Sprites d'une tenue dédiée (chargés à la première demande), sinon ceux du perso
+    const cacheSprites = {};
+    function sprites_skin(perso, skinId) {
+        const skin = LOOT.skins[skinId];
+        if (!skin || !skin.perso) return SPRITES_PERSO[perso];
+        return cacheSprites[skinId] || (cacheSprites[skinId] = charger_sprites(`skin_${skinId}`));
+    }
+    const sprites = perso => sprites_skin(perso, connu(L().equipes[perso]) ? L().equipes[perso] : null);
+
     return {
-        ouvrir, gagner, equiper, filtre, tirer_objet, rarete,
+        ouvrir, gagner, equiper, filtre, tirer_objet, rarete, sprites, sprites_skin,
         solde: () => L().cranes,
         equipe: perso => (connu(L().equipes[perso]) ? L().equipes[perso] : null),
         skinsDe: perso => L().possedes.filter(id => typeof id === 'string' && id.startsWith(perso + ':'))
@@ -146,10 +169,10 @@ const LootUI = (() => {
             return span;
         }
         const img = document.createElement('img');
-        img.src = SPRITES_PERSO[objet.perso].arret.src;
+        img.src = Loot.sprites_skin(objet.perso, objet.skin).arret.src;
         img.alt = '';
         if (objet.anime) img.classList.add('arcenciel');
-        else img.style.filter = objet.filtre;
+        else if (objet.filtre) img.style.filter = objet.filtre;
         return img;
     }
 

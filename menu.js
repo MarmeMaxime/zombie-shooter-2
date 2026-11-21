@@ -59,8 +59,9 @@ function rafraichir_cartes_persos() {
     for (const carte of liste_persos.children) {
         const img = carte.querySelector('img');
         const skin = LOOT.skins[Loot.equipe(carte.dataset.perso)];
+        img.src = Loot.sprites(carte.dataset.perso).arret.src;
         img.classList.toggle('arcenciel', Boolean(skin && skin.anime));
-        img.style.filter = skin && !skin.anime ? skin.filtre : '';
+        img.style.filter = skin && skin.filtre ? skin.filtre : '';
     }
 }
 rafraichir_cartes_persos();
