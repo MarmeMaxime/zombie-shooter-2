@@ -103,6 +103,8 @@ $('btn-perso').addEventListener('click', () => { rafraichir_cartes_persos(); aff
 $('btn-close-perso').addEventListener('click', () => afficher(ecrans.perso, false));
 
 $('btn-start').addEventListener('click', () => {
+    // Toute première partie : le sergent propose son entraînement
+    if (typeof proposer_entrainement === 'function' && proposer_entrainement()) return;
     afficher(ecrans.menu, false);
     afficher(ecrans.jeu, true);
     init_game(difficulte_choisie, perso_choisi);

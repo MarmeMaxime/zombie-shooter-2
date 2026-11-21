@@ -95,6 +95,18 @@
         </div>
       </div>
 
+      <div id="tuto-proposition" class="hidden">
+        <div class="mission-card">
+          <canvas id="proposition-visage" width="120" height="120"></canvas>
+          <h2>Sergent Mâchoire</h2>
+          <p class="game-over-text">Première fois ici, recrue ? Deux minutes d'entraînement, ça t'évitera de mourir bêtement. Enfin, moins bêtement.</p>
+          <div class="game-over-buttons">
+            <button id="btn-proposition-oui">🎯 Entraînement</button>
+            <button id="btn-proposition-non">Jouer directement</button>
+          </div>
+        </div>
+      </div>
+
       <div id="bestiaire-overlay" class="hidden">
         <div class="mission-card loot-card">
           <h2>BESTIAIRE</h2>
@@ -157,6 +169,16 @@
         <div id="boss-barre" class="hidden">
           <span id="boss-nom">LE MASTODONTE</span>
           <div class="boss-jauge"><div id="boss-vie"></div></div>
+        </div>
+
+        <!-- Le sergent Mâchoire : consignes de l'entraînement et conseils (tutoriel.js) -->
+        <div id="instructeur" class="hidden">
+          <canvas id="instructeur-visage" width="80" height="80"></canvas>
+          <div class="instructeur-bulle">
+            <strong>Sergent Mâchoire</strong>
+            <p id="instructeur-texte"></p>
+            <div id="instructeur-boutons"></div>
+          </div>
         </div>
 
         <canvas id="jeu" width="800" height="400"></canvas>
@@ -248,6 +270,7 @@
             Tes points rapportent des 💀 pour ouvrir des caisses.
           </p>
 
+          <button id="btn-entrainement">🎯 ENTRAÎNEMENT</button>
           <button id="btn-close-tuto">À L'ATTAQUE !</button>
         </div>
       </div>
@@ -264,6 +287,7 @@
             <label>🎵 Musique <input type="range" id="vol-musique" min="0" max="100" step="5"></label>
             <label>💥 Effets <input type="range" id="vol-effets" min="0" max="100" step="5"></label>
             <button id="btn-vibrations">Vibrations : activées</button>
+            <button id="btn-conseils">Conseils du sergent : activés</button>
           </div>
           <h3>Touches</h3>
           <p class="options-aide">Clique sur une action, puis appuie sur la nouvelle touche.</p>
@@ -285,6 +309,7 @@
     <script src="./options.js"></script>
     <!-- Sprites générés en pixel art (avant les scripts qui les utilisent) -->
     <script src="./pixel_art.js"></script>
+    <script src="./instructeur_sprite.js"></script>
     <script src="./boss_sprite.js"></script>
     <script src="./joggeur_sprite.js"></script>
     <script src="./emeute_sprite.js"></script>
@@ -311,6 +336,7 @@
     <script src="./bestiaire.js"></script>
     <script src="./menu.js"></script>
     <script src="./ecran_titre.js"></script>
+    <script src="./tutoriel.js"></script>
     <script src="./manette.js"></script>
     <script>Langue.traduire_page(); Touches.maj_affichages();</script>
 

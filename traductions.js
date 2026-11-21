@@ -308,5 +308,29 @@ const TRADUCTIONS = {
     'Le Fossoyeur': ['The Gravedigger', 'El Sepulturero'],
     'Il a enterré tout le village, puis le village d\'à côté, puis lui-même. Il ne s\'en est jamais remis. Maintenant il creuse pour les autres, il te réserve une place au premier rang et il prend les mesures à distance, à coups de pelle. Il est très professionnel : chaque tombe est livrée avec son occupant.':
         ['He buried the whole village, then the next village, then himself. He never got over it. Now he digs for others, he has saved you a front-row spot and he takes your measurements from afar, with a shovel. Very professional: every grave comes with its occupant.', 'Enterró a todo el pueblo, luego al pueblo de al lado y luego a sí mismo. Nunca lo superó. Ahora cava para los demás, te reserva un sitio en primera fila y te toma las medidas a distancia, a golpe de pala. Muy profesional: cada tumba viene con su ocupante.'],
-    'Sors du cercle avant que la pelletée tombe. Casse les tombes avant qu\'elles s\'ouvrent, ou tape le patron.': ['Get out of the circle before the shovelful lands. Break the graves before they open, or hit the boss.', 'Sal del círculo antes de que caiga la palada. Rompe las tumbas antes de que se abran, o pégale al jefe.']
+    'Sors du cercle avant que la pelletée tombe. Casse les tombes avant qu\'elles s\'ouvrent, ou tape le patron.': ['Get out of the circle before the shovelful lands. Break the graves before they open, or hit the boss.', 'Sal del círculo antes de que caiga la palada. Rompe las tumbas antes de que se abran, o pégale al jefe.'],
+    // ---------- Tutoriel : le sergent Mâchoire ----------
+    'Sergent Mâchoire': ['Sergeant Jaw', 'Sargento Mandíbula'],
+    'Première fois ici, recrue ? Deux minutes d\'entraînement, ça t\'évitera de mourir bêtement. Enfin, moins bêtement.': ['First time here, recruit? Two minutes of training will keep you from dying stupidly. Well, less stupidly.', '¿Primera vez aquí, recluta? Dos minutos de entrenamiento te evitarán morir como un tonto. Bueno, menos tonto.'],
+    '🎯 Entraînement': ['🎯 Training', '🎯 Entrenamiento'],
+    'Jouer directement': ['Just play', 'Jugar directamente'],
+    '🎯 ENTRAÎNEMENT': ['🎯 TRAINING', '🎯 ENTRENAMIENTO'],
+    'Conseils du sergent : activés': ['Sergeant\'s tips: on', 'Consejos del sargento: activados'],
+    'Conseils du sergent : coupés': ['Sergeant\'s tips: off', 'Consejos del sargento: desactivados'],
+    'le joystick': ['the joystick', 'el joystick'], 'le bouton TIR': ['the FIRE button', 'el botón DISPARO'],
+    'le bouton ★': ['the ★ button', 'el botón ★'], 'le bouton V': ['the V button', 'el botón V'],
+    'Recrue ! Bienvenue au camp d\'entraînement. Je suis le sergent Mâchoire et tu es en retard. Monte avec {haut}, descends avec {bas}. Exécution !': ['Recruit! Welcome to boot camp. I\'m Sergeant Jaw and you\'re late. Go up with {haut}, down with {bas}. Move it!', '¡Recluta! Bienvenido al campo de entrenamiento. Soy el sargento Mandíbula y llegas tarde. Sube con {haut}, baja con {bas}. ¡Andando!'],
+    'Ce zombie est attaché : il ne bougera pas. Il est plus discipliné que toi. Aligne-toi et tire avec {tir} !': ['This zombie is tied up: he won\'t move. He\'s more disciplined than you. Line up and shoot with {tir}!', 'Este zombi está atado: no se moverá. Es más disciplinado que tú. ¡Alinéate y dispara con {tir}!'],
+    'Trois zombies, trois lignes. Tu t\'alignes, tu tires, tu recommences. C\'est tout le métier.': ['Three zombies, three lanes. Line up, shoot, repeat. That\'s the whole job.', 'Tres zombis, tres carriles. Te alineas, disparas, repites. Ese es todo el oficio.'],
+    'Ton score est vert : achète une vie avec {vie}. Profites-en, c\'est le seul cadeau que je te ferai.': ['Your score is green: buy a life with {vie}. Enjoy it, it\'s the only gift you\'ll ever get from me.', 'Tus puntos están en verde: compra una vida con {vie}. Aprovecha, es el único regalo que te haré.'],
+    'Ta jauge ★ est pleine. Lance ta {pouvoir} avec {touche} et nettoie-moi ce troupeau !': ['Your ★ gauge is full. Fire your {pouvoir} with {touche} and clean up that herd!', 'Tu barra ★ está llena. ¡Lanza tu {pouvoir} con {touche} y límpiame esa manada!'],
+    'Écoute bien : si un zombie te touche ou passe derrière toi, tu perds une vie. À zéro, c\'est fini. Ici je suis gentil. Dehors, non.': ['Listen up: if a zombie touches you or gets past you, you lose a life. At zero, it\'s over. In here I\'m nice. Out there, I\'m not.', 'Escucha bien: si un zombi te toca o pasa por detrás, pierdes una vida. A cero, se acabó. Aquí soy amable. Ahí fuera, no.'],
+    'Compris, sergent !': ['Understood, sergeant!', '¡Entendido, sargento!'],
+    'Entraînement terminé. Tu n\'es pas prêt : personne ne l\'est. Les monstres bizarres, je te les présenterai sur le terrain. Rompez !': ['Training complete. You\'re not ready: nobody is. I\'ll introduce you to the weird monsters out in the field. Dismissed!', 'Entrenamiento terminado. No estás listo: nadie lo está. Los monstruos raros te los presentaré sobre el terreno. ¡Rompan filas!'],
+    'Au combat !': ['Into battle!', '¡Al combate!'],
+    'Passer l\'entraînement': ['Skip training', 'Saltar entrenamiento'],
+    'Bien.': ['Good.', 'Bien.'],
+    '{nom} en approche ! {conseil}': ['{nom} incoming! {conseil}', '¡{nom} se acerca! {conseil}'],
+    'Ta jauge ★ est pleine ! Lance ton pouvoir avec {touche}.': ['Your ★ gauge is full! Use your power with {touche}.', '¡Tu barra ★ está llena! Usa tu poder con {touche}.'],
+    'Ton score est vert : {touche} pour acheter une vie.': ['Your score is green: {touche} to buy a life.', 'Tus puntos están en verde: {touche} para comprar una vida.']
 };

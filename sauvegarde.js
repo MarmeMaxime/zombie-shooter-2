@@ -30,7 +30,7 @@ const Sauvegarde = (() => {
         missions: [],
         persosDebloques: ['soldat'],
         son: { actif: true, musique: 0.8, effets: 0.8, vibrations: true },   // réglages du son (activé de base)
-        options: { langue: 'fr', touches: {} },                               // langue, touches choisies (options.js)
+        options: { langue: 'fr', touches: {}, conseils: true, tutoPropose: false, conseilsVus: [] },                               // langue, touches choisies (options.js)
         bestiaire: [],
         titre: ''
     });

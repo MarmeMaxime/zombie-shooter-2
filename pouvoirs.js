@@ -28,7 +28,10 @@ function reset_pouvoir(perso) {
 function pouvoir_zombie_tue() {
     const avant = pouvoir_pret();
     pouvoir.charge = Math.min(cfg_pouvoir().kills, pouvoir.charge + 1);
-    if (!avant && pouvoir_pret()) Son.effet('pouvoirPret');
+    if (!avant && pouvoir_pret()) {
+        Son.effet('pouvoirPret');
+        if (typeof Conseils !== 'undefined') Conseils.pouvoir_pret();
+    }
     maj_hud_pouvoir();
 }
 
@@ -38,8 +41,8 @@ function activer_pouvoir() {
     maj_hud_pouvoir();
     POUVOIRS[pouvoir.id](cfg_pouvoir());
     Son.vibrer(0.6, 120);
-    if (typeof Succes !== 'undefined') Succes.compter('pouvoirs');
-    if (typeof statsPerso !== 'undefined') statsPerso(etat.perso).pouvoirs++;   // missions « utiliser N fois »
+    if (typeof Succes !== 'undefined' && !etat.tuto) Succes.compter('pouvoirs');
+    if (typeof statsPerso !== 'undefined' && !etat.tuto) statsPerso(etat.perso).pouvoirs++;   // missions « utiliser N fois »
 }
 
 const centre_zombie = z => ({ x: z.x + z.taille / 2, y: z.y + z.taille / 2 });

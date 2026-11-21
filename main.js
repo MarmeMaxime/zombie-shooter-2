@@ -127,6 +127,7 @@ function maj_hud() {
     ui.temps.textContent = Math.floor(etat.temps);
     ui.prixVie.textContent = etat.prixVie;
     ui.score.classList.toggle('score-ready', etat.score >= etat.prixVie);
+    if (etat.score >= etat.prixVie && typeof Conseils !== 'undefined') Conseils.score_vert();
 }
 
 function ajouter_score(points) {
@@ -145,6 +146,11 @@ function acheter_vie() {
 
 function perdre_vie() {
     if (!etat.enCours) return;
+    if (etat.tuto) {   // entraînement : on montre le coup, sans retirer de vie
+        Son.effet('degat');
+        joueur_touche();
+        return;
+    }
     etat.vies--;
     maj_hud();
     Son.effet('degat');
@@ -166,7 +172,7 @@ function boucle(instant) {
     etat.temps += dt;
     if (Math.floor(etat.temps) !== secondesAvant) {
         ui.temps.textContent = Math.floor(etat.temps);
-        Succes.seconde();
+        if (!etat.tuto) Succes.seconde();   // l'entraînement ne compte pas
     }
 
     // Mise à jour
@@ -175,6 +181,7 @@ function boucle(instant) {
     update_balles(dt, MONDE.largeur, MONDE.hauteur);
     update_zombies(dt, MONDE.largeur, MONDE.hauteur, etat.temps);
     Missions.fin_image();   // zombies tués « d'un seul coup » pendant cette image
+    if (typeof Tutoriel !== 'undefined') Tutoriel.maj(dt);
 
     dessiner();
 
@@ -198,6 +205,7 @@ function init_game(mode, perso) {
         perso,
         score: 0,
         gagnes: 0,
+        tuto: false,         // entraînement (tutoriel.js)
         vies: CONFIG.viesDepart,
         temps: 0,
         prixVie: CONFIG.prixVieDepart,
@@ -231,6 +239,8 @@ function init_game(mode, perso) {
 
 function quitter_partie() {
     arreter_boucle();
+    if (typeof Tutoriel !== 'undefined') Tutoriel.arreter();
+    if (typeof Instructeur !== 'undefined') Instructeur.cacher();
     relacher_commandes();
     Son.arreterMusique();
 }

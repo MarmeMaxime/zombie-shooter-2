@@ -1,0 +1,207 @@
+/* =========================================================================
+   TUTORIEL : le sergent Mâchoire (portrait : instructeur_sprite.js)
+   - Instructeur : la bulle en haut de l'écran, avec son visage qui parle.
+   - Entraînement : une partie scriptée avec le Soldat, étape par étape. On
+     ne peut pas y mourir et rien n'y est compté (succès, missions, stats).
+     Proposé à la première partie, rejouable depuis l'écran « ? ».
+   - Conseils : en vraie partie, une phrase à la première rencontre de chaque
+     monstre, au premier pouvoir prêt et au premier score vert (désactivables).
+   ========================================================================= */
+const Instructeur = (() => {
+    const $i = id => document.getElementById(id);
+    const boite = $i('instructeur'), texte = $i('instructeur-texte'), boutons = $i('instructeur-boutons');
+    let parleJusque = 0, animation = null, cacherApres = null;
+
+    // Visage dessiné dans un canvas (bouche ouverte ou fermée)
+    function visage(canvas, ouvert) {
+        const g = canvas.getContext('2d');
+        g.imageSmoothingEnabled = false;
+        g.clearRect(0, 0, canvas.width, canvas.height);
+        g.drawImage(SPRITES_INSTRUCTEUR[ouvert ? 1 : 0], 0, 0, canvas.width, canvas.height);
+    }
+
+    function parler(message, liste = [], duree = 0) {
+        boite.classList.remove('hidden');
+        texte.textContent = message;
+        boutons.replaceChildren(...liste.map(b => {
+            const el = document.createElement('button');
+            el.textContent = b.texte;
+            el.addEventListener('click', () => { Son.bouton(); el.blur(); b.action(); });
+            return el;
+        }));
+        // La bouche bouge le temps de « dire » la phrase
+        parleJusque = performance.now() + Math.min(2600, 400 + message.length * 30);
+        clearInterval(animation);
+        let ouvert = false;
+        animation = setInterval(() => {
+            ouvert = performance.now() < parleJusque && !ouvert;
+            visage($i('instructeur-visage'), ouvert);
+            if (performance.now() >= parleJusque) clearInterval(animation);
+        }, 130);
+        clearTimeout(cacherApres);
+        if (duree) cacherApres = setTimeout(cacher, duree);
+    }
+
+    function cacher() {
+        clearInterval(animation);
+        clearTimeout(cacherApres);
+        boite.classList.add('hidden');
+    }
+
+    visage($i('instructeur-visage'), false);
+    visage($i('proposition-visage'), false);
+    return { parler, cacher, visage };
+})();
+
+// Nom d'une commande pour les consignes : la touche choisie, ou le bouton tactile
+const tactile = () => typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
+function commande(action) {
+    if (tactile()) return T({ haut: 'le joystick', bas: 'le joystick', tir: 'le bouton TIR', pouvoir: 'le bouton ★', vie: 'le bouton V' }[action]);
+    return `[${Touches.libelle(action)}]`;
+}
+
+/* ---------- Entraînement ---------- */
+const Tutoriel = (() => {
+    let etape = -1, suivi = {};
+
+    function zombie(fractionX, y, vitesse) {
+        const z = creer_zombie('normal', MONDE.largeur, MONDE.hauteur);
+        z.x = MONDE.largeur * fractionX;
+        z.y = y;
+        z.vitesse = vitesse;
+        return z;
+    }
+    const vivants = liste => liste.filter(z => zombies.includes(z));
+    // Les cibles ne doivent pas atteindre la recrue : on les renvoie au fond
+    const repousser = liste => { for (const z of vivants(liste)) if (z.x < joueur.x + joueur.taille + 20) z.x = MONDE.largeur * 0.82; };
+
+    const ETAPES = [
+        {   // 1. Se déplacer
+            texte: () => T('Recrue ! Bienvenue au camp d\'entraînement. Je suis le sergent Mâchoire et tu es en retard. Monte avec {haut}, descends avec {bas}. Exécution !', { haut: commande('haut'), bas: commande('bas') }),
+            debut() { suivi.yMin = suivi.yMax = joueur.y; },
+            fini() {
+                suivi.yMin = Math.min(suivi.yMin, joueur.y);
+                suivi.yMax = Math.max(suivi.yMax, joueur.y);
+                return suivi.yMax - suivi.yMin > 120;
+            }
+        },
+        {   // 2. Tirer sur une cible immobile
+            texte: () => T('Ce zombie est attaché : il ne bougera pas. Il est plus discipliné que toi. Aligne-toi et tire avec {tir} !', { tir: commande('tir') }),
+            debut() { suivi.cibles = [zombie(0.6, joueur.y < 200 ? 260 : 110, 0)]; },
+            fini: () => !vivants(suivi.cibles).length
+        },
+        {   // 3. Changer de ligne
+            texte: () => T('Trois zombies, trois lignes. Tu t\'alignes, tu tires, tu recommences. C\'est tout le métier.'),
+            debut() { suivi.cibles = [80, 180, 280].map((y, i) => zombie(0.72 + i * 0.07, y, 22)); },
+            maj() { repousser(suivi.cibles); },
+            fini: () => !vivants(suivi.cibles).length
+        },
+        {   // 4. Acheter une vie
+            texte: () => T('Ton score est vert : achète une vie avec {vie}. Profites-en, c\'est le seul cadeau que je te ferai.', { vie: commande('vie') }),
+            debut() { etat.score = Math.max(etat.score, etat.prixVie); maj_hud(); suivi.vies = etat.vies; },
+            fini: () => etat.vies > suivi.vies
+        },
+        {   // 5. Pouvoir spécial
+            texte: () => T('Ta jauge ★ est pleine. Lance ta {pouvoir} avec {touche} et nettoie-moi ce troupeau !', { pouvoir: CONFIG.pouvoirs.rafale.nom, touche: commande('pouvoir') }),
+            debut() { suivi.cibles = []; suivi.lance = false; },
+            maj() {
+                if (pouvoir.rafale > 0) suivi.lance = true;
+                if (!suivi.lance && !pouvoir_pret()) { pouvoir.charge = cfg_pouvoir().kills; maj_hud_pouvoir(); }
+                // Un troupeau à balayer (il revient tant que le pouvoir n'a pas servi)
+                if (!vivants(suivi.cibles).length && !suivi.lance) suivi.cibles = [60, 110, 160, 210, 260, 310].map((y, i) => zombie(0.68 + (i % 2) * 0.06, y, 18));
+                repousser(suivi.cibles);
+            },
+            fini: () => suivi.lance && !vivants(suivi.cibles).length
+        },
+        {   // 6. Les vies
+            texte: () => T('Écoute bien : si un zombie te touche ou passe derrière toi, tu perds une vie. À zéro, c\'est fini. Ici je suis gentil. Dehors, non.'),
+            bouton: 'Compris, sergent !'
+        },
+        {   // 7. Fin
+            texte: () => T('Entraînement terminé. Tu n\'es pas prêt : personne ne l\'est. Les monstres bizarres, je te les présenterai sur le terrain. Rompez !'),
+            bouton: 'Au combat !',
+            fin: true
+        }
+    ];
+
+    function suivant() {
+        etape++;
+        suivi = {};
+        const e = ETAPES[etape];
+        if (e.debut) e.debut();
+        const liste = [];
+        if (e.bouton) liste.push({ texte: T(e.bouton), action: e.fin ? terminer : suivant });
+        if (!e.fin) liste.push({ texte: T('Passer l\'entraînement'), action: terminer });
+        Instructeur.parler(e.texte(), liste);
+    }
+
+    function demarrer() {
+        afficher(ecrans.menu, false);
+        afficher(ecrans.tuto, false);
+        afficher(ecrans.jeu, true);
+        init_game('normal', 'soldat');
+        etat.tuto = true;
+        etape = -1;
+        suivant();
+    }
+
+    // Appelée à chaque image de la partie (main.js)
+    function maj(dt) {
+        if (!etat.tuto || etape < 0) return;
+        const e = ETAPES[etape];
+        if (e.maj) e.maj(dt);
+        if (!e.fini || !e.fini()) return;
+        // Étape réussie : un « Bien. » et on enchaîne
+        suivi.bravo = (suivi.bravo || 0) + dt;
+        if (suivi.bravo === dt) Instructeur.parler(T('Bien.'));
+        if (suivi.bravo > 0.9) suivant();
+    }
+
+    function terminer() {
+        arreter();
+        quitter_partie();
+        retour_menu_principal();
+    }
+    function arreter() {
+        etape = -1;
+        Instructeur.cacher();
+    }
+
+    return { demarrer, maj, arreter };
+})();
+
+/* ---------- Conseils en vraie partie (une seule fois chacun) ---------- */
+const Conseils = (() => {
+    const options = Sauvegarde.donnees.options;
+    function dire(cle, message) {
+        if (!options.conseils || etat.tuto || !etat.enCours || options.conseilsVus.includes(cle)) return;
+        options.conseilsVus.push(cle);
+        Sauvegarde.sauver();
+        Instructeur.parler(message, [], 6500);
+    }
+    return {
+        monstre(type) {
+            const f = FICHES.find(x => x.type === type);
+            if (f && type !== 'normal') dire('monstre_' + type, T('{nom} en approche ! {conseil}', { nom: f.nom, conseil: f.conseil }));
+        },
+        pouvoir_pret: () => dire('pouvoir', T('Ta jauge ★ est pleine ! Lance ton pouvoir avec {touche}.', { touche: commande('pouvoir') })),
+        score_vert: () => dire('vie', T('Ton score est vert : {touche} pour acheter une vie.', { touche: commande('vie') }))
+    };
+})();
+
+/* ---------- Proposition à la première partie, bouton de l'écran « ? » ---------- */
+(() => {
+    const $p = id => document.getElementById(id);
+    const options = Sauvegarde.donnees.options;
+    // Renvoie true si la proposition s'affiche (la partie attend la réponse)
+    window.proposer_entrainement = () => {
+        if (options.tutoPropose) return false;
+        options.tutoPropose = true;
+        Sauvegarde.sauver();
+        $p('tuto-proposition').classList.remove('hidden');
+        return true;
+    };
+    $p('btn-proposition-oui').addEventListener('click', () => { $p('tuto-proposition').classList.add('hidden'); Tutoriel.demarrer(); });
+    $p('btn-proposition-non').addEventListener('click', () => { $p('tuto-proposition').classList.add('hidden'); $p('btn-start').click(); });
+    $p('btn-entrainement').addEventListener('click', () => Tutoriel.demarrer());
+})();

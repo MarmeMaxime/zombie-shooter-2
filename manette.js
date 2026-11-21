@@ -15,7 +15,7 @@ const Manette = (() => {
     const ECRANS = [
         ['vestiaire-overlay', 'btn-close-vestiaire'], ['loot-overlay', 'btn-close-loot'], ['perso-overlay', 'btn-close-perso'],
         ['missions-overlay', 'btn-close-missions'], ['bestiaire-overlay', 'btn-close-bestiaire'], ['succes-overlay', 'btn-close-succes'],
-        ['save-overlay', 'btn-close-save'], ['tutorial-overlay', 'btn-close-tuto'], ['options-overlay', 'btn-close-options']
+        ['save-overlay', 'btn-close-save'], ['tutorial-overlay', 'btn-close-tuto'], ['options-overlay', 'btn-close-options'], ['tuto-proposition', 'btn-proposition-non']
     ];
     const visible = id => { const e = document.getElementById(id); return e && !e.classList.contains('hidden'); };
     const cliquer = id => document.getElementById(id).click();

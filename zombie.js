@@ -205,14 +205,15 @@ function toucher_zombie(z, degats = 1, tir) {
         secouer_ecran(4);
         Son.effet('bossMort');
     }
-    if (typeof Succes !== 'undefined') Succes.zombie_tue(z.type);
+    if (typeof Succes !== 'undefined' && !etat.tuto) Succes.zombie_tue(z.type);
 }
 
 /* ---------- Mise à jour ---------- */
 function update_zombies(dt, largeurCanvas, hauteurCanvas, tempsJeu) {
     // Pendant le combat de boss, seuls ses invocations arrivent
-    if (!boss) gerer_apparitions(dt, largeurCanvas, hauteurCanvas, tempsJeu);
-    gerer_boss(dt, largeurCanvas, hauteurCanvas, tempsJeu);
+    // Entraînement : seuls les zombies placés par le sergent
+    if (!boss && !etat.tuto) gerer_apparitions(dt, largeurCanvas, hauteurCanvas, tempsJeu);
+    if (!etat.tuto) gerer_boss(dt, largeurCanvas, hauteurCanvas, tempsJeu);
     update_crachats(dt);
 
     const zoneJoueur = hitbox(joueur.x, joueur.y, joueur.taille);
@@ -225,7 +226,11 @@ function update_zombies(dt, largeurCanvas, hauteurCanvas, tempsJeu) {
         const etourdi = z.etourdi > 0;
         const comp = comportement(z);
         // Première apparition de ce monstre : il entre au bestiaire
-        if (!z.vu) { z.vu = true; if (typeof Bestiaire !== 'undefined') Bestiaire.rencontre(z.type); }
+        if (!z.vu && !etat.tuto) {
+            z.vu = true;
+            if (typeof Bestiaire !== 'undefined') Bestiaire.rencontre(z.type);
+            if (typeof Conseils !== 'undefined') Conseils.monstre(z.type);   // le sergent présente le nouveau venu
+        }
         if (z.joggeur && !etourdi) gerer_joggeur(z, dt);
         if (comp.maj && !etourdi) comp.maj(z, dt);
         if (z.retirer) { zombies.splice(i, 1); continue; }   // retiré par son comportement (tombe ouverte)
