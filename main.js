@@ -200,7 +200,9 @@ function arreter_boucle() {
 }
 
 /* ---------- Début / fin de partie ---------- */
-function init_game(mode, perso) {
+// tuto = true : entraînement (tutoriel.js), connu dès le départ pour que la toute
+// première image montre déjà le camp et que la marche démarre directement
+function init_game(mode, perso, tuto = false) {
     arreter_boucle(); // garantit qu'une seule boucle tourne à la fois
 
     Object.assign(etat, {
@@ -210,7 +212,7 @@ function init_game(mode, perso) {
         perso,
         score: 0,
         gagnes: 0,
-        tuto: false,         // entraînement (tutoriel.js)
+        tuto,                // entraînement (tutoriel.js)
         vies: CONFIG.viesDepart,
         temps: 0,
         prixVie: CONFIG.prixVieDepart,
@@ -235,7 +237,7 @@ function init_game(mode, perso) {
     ui.gameOver.classList.add('hidden');
     ecran_pause.classList.add('hidden');
     Son.reprendreMusique();
-    Son.jouerAmbiance(mode);
+    Son.jouerAmbiance(tuto ? 'entrainement' : mode);
 
     redimensionner();   // le canvas vient de s'afficher : on prend la taille de l'écran
     dernierInstant = performance.now();

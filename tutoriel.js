@@ -181,9 +181,7 @@ const Tutoriel = (() => {
         afficher(ecrans.menu, false);
         afficher(ecrans.tuto, false);
         afficher(ecrans.jeu, true);
-        init_game('normal', 'soldat');
-        etat.tuto = true;
-        Son.jouerAmbiance('entrainement');   // marche militaire (audio.js)
+        init_game('normal', 'soldat', true);   // décor du camp et marche militaire dès la première image
         etape = -1;
         document.getElementById('btn-passer-tuto').classList.remove('hidden');
         suivant();
