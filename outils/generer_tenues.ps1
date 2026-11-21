@@ -13,10 +13,29 @@ function BaseFile($base, $frame) {
     return "$assets\${base}_$frame.png"
 }
 
+# --- Accessories -------------------------------------------------------------
+# Each outfit can get details drawn relative to the character's eye, found on
+# every frame (so they follow the head while walking). $DECOS[outfit] is a
+# scriptblock(bmp, ex, ey) that draws with Pt (any pixel) / Po (opaque only).
+$COULEURS_OEIL = @{ 'joueur' = 'FA6A0A'; 'brute' = '1A1A1A'; 'grenadier' = '22305A' }
+function Pt($bmp, $x, $y, $hex) { if ($x -ge 0 -and $y -ge 0 -and $x -lt $bmp.Width -and $y -lt $bmp.Height) { $bmp.SetPixel($x, $y, (C $hex)) } }
+function Po($bmp, $x, $y, $hex) { if ($x -ge 0 -and $y -ge 0 -and $x -lt $bmp.Width -and $y -lt $bmp.Height -and $bmp.GetPixel($x, $y).A -gt 0) { $bmp.SetPixel($x, $y, (C $hex)) } }
+function Ligne($bmp, $x0, $x1, $y, $hex, [switch]$opaque) { for ($x = $x0; $x -le $x1; $x++) { if ($opaque) { Po $bmp $x $y $hex } else { Pt $bmp $x $y $hex } } }
+function Oeil($bmp, $couleur) {
+    $res = $null
+    for ($y = 0; $y -le 14; $y++) { for ($x = 0; $x -lt $bmp.Width; $x++) {
+        $c = $bmp.GetPixel($x, $y)
+        if ($c.A -gt 0 -and ('{0:X2}{1:X2}{2:X2}' -f $c.R, $c.G, $c.B) -eq $couleur -and (-not $res -or $x -gt $res[0])) { $res = @($x, $y) }
+    } }
+    return $res
+}
+$DECOS = @{}
+
 # value: 'RRGGBB' or 'camo:A,B,C' (patchy pattern) ; $special: scriptblock(k,x,y) -> hex or $null
 function Recolor($base, $out, $map, $special) {
     foreach ($fr in $frames) {
         $s = [System.Drawing.Bitmap]::FromFile((BaseFile $base $fr)); $bmp = New-Object System.Drawing.Bitmap $s; $s.Dispose()
+        $posOeil = Oeil $bmp $COULEURS_OEIL[$base]
         for ($y = 0; $y -lt $bmp.Height; $y++) { for ($x = 0; $x -lt $bmp.Width; $x++) {
             $c = $bmp.GetPixel($x, $y); if ($c.A -eq 0) { continue }
             $k = '{0:X2}{1:X2}{2:X2}' -f $c.R, $c.G, $c.B
@@ -30,10 +49,69 @@ function Recolor($base, $out, $map, $special) {
             }
             $bmp.SetPixel($x, $y, (C $n))
         } }
+        if ($posOeil -and $DECOS.ContainsKey($out)) { & $DECOS[$out] $bmp $posOeil[0] $posOeil[1] }
         $bmp.Save("$assets\skin_${out}_$fr.png", [System.Drawing.Imaging.ImageFormat]::Png)
         $bmp.Dispose()
     }
 }
+
+# ---------------- ACCESSOIRES PAR TENUE (relative to the eye ex, ey) ----------------
+# Soldat : (ex, ey) = right end of the visor
+$DECOS['soldat_urbain'] = { param($b, $ex, $ey)            # tactical headset + mic
+    Ligne $b ($ex - 8) ($ex - 7) ($ey) '8A8E96'; Ligne $b ($ex - 8) ($ex - 7) ($ey + 1) '8A8E96'
+    for ($i = 0; $i -le 5; $i++) { Pt $b ($ex - 6 + $i) ($ey + 2 + [Math]::Floor($i / 3)) 'B0B4BC' }
+    Pt $b ($ex) ($ey + 3) 'FF3A3A' }
+$DECOS['soldat_neige'] = { param($b, $ex, $ey)             # fur trim around the hood
+    for ($x = $ex - 10; $x -le $ex + 1; $x++) { Po $b $x ($ey - 1) $(if ($x % 2) { 'FFFFFF' } else { 'D8E0E8' }) }
+    Po $b ($ex - 10) $ey 'FFFFFF'; Po $b ($ex - 10) ($ey + 1) 'D8E0E8' }
+$DECOS['soldat_jungle'] = { param($b, $ex, $ey)            # leaves stuck in the helmet net
+    foreach ($p in @(@(-9, -5, '3A6A1A'), @(-8, -6, '6A9A2A'), @(-5, -7, '6A9A2A'), @(-4, -6, '3A6A1A'), @(-2, -6, '6A9A2A'), @(-6, -5, '3A6A1A'), @(-1, -7, '3A6A1A'))) { Pt $b ($ex + $p[0]) ($ey + $p[1]) $p[2] }
+    Ligne $b ($ex - 6) ($ex - 1) ($ey + 2) '3A2A1A' -opaque }   # black face paint
+$DECOS['soldat_apparat'] = { param($b, $ex, $ey)           # red plume, gold band, medals
+    Ligne $b ($ex - 7) ($ex - 3) ($ey - 6) 'E8C24A' -opaque
+    for ($i = 0; $i -lt 6; $i++) { Pt $b ($ex - 6 - [Math]::Floor($i / 2)) ($ey - 7 - $i) $(if ($i % 2) { 'C81E1E' } else { 'E8402E' }); Pt $b ($ex - 5 - [Math]::Floor($i / 2)) ($ey - 7 - $i) 'C81E1E' }
+    foreach ($dx in @(-4, -2)) { Pt $b ($ex + $dx) ($ey + 11) 'C81E1E'; Pt $b ($ex + $dx) ($ey + 12) 'F2D24A'; Pt $b ($ex + $dx) ($ey + 13) 'B8902E' } }
+$DECOS['soldat_cyber'] = { param($b, $ex, $ey)             # glowing visor line + antenna
+    Ligne $b ($ex - 7) ($ex) ($ey) '3CF0FF' -opaque; Pt $b ($ex + 1) ($ey) 'C8FFFF'
+    for ($i = 1; $i -le 5; $i++) { Pt $b ($ex - 9) ($ey - 3 - $i) '1C1C28' }
+    Pt $b ($ex - 9) ($ey - 9) 'FF2E88'; Pt $b ($ex - 9) ($ey - 10) 'FF8AC4' }
+
+# Brutus : (ex, ey) = his eye
+$DECOS['brute_marcel'] = { param($b, $ex, $ey)             # cigarette and smoke
+    Ligne $b ($ex + 1) ($ex + 4) ($ey + 4) 'F0F0F0'; Pt $b ($ex + 5) ($ey + 4) 'FF6A1A'
+    Pt $b ($ex + 6) ($ey + 2) 'B8B8B8'; Pt $b ($ex + 7) ($ey + 1) 'D8D8D8'; Pt $b ($ex + 6) ($ey) 'B8B8B8' }
+$DECOS['brute_fonce'] = { param($b, $ex, $ey)              # gold chain
+    for ($x = $ex - 8; $x -le $ex - 1; $x++) { Po $b $x ($ey + 7 + [Math]::Floor([Math]::Abs($x - $ex + 4.5) / 3)) $(if ($x % 2) { 'F2C230' } else { 'B8902E' }) }
+    Po $b ($ex - 4) ($ey + 9) 'F2C230'; Po $b ($ex - 4) ($ey + 10) 'FFE38A' }
+$DECOS['brute_hawai'] = { param($b, $ex, $ey)              # sunglasses + flower lei
+    Ligne $b ($ex - 4) ($ex + 1) ($ey) '111111'; Ligne $b ($ex - 3) ($ex) ($ey + 1) '111111'; Pt $b ($ex - 1) ($ey) '4A7AB8'
+    $cols = @('FF4F9A', 'FFD23C', 'FFFFFF', '3ADC6A')
+    for ($x = $ex - 9; $x -le $ex - 1; $x++) { Po $b $x ($ey + 8) $cols[($x + 20) % 4] } }
+$DECOS['brute_noel'] = { param($b, $ex, $ey)               # Santa hat with white trim and pompom
+    for ($r = 0; $r -le 5; $r++) { Ligne $b ($ex - 9 - $r) ($ex - 1 - 2 * $r) ($ey - 5 - $r) 'D42A2A' }
+    Ligne $b ($ex - 10) ($ex + 1) ($ey - 4) 'F2F2F2'; Ligne $b ($ex - 10) ($ex + 1) ($ey - 3) 'D8D8D8'
+    foreach ($p in @(@(-16, -10), @(-15, -10), @(-16, -9), @(-15, -9))) { Pt $b ($ex + $p[0]) ($ey + $p[1]) 'F2F2F2' } }
+$DECOS['brute_catch'] = { param($b, $ex, $ey)              # luchador mask with white eye trim
+    for ($y = $ey - 5; $y -le $ey + 2; $y++) { for ($x = $ex - 7; $x -le $ex + 2; $x++) {
+        if ($b.GetPixel($x, $y).A -gt 0) { $k = '{0:X2}{1:X2}{2:X2}' -f $b.GetPixel($x, $y).R, $b.GetPixel($x, $y).G, $b.GetPixel($x, $y).B; if ($k -ne '050403' -and $k -ne '000000' -and $k -ne '1A1A1A') { Pt $b $x $y $(if (($x + $y) % 5 -eq 0) { 'F2C230' } else { 'C81E1E' }) } } } }
+    foreach ($p in @(@(-1, -1), @(0, -1), @(1, -1), @(-1, 0), @(1, 0), @(-1, 1), @(0, 1), @(1, 1))) { Po $b ($ex + $p[0]) ($ey + $p[1]) 'FFFFFF' }
+    Pt $b $ex $ey '1A1A1A' }
+
+# Mira : (ex, ey) = her eye
+$DECOS['mira_rousse'] = { param($b, $ex, $ey)              # freckles
+    foreach ($p in @(@(-2, 2), @(-1, 3), @(0, 2), @(-3, 3))) { Po $b ($ex + $p[0]) ($ey + $p[1]) 'B0602A' } }
+$DECOS['mira_treillis'] = { param($b, $ex, $ey)            # face paint stripes + dog tag
+    Ligne $b ($ex - 3) ($ex) ($ey + 2) '3A4A20' -opaque; Ligne $b ($ex - 2) ($ex) ($ey + 3) '5A6A30' -opaque
+    Po $b ($ex - 2) ($ey + 6) '8A8A90'; Po $b ($ex - 2) ($ey + 7) 'D8D8E0'; Po $b ($ex - 1) ($ey + 7) 'C0C0C8' }
+$DECOS['mira_gothique'] = { param($b, $ex, $ey)            # choker with a red gem, winged eyeliner
+    Ligne $b ($ex - 5) ($ex) ($ey + 5) '111111' -opaque; Po $b ($ex - 2) ($ey + 5) 'C81E3A'
+    Pt $b ($ex + 1) ($ey - 1) '111111'; Po $b ($ex + 1) ($ey) '111111' }
+$DECOS['mira_plage'] = { param($b, $ex, $ey)               # sunglasses on the head + flower in the hair
+    Ligne $b ($ex - 5) ($ex + 1) ($ey - 4) '111111'; Pt $b ($ex - 3) ($ey - 4) '4A7AB8'; Pt $b ($ex) ($ey - 4) '4A7AB8'
+    foreach ($p in @(@(-7, -3, 'FF4F9A'), @(-9, -3, 'FF4F9A'), @(-8, -4, 'FF4F9A'), @(-8, -2, 'FF4F9A'), @(-8, -3, 'FFD23C'))) { Pt $b ($ex + $p[0]) ($ey + $p[1]) $p[2] } }
+$DECOS['mira_cyber'] = { param($b, $ex, $ey)               # neon visor + glowing tattoo
+    Ligne $b ($ex - 4) ($ex + 1) ($ey) '3CF0FF'; Ligne $b ($ex - 3) ($ex + 1) ($ey + 1) '1A8AA8'
+    Po $b ($ex - 2) ($ey + 3) 'FF4FD8'; Po $b ($ex - 1) ($ey + 4) 'FF4FD8' }
 
 # ---------------- SOLDAT (base: joueur) ----------------
 $U='322B28'; $D='171819'; $H='4C3D2E'; $V1='14121D'; $V2='242234'; $HC='586335'; $GO='FA6A0A'

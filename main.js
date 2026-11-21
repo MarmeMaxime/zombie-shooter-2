@@ -147,6 +147,7 @@ function perdre_vie() {
     maj_hud();
     Son.effet('degat');
     Missions.degat();
+    joueur_touche();
     if (etat.vies <= 0) game_over();
 }
 

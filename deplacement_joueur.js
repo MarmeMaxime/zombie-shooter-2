@@ -99,23 +99,54 @@ function update_joueur(dt, hauteurCanvas) {
     } else {
         joueur.tempsImage = 0;
     }
+    joueur.touche = Math.max(0, (joueur.touche || 0) - dt);
 }
+
+// Appelée quand le joueur perd une vie : il clignote en rouge et recule un peu
+function joueur_touche() { joueur.touche = 0.5; }
+
+/* ---------- Dessin animé du joueur ----------
+   En plus des images (arrêt, tir, 4 de marche), le corps est animé en deux
+   parties, buste et jambes, coupées à la hanche :
+   - arrêt : il respire (le buste monte et descend d'un pixel)
+   - marche : le buste rebondit à chaque demi-pas (8 positions au lieu de 4)
+   - tir : recul de l'arme et du buste
+   - perte d'une vie : clignote en rouge et recule
+   Ça marche pour tous les personnages et toutes les tenues, sans images en plus. */
+const HANCHE_JOUEUR = 0.62;      // hauteur de la hanche dans le sprite (fraction depuis le haut)
 
 function draw_joueur(ctx) {
     let img = joueur.sprites.arret;
     if (joueur.animTir > 0) img = joueur.sprites.tir;
     else if (joueur.bouge) img = joueur.sprites.marche[joueur.etapeMarche];
 
-    // Skin équipé (gagné dans les caisses) = filtre de couleur sur le sprite
-    const filtre = Loot.filtre(joueur.perso, performance.now() / 1000);
-    if (filtre) {
-        ctx.save();
-        ctx.filter = filtre;
-        ctx.drawImage(img, joueur.x, joueur.y, joueur.taille, joueur.taille);
-        ctx.restore();
+    const t = joueur.taille, px = t / 64;                   // un pixel du sprite
+    const temps = performance.now() / 1000;
+    let busteY = 0, dx = 0;
+    if (joueur.animTir > 0) {
+        // Recul : tout le corps part en arrière au moment du coup, puis revient
+        const r = joueur.animTir / CONFIG.joueur.dureeAnimTir;
+        dx = -2 * px * Math.max(0, r * 2 - 1);
+        busteY = r > 0.6 ? px : 0;
+    } else if (joueur.bouge) {
+        busteY = joueur.tempsImage > CONFIG.joueur.dureeImageMarche / 2 ? px : 0;   // rebond à mi-pas
     } else {
-        ctx.drawImage(img, joueur.x, joueur.y, joueur.taille, joueur.taille);
+        busteY = Math.sin(temps * Math.PI * 1.2) > 0.2 ? px : 0;                  // respiration
     }
+    if (joueur.touche > 0) dx -= 3 * px * (joueur.touche / 0.5);
+
+    // Filtre : clignotement rouge quand il est touché, sinon le skin équipé
+    const clignote = joueur.touche > 0 && Math.floor(joueur.touche * 16) % 2 === 0;
+    const filtre = clignote ? 'brightness(1.4) sepia(1) hue-rotate(-50deg) saturate(6)' : Loot.filtre(joueur.perso, temps);
+
+    const nw = img.naturalWidth || img.width || 64, nh = img.naturalHeight || img.height || 64;
+    const x = joueur.x + dx, y = joueur.y;
+    ctx.save();
+    if (filtre) ctx.filter = filtre;
+    // Jambes (fixes), puis buste décalé verticalement
+    ctx.drawImage(img, 0, nh * HANCHE_JOUEUR, nw, nh * (1 - HANCHE_JOUEUR), x, y + t * HANCHE_JOUEUR, t, t * (1 - HANCHE_JOUEUR));
+    ctx.drawImage(img, 0, 0, nw, nh * HANCHE_JOUEUR, x, y + busteY, t, t * HANCHE_JOUEUR);
+    ctx.restore();
 }
 
 /* =========================================================================
