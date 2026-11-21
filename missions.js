@@ -97,6 +97,7 @@ const Missions = (() => {
             Sauvegarde.sauver();
             LootUI.maj_soldes();
             Succes.verifier();     // les succès « Vétéran » dépendent des missions
+            Deblocage.verifier();  // 3 missions avec un perso débloquent le suivant
         }
     }
 
@@ -187,4 +188,51 @@ const Missions = (() => {
     $m('btn-close-missions').addEventListener('click', () => $m('missions-overlay').classList.add('hidden'));
 
     return { zombie_tue, fin_image, degat, debut_partie, seconde, fin_partie, terminees };
+})();
+
+/* =========================================================================
+   DÉBLOCAGE DES PERSONNAGES
+   Ordre et nombre de missions : CONFIG.deblocage. Les persos débloqués sont
+   gardés dans la sauvegarde (persosDebloques). Une sauvegarde d'avant ce
+   système garde les persos déjà joués ou qui ont des missions terminées.
+   ========================================================================= */
+const Deblocage = (() => {
+    const ordre = CONFIG.deblocage.ordre;
+    const liste = () => Sauvegarde.donnees.persosDebloques;
+    const est_debloque = id => !ordre.includes(id) || liste().includes(id);
+
+    // Ce qu'il manque pour débloquer ce perso : { precedent, faites, requis } (ou null)
+    function condition(id) {
+        const i = ordre.indexOf(id);
+        if (i <= 0) return null;
+        const precedent = ordre[i - 1];
+        return { precedent, faites: Math.min(Missions.terminees(precedent), CONFIG.deblocage.missions), requis: CONFIG.deblocage.missions };
+    }
+
+    // Débloque tout ce qui peut l'être ; true si au moins un nouveau perso
+    function verifier(annoncer = true) {
+        let nouveau = false;
+        for (const id of ordre) {
+            if (est_debloque(id)) continue;
+            const c = condition(id);
+            if (!c || !est_debloque(c.precedent) || c.faites < c.requis) break;   // dans l'ordre : on s'arrête au premier verrou
+            liste().push(id);
+            nouveau = true;
+            if (annoncer) Succes.notifier(`🔓 Nouveau personnage débloqué : ${CONFIG.personnages[id].nom} !`);
+        }
+        if (nouveau) {
+            Sauvegarde.sauver();
+            if (typeof rafraichir_cartes_persos === 'function') rafraichir_cartes_persos();
+        }
+        return nouveau;
+    }
+
+    // Sauvegarde d'avant le déblocage : on ne retire rien au joueur
+    const st = Sauvegarde.donnees.stats;
+    for (const id of ordre) {
+        if (!liste().includes(id) && (id === ordre[0] || st.persosJoues.includes(id) || Missions.terminees(id) > 0)) liste().push(id);
+    }
+    verifier(false);
+
+    return { est_debloque, condition, verifier };
 })();

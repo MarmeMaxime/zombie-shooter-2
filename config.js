@@ -42,6 +42,14 @@ const CONFIG = {
             description: 'La foudre frappe chaque zombie à l\'écran une fois.' }
     },
 
+    /* Déblocage des personnages, dans cet ordre : chacun se débloque en
+       terminant « missions » missions avec le précédent (missions.js).
+       Un perso absent de la liste est disponible d'emblée. */
+    deblocage: {
+        ordre: ['soldat', 'brute', 'grenadier', 'lassie'],
+        missions: 3
+    },
+
     personnages: {
         soldat: {
             nom: 'Soldat',

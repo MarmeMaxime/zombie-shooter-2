@@ -51,7 +51,8 @@ for (const [id, perso] of Object.entries(CONFIG.personnages)) {
 
     carte.append(img, ligne('nom', perso.nom), ligne('arme', CONFIG.armes[perso.arme].nom), ligne('description', perso.description),
         ligne('pouvoir', '★ ' + CONFIG.pouvoirs[perso.pouvoir].nom + ' : ' + CONFIG.pouvoirs[perso.pouvoir].description));
-    carte.addEventListener('click', () => choisir_perso(id));
+    carte.append(ligne('verrou', ''));   // condition de déblocage (masquée une fois le perso débloqué)
+    carte.addEventListener('click', () => { if (Deblocage.est_debloque(id)) choisir_perso(id); });
     liste_persos.appendChild(carte);
 }
 
@@ -63,12 +64,19 @@ function rafraichir_cartes_persos() {
         img.src = Loot.sprites(carte.dataset.perso).arret.src;
         img.classList.toggle('arcenciel', Boolean(skin && skin.anime));
         img.style.filter = skin && skin.filtre ? skin.filtre : '';
+        // Perso verrouillé : carte grisée et ce qu'il reste à faire pour le débloquer
+        const id = carte.dataset.perso, verrouille = !Deblocage.est_debloque(id);
+        carte.classList.toggle('verrouille', verrouille);
+        carte.disabled = verrouille;
+        const c = Deblocage.condition(id);
+        carte.querySelector('.verrou').textContent = verrouille && c
+            ? `🔒 Terminer ${c.requis} missions avec ${CONFIG.personnages[c.precedent].nom} (${c.faites}/${c.requis})` : '';
     }
 }
 rafraichir_cartes_persos();
 
-// Un perso retiré par une mise à jour ? On retombe sur le soldat.
-choisir_perso(CONFIG.personnages[Sauvegarde.donnees.perso] ? Sauvegarde.donnees.perso : 'soldat');
+// Un perso retiré par une mise à jour, ou pas encore débloqué ? On retombe sur le soldat.
+choisir_perso(CONFIG.personnages[Sauvegarde.donnees.perso] && Deblocage.est_debloque(Sauvegarde.donnees.perso) ? Sauvegarde.donnees.perso : 'soldat');
 
 /* ---------- Boutons (son de clic + perte du focus) ---------- */
 document.querySelectorAll('button').forEach(bouton => {
@@ -102,7 +110,7 @@ btn_hardcore.addEventListener('click', () => choisir_difficulte('hardcore'));
 /* ---------- Navigation ---------- */
 $('btn-tuto').addEventListener('click', () => afficher(ecrans.tuto, true));
 $('btn-close-tuto').addEventListener('click', () => afficher(ecrans.tuto, false));
-$('btn-perso').addEventListener('click', () => afficher(ecrans.perso, true));
+$('btn-perso').addEventListener('click', () => { rafraichir_cartes_persos(); afficher(ecrans.perso, true); });
 $('btn-close-perso').addEventListener('click', () => afficher(ecrans.perso, false));
 
 $('btn-start').addEventListener('click', () => {
