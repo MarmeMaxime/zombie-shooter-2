@@ -95,12 +95,17 @@ button.active { background: #ff3333; border-color: #ff3333; }
 /* =========================================================================
    5. HUD (IN-GAME)
    ========================================================================= */
+/* Barre d'infos : toujours entre le bouton pause (à gauche) et le bouton son (à droite) ;
+   si l'écran est trop étroit, elle passe sur deux lignes au lieu de déborder */
 #info {
-  position: absolute; top: 15px; left: 50%; transform: translateX(-50%); 
-  color: white; font-size: 20px; font-weight: bold;
+  position: absolute; top: 15px; left: 56px; right: 68px;   /* pause : 10 + 34 px ; son : 20 + 40 px */
+  display: flex; flex-wrap: wrap; justify-content: center; column-gap: 12px; row-gap: 2px;
+  color: white; font-size: 17px; font-weight: bold;
   text-shadow: 1px 1px 2px black;
-  z-index: 5; pointer-events: none; white-space: nowrap; 
+  z-index: 5; pointer-events: none;
 }
+#info > span { white-space: nowrap; }
+@media (pointer: coarse) { .touche-pc { display: none; } }   /* au doigt : bouton ★, pas de touche E */
 
 /* Score prêt à l'achat */
 span#score.score-ready {
@@ -540,6 +545,7 @@ span#score.score-ready {
     font-size: 0.9rem; white-space: nowrap; pointer-events: none; zoom: var(--ui);
   }
   #info { top: 50px; }   /* sous le bouton pause */
+  #boss-barre { top: 100px; }   /* sous la barre d'infos, qui tient sur deux lignes */
 }
 
 /* =========================================================================

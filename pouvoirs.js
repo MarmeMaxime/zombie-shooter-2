@@ -176,7 +176,7 @@ function maj_hud_pouvoir() {
     const p = Math.min(1, pouvoir.charge / cfg_pouvoir().kills);
     bouton_pouvoir.style.setProperty('--charge', (p * 100).toFixed(0) + '%');
     bouton_pouvoir.classList.toggle('pret', p >= 1);
-    texte_pouvoir.textContent = p >= 1 ? `★ ${cfg_pouvoir().nom.toUpperCase()} PRÊT (E)` : `★ (E) : ${Math.floor(p * 100)}%`;
+    texte_pouvoir.textContent = p >= 1 ? '★ PRÊT' : `★ ${Math.floor(p * 100)}%`;   // court : la barre doit tenir entre les boutons
     texte_pouvoir.classList.toggle('pret', p >= 1);
     bouton_pouvoir.title = `${cfg_pouvoir().nom} (E) : ${pouvoir.charge}/${cfg_pouvoir().kills}`;
 }
