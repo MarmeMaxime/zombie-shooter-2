@@ -30,7 +30,7 @@ const ctx = vm.createContext({
     performance: { now: () => 0 }, requestAnimationFrame: () => 1, cancelAnimationFrame() {},
     Math: Object.assign(Object.create(Math), { random: rand }), console, localStorage: { getItem() {}, setItem() {} }
 });
-for (const f of ['config.js', 'sauvegarde.js', 'audio.js', 'pixel_art.js', 'boss_sprite.js', 'joggeur_sprite.js', 'emeute_sprite.js', 'deplacement_joueur.js', 'tir_joueur.js', 'zombie.js', 'boss.js', 'joggeur.js', 'emeute.js', 'morts.js', 'main.js', 'lootbox.js', 'succes.js', 'missions.js', 'menu.js']) {
+for (const f of ['config.js', 'sauvegarde.js', 'audio.js', 'pixel_art.js', 'boss_sprite.js', 'joggeur_sprite.js', 'emeute_sprite.js', 'deplacement_joueur.js', 'tir_joueur.js', 'zombie.js', 'boss.js', 'joggeur.js', 'emeute.js', 'morts.js', 'pouvoirs.js', 'main.js', 'lootbox.js', 'succes.js', 'missions.js', 'menu.js']) {
     vm.runInContext(fs.readFileSync(path.join(dir, f), 'utf8'), ctx, { filename: f });
 }
 
@@ -46,7 +46,7 @@ const resultat = vm.runInContext(`
     init_game(mode, perso);
     const arme = joueur.arme, typeArme = CONFIG.personnages[perso].arme;
     let pertes = 0, achats = 0; const causes = {};
-    let crachatsRecus = 0, bossPasses = 0, dureesBoss = [], debutBoss = null;
+    let pouvoirsUtilises = 0, crachatsRecus = 0, bossPasses = 0, dureesBoss = [], debutBoss = null;
     const uc = update_crachats; update_crachats = dt => { const v = etat.vies; uc(dt); crachatsRecus += Math.max(0, v - etat.vies); };
     const fb = fin_boss; fin_boss = () => { if (boss && boss.pv > 0) bossPasses++; if (debutBoss !== null) dureesBoss.push(Math.round(etat.temps - debutBoss)); debutBoss = null; fb(); };
     const fab = faire_apparaitre_boss; faire_apparaitre_boss = (a, b) => { debutBoss = etat.temps; fab(a, b); };
@@ -126,6 +126,8 @@ const resultat = vm.runInContext(`
         } else if (dir && danger(joueur.y + dir * joueur.vitesse * 0.15)) {
             commandes.haut = commandes.bas = false;
         }
+        // Pouvoir spécial : dès qu'il y a du monde ou une urgence
+        if (pouvoir_pret() && (zombies_visibles().length >= 5 || zombies.some(z => urgence(z) < 1.5))) { activer_pouvoir(); pouvoirsUtilises++; }
         aligneDepuis = pret ? aligneDepuis + DT : 0;
         commandes.tir = !commandes.tir && aligneDepuis > 0.05 && joueur.rechargeTir === 0;
 
@@ -141,7 +143,7 @@ const resultat = vm.runInContext(`
             pertesMinute = pertes;
         }
     }
-    return { joggeurs: (Sauvegarde.donnees.stats.tues.joggeur || 0) + ' tués, ' + Sauvegarde.donnees.stats.esquives + ' esquives, ' + Sauvegarde.donnees.stats.sprintsStoppes + ' sprints stoppés', missionsRatees: MISSIONS[perso].filter(m => !Sauvegarde.donnees.missions.includes(m.id)).map(m => m.nom + ' ' + m.valeur(statsPerso(perso)) + '/' + m.objectif).join(' | '), coupMax: statsPerso(perso).coupMax, crachatsRecus, bossPasses, dureesBoss: dureesBoss.join(','), boss: Sauvegarde.donnees.stats.bossTues, bossApparus, causes, survie: Math.round(etat.temps), vivant: etat.enCours, vies: etat.vies, pertes, achats, pertesParMinute: pertesParMinute.join('') };
+    return { pouvoirsUtilises, joggeurs: (Sauvegarde.donnees.stats.tues.joggeur || 0) + ' tués, ' + Sauvegarde.donnees.stats.esquives + ' esquives, ' + Sauvegarde.donnees.stats.sprintsStoppes + ' sprints stoppés', missionsRatees: MISSIONS[perso].filter(m => !Sauvegarde.donnees.missions.includes(m.id)).map(m => m.nom + ' ' + m.valeur(statsPerso(perso)) + '/' + m.objectif).join(' | '), coupMax: statsPerso(perso).coupMax, crachatsRecus, bossPasses, dureesBoss: dureesBoss.join(','), boss: Sauvegarde.donnees.stats.bossTues, bossApparus, causes, survie: Math.round(etat.temps), vivant: etat.enCours, vies: etat.vies, pertes, achats, pertesParMinute: pertesParMinute.join('') };
 })`, ctx)(mode, Number(minutes) * 60, Number(reaction), process.env.PERSO || 'soldat');
 
 console.log(JSON.stringify({ perso: process.env.PERSO || 'soldat', mode, reaction: Number(reaction), ...resultat }));

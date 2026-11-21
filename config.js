@@ -29,22 +29,38 @@ const CONFIG = {
     /* ---------- Personnages jouables ----------
        Pour en ajouter un : une entrée ici (sprites = préfixe des images
        <prefixe>_arret.png, _tir.png, _marche1..4.png) + une arme ci-dessous. */
+    /* Pouvoirs spéciaux (pouvoirs.js) : la jauge se remplit en tuant des zombies
+       (« kills » éliminations pour la remplir), puis touche E ou bouton ★. */
+    pouvoirs: {
+        rafale: { nom: 'Rafale', kills: 28, duree: 3, cadence: 0.1,
+            description: 'Tir automatique très rapide pendant 3 s : balayez les lignes.' },
+        onde: { nom: 'Onde de choc', kills: 15, portee: 320, porteeDegats: 140, recul: 150, etourdissement: 2,
+            description: 'Frappe le sol : blesse les zombies collés à lui, repousse et étourdit ceux autour.' },
+        artillerie: { nom: 'Tapis de bombes', kills: 30, obus: 6, delai: 0.7, intervalle: 0.12,
+            description: '6 obus tombent sur les zombies les plus proches.' },
+        orage: { nom: 'Orage', kills: 26, degats: 1, degatsBoss: 3,
+            description: 'La foudre frappe chaque zombie à l\'écran une fois.' }
+    },
+
     personnages: {
         soldat: {
             nom: 'Soldat',
             arme: 'fusil',
+            pouvoir: 'rafale',
             vitesse: 1.25,      // plus rapide que les autres : compense son arme à une seule cible
             description: 'Le plus rapide. Balle à longue portée, une seule cible : il faut bien viser.'
         },
         brute: {
             nom: 'Brutus',
             arme: 'pompe',
+            pouvoir: 'onde',
             sprites: 'brute',
             description: '5 plombs en éventail : pas besoin de viser juste, mais portée limitée.'
         },
         grenadier: {
             nom: 'Mira',
             arme: 'grenade',
+            pouvoir: 'artillerie',
             sprites: 'grenadier',
             description: 'Explose au contact et blesse tout autour. Idéal contre les groupes.'
         },
@@ -52,6 +68,7 @@ const CONFIG = {
         lassie: {
             nom: 'Lassie',
             arme: 'foudre',
+            pouvoir: 'orage',
             sprites: 'lassie',
             vitesse: 1.25,   // équilibrée par simulation avec une cadence de 0,6 s
             description: 'Foxgirl électrique : la foudre saute d\'un zombie à l\'autre, jusqu\'à 3. Agile, mais tire moins vite que le fusil.'

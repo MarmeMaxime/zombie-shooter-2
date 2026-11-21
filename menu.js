@@ -49,7 +49,8 @@ for (const [id, perso] of Object.entries(CONFIG.personnages)) {
         return el;
     };
 
-    carte.append(img, ligne('nom', perso.nom), ligne('arme', CONFIG.armes[perso.arme].nom), ligne('description', perso.description));
+    carte.append(img, ligne('nom', perso.nom), ligne('arme', CONFIG.armes[perso.arme].nom), ligne('description', perso.description),
+        ligne('pouvoir', '★ ' + CONFIG.pouvoirs[perso.pouvoir].nom + ' : ' + CONFIG.pouvoirs[perso.pouvoir].description));
     carte.addEventListener('click', () => choisir_perso(id));
     liste_persos.appendChild(carte);
 }

@@ -196,6 +196,18 @@ const Son = (() => {
             for (let k = 0; k < 5; k++) bruit(k * 0.04, 0.08, { vol: 0.2, filtre: 2500 + k * 600, type: 'highpass' });
             ton(520, 0, 0.3, { type: 'square', vol: 0.06, f2: 180 });
         },
+        // Pouvoirs spéciaux
+        pouvoirPret: () => [660, 880, 1320].forEach((f, i) => ton(f, i * 0.07, 0.25, { type: 'triangle', vol: 0.1 })),
+        rafale: () => { ton(220, 0, 0.3, { type: 'sawtooth', vol: 0.1, f2: 880 }); bruit(0, 0.2, { vol: 0.15, filtre: 3000, type: 'highpass' }); },
+        onde: () => {
+            bruit(0, 0.9, { vol: 0.7, filtre: 900, filtreFin: 50 });
+            ton(55, 0, 0.7, { vol: 0.5, f2: 25 });
+        },
+        sifflement: () => [0, 0.12, 0.24].forEach(d => ton(1800, d, 0.6, { type: 'sine', vol: 0.05, f2: 500 })),
+        orage: () => {
+            bruit(0, 1.2, { vol: 0.6, filtre: 6000, filtreFin: 200 });
+            ton(45, 0.05, 1.0, { type: 'sawtooth', vol: 0.15, f2: 30 });
+        },
         succes: () => [784, 988, 1175, 1568].forEach((f, i) => ton(f, i * 0.09, 0.35, { type: 'triangle', vol: 0.15 })),
         degat: () => { ton(220, 0, 0.25, { type: 'square', vol: 0.12, f2: 90 }); bruit(0, 0.15, { vol: 0.15, filtre: 800 }); }
     };

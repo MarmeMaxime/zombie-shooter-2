@@ -54,7 +54,9 @@ function dessiner() {
     ctx.imageSmoothingEnabled = false;    // le pixel art reste net, sans flou
     draw_zombies(ctx);
     draw_balles(ctx);
+    draw_pouvoir(ctx);
     draw_joueur(ctx);
+    draw_flash_pouvoir(ctx);
 }
 
 const ui = {
@@ -168,6 +170,7 @@ function boucle(instant) {
 
     // Mise à jour
     update_joueur(dt, MONDE.hauteur);
+    update_pouvoir(dt);
     update_balles(dt, MONDE.largeur, MONDE.hauteur);
     update_zombies(dt, MONDE.largeur, MONDE.hauteur, etat.temps);
     Missions.fin_image();   // zombies tués « d'un seul coup » pendant cette image
@@ -201,6 +204,7 @@ function init_game(mode, perso) {
     maj_hud();
 
     reset_joueur(mode, perso);
+    reset_pouvoir(perso);
     Missions.debut_partie();
     reset_zombies(mode);
     reset_balles();

@@ -126,7 +126,8 @@
           Score: <span id="score">0</span> | 
           Vies: <span id="vies">3</span> | 
           Temps: <span id="temps">0</span> |
-          Vie (V) : <span id="prix-vie">100</span>
+          Vie (V) : <span id="prix-vie">100</span> |
+          <span id="pouvoir-hud">★ (E) : 0%</span>
         </div>
         
         <div id="tactical-controls">
@@ -134,6 +135,7 @@
             <div id="joystick-bouton"></div>
           </div>
           <div class="action-controls">
+            <button class="touch-btn" id="btn-pouvoir" title="Pouvoir (E)">★</button>
             <button class="touch-btn" id="btn-touch-buy">V</button>
             <button class="touch-btn" id="btn-touch-shoot">TIR</button>
           </div>
@@ -256,6 +258,7 @@
     <script src="./joggeur.js"></script>
     <script src="./emeute.js"></script>
     <script src="./morts.js"></script>
+    <script src="./pouvoirs.js"></script>
     <script src="./main.js"></script>
     <script src="./lootbox.js"></script>
     <script src="./succes.js"></script>

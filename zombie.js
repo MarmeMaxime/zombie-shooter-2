@@ -169,6 +169,7 @@ function toucher_zombie(z, degats = 1, tir) {
     zombies.splice(index, 1);
     ajouter_cadavre(z);
     ajouter_score(TYPES_ZOMBIE[z.type].config.points);
+    pouvoir_zombie_tue();
     if (z.joggeur && z.joggeur.etat === 'course' && typeof Succes !== 'undefined') Succes.compter('sprintsStoppes');
     Son.effet('mort');
     if (z === boss) {
@@ -191,13 +192,16 @@ function update_zombies(dt, largeurCanvas, hauteurCanvas, tempsJeu) {
     for (let i = zombies.length - 1; i >= 0; i--) {
         const z = zombies[i];
         const type = TYPES_ZOMBIE[z.type];
-        if (z.joggeur) gerer_joggeur(z, dt);
-        z.vitesseActuelle = z.joggeur ? vitesse_joggeur(z) : z.emeute ? vitesse_emeute(z) : z.vitesse;
+        // Étourdi (onde de choc de Brutus) : immobile, il ne charge ni ne se téléporte
+        z.etourdi = Math.max(0, (z.etourdi || 0) - dt);
+        const etourdi = z.etourdi > 0;
+        if (z.joggeur && !etourdi) gerer_joggeur(z, dt);
+        z.vitesseActuelle = etourdi ? 0 : z.joggeur ? vitesse_joggeur(z) : z.emeute ? vitesse_emeute(z) : z.vitesse;
         z.x -= z.vitesseActuelle * MONDE.echelleX * dt;   // même temps de traversée sur tout écran
-        if (z.teleport) gerer_teleport(z, dt, hauteurCanvas);
+        if (z.teleport && !etourdi) gerer_teleport(z, dt, hauteurCanvas);
 
         // En course, ses jambes vont deux fois et demie plus vite
-        z.tempsImage += dt * (z.joggeur && z.joggeur.etat === 'course' ? 2.5 : 1);
+        if (!etourdi) z.tempsImage += dt * (z.joggeur && z.joggeur.etat === 'course' ? 2.5 : 1);
         if (z.tempsImage >= type.config.dureeImage) {
             z.tempsImage -= type.config.dureeImage;
             z.etape = (z.etape + 1) % type.images.length;
@@ -276,6 +280,18 @@ function dessiner_effets(ctx) {
     ctx.restore();
 }
 
+// Petites étoiles qui tournent au-dessus d'un zombie étourdi
+function dessiner_etourdi(ctx, z) {
+    ctx.save();
+    ctx.fillStyle = '#ffe14d';
+    const t = performance.now() / 250;
+    for (let k = 0; k < 3; k++) {
+        const a = t + k * Math.PI * 2 / 3;
+        dessiner_etoile(ctx, z.x + z.taille / 2 + Math.cos(a) * 14, z.y + 4 + Math.sin(a) * 4, 4);
+    }
+    ctx.restore();
+}
+
 function draw_zombies(ctx) {
     draw_cadavres(ctx);
     draw_crachats(ctx);
@@ -304,6 +320,8 @@ function draw_zombies(ctx) {
         if (z.joggeur) dessiner_joggeur(ctx, z);
         else if (z.emeute) dessiner_emeute(ctx, z);
         else ctx.drawImage(TYPES_ZOMBIE[z.type].images[z.etape], z.x, z.y, z.taille, z.taille);
+
+        if (z.etourdi > 0) dessiner_etourdi(ctx, z);
 
         // Barre de vie des zombies blessés
         if (z.pv < z.pvMax) {
