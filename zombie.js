@@ -349,25 +349,31 @@ function toucher_zombie(z, degats = 1) {
 }
 
 /* ---------- Animations de mort ----------
-   Chaque espèce meurt à sa façon. Le corps est animé par phases (impact,
-   genoux qui flanchent, chute, rebond, corps au sol, disparition) :
-   - normal  : s'effondre en avant, face contre terre
-   - tank    : projetée en arrière, tombe sur le dos
-   - joggeur : abattu en plein sprint, il s'écrase et glisse sur le ventre
-   - magical girl : tourne sur elle-même et se dissout en étoiles
-   - boss    : titube, tombe à genoux, s'écroule (séisme et poussière)
-   Le corps reste un moment au sol, sur une flaque qui s'étend. */
+   Le corps est ARTICULÉ : on dessine séparément le haut du corps (tête, buste,
+   bras) et les jambes, reliés à la hanche. Une mort se joue par phases :
+   recul à l'impact -> titube (il continue quelques pas) -> les genoux plient
+   -> le buste bascule d'un côté pendant que les jambes se couchent de l'autre
+   -> rebond au sol -> dernier spasme -> il reste allongé, puis disparaît.
+   - face (zombie normal, Joggeur) : tombe en avant, face contre terre
+   - dos (tank) : projetée en arrière, tombe sur le dos
+   - glissade (Joggeur en plein sprint) : s'écrase et glisse sur le ventre
+   - electro (foudre de Lassie) : tremble et clignote avant de tomber
+   - colosse (boss) : titube longtemps, tombe à genoux, s'écroule (séisme)
+   - paillettes (magical girl) : tourne sur elle-même et se dissout en étoiles
+   sens : -1 = tombe vers la gauche (en avant), +1 = vers la droite (en arrière)
+   hanche : hauteur de la hanche dans le sprite (fraction depuis le haut) */
 const MORTS = {
-    face: { duree: 2.4, chute: [0.4, 0.7], sens: -1, pivot: 0.3, recul: 4, flaque: '#5a0808' },
-    dos: { duree: 2.4, chute: [0.3, 0.6], sens: 1, pivot: 0.7, recul: 12, flaque: '#5a0808' },
-    glissade: { duree: 2.4, chute: [0.05, 0.25], sens: -1, pivot: 0.3, recul: 0, flaque: '#5a0808', glisse: 70 },
-    electro: { duree: 2.4, chute: [0.65, 0.95], sens: -1, pivot: 0.3, recul: 0, flaque: '#5a0808', electro: 0.6 },
-    paillettes: { duree: 1.5 },
-    colosse: { duree: 3.6, chute: [1.3, 1.9], sens: -1, pivot: 0.25, recul: 0, flaque: '#4a6a1a', genoux: [0.8, 1.3], titube: 0.8 }
+    face: { duree: 2.6, titube: 0.4, genoux: [0.1, 0.45], chute: [0.45, 0.78], sens: -1, recul: 4, hanche: 0.6, flaque: '#5a0808' },
+    dos: { duree: 2.6, titube: 0.15, genoux: [0.12, 0.32], chute: [0.32, 0.62], sens: 1, recul: 12, hanche: 0.6, flaque: '#5a0808' },
+    glissade: { duree: 2.6, titube: 0, genoux: [0, 0.05], chute: [0.05, 0.28], sens: -1, recul: 0, hanche: 0.6, flaque: '#5a0808', glisse: 70 },
+    electro: { duree: 2.6, titube: 0, genoux: [0.6, 0.78], chute: [0.78, 1.08], sens: -1, recul: 0, hanche: 0.6, flaque: '#5a0808', electro: 0.6 },
+    colosse: { duree: 3.8, titube: 0.8, genoux: [0.8, 1.3], chute: [1.3, 1.9], sens: -1, recul: 0, hanche: 0.66, flaque: '#4a6a1a', tremble: true },
+    paillettes: { duree: 1.5 }
 };
 let cadavres = [];
 
 const entre = (t, a, b) => Math.max(0, Math.min(1, (t - a) / (b - a)));   // progression 0 -> 1 entre a et b
+const lisse = t => t * t * (3 - 2 * t);                                     // départ et arrivée en douceur
 
 function ajouter_cadavre(z) {
     const style = z.type === 'boss' ? 'colosse'
@@ -387,8 +393,10 @@ function ajouter_cadavre(z) {
         taille: 2 + Math.random() * 3,
         couleur: couleurs[Math.floor(Math.random() * couleurs.length)]
     }));
+    // Images de marche (celles de la course pour un joggeur en plein sprint)
+    const images = z.joggeur && z.joggeur.etat === 'course' ? SPRITES_JOGGEUR.course : TYPES_ZOMBIE[z.type].images;
     cadavres.push({
-        style, image: TYPES_ZOMBIE[z.type].images[z.etape], x: z.x, y: z.y, taille: z.taille,
+        style, images, etape: z.etape % images.length, x: z.x, y: z.y, taille: z.taille,
         age: 0, particules, poussiere: [], impact: false, etoiles: style === 'paillettes'
     });
 }
@@ -406,7 +414,7 @@ function update_cadavres(dt) {
             c.impact = true;
             const nb = c.style === 'colosse' ? 14 : 5;
             for (let k = 0; k < nb; k++) {
-                c.poussiere.push({ x: c.x + c.taille * (0.2 + Math.random() * 0.6), y: c.y + c.taille - 4, vx: (Math.random() - 0.5) * 60, age: 0, r: c.style === 'colosse' ? 10 : 5 });
+                c.poussiere.push({ x: c.x + c.taille * (0.1 + Math.random() * 0.8) + m.sens * c.taille * 0.3, y: c.y + c.taille - 4, vx: (Math.random() - 0.5) * 60, age: 0, r: c.style === 'colosse' ? 10 : 5 });
             }
             if (c.style === 'colosse') { secouer_ecran(3); Son.effet('explosion'); }
         }
@@ -421,82 +429,122 @@ function update_cadavres(dt) {
     cadavres = cadavres.filter(c => c.age < MORTS[c.style].duree);
 }
 
-// Pose du corps à un instant donné : décalage, rotation autour des pieds, écrasement
-function pose(c) {
-    const m = MORTS[c.style], a = c.age;
-    const p = { dx: 0, dy: 0, rot: 0, sx: 1, sy: 1, pivot: m.pivot || 0.5, alpha: 1, flash: a < 0.08 };
-    const fin = m.duree - 0.5;
-    p.alpha = a < fin ? 1 : 1 - entre(a, fin, m.duree);
+// Pose du corps articulé à l'instant c.age : rotation du buste, des jambes, pliage des genoux
+function pose_articulee(c) {
+    const m = MORTS[c.style], a = c.age, s = m.sens;
+    const genoux = lisse(entre(a, m.genoux[0], m.genoux[1]));
+    const chute = entre(a, m.chute[0], m.chute[1]);
+    const chuteG = chute * chute;                          // accélère comme sous la gravité
+    const p = { dx: 0, buste: 0, jambes: 0, plie: 1, filtre: null, flash: a < 0.08 };
 
-    if (c.style === 'paillettes') {
-        // Tourne sur elle-même (on la voit de face puis de dos) en s'élevant un peu
-        p.sx = Math.cos(entre(a, 0.1, 0.9) * Math.PI * 4);
-        p.dy = -8 * entre(a, 0.1, 0.6);
-        p.alpha = 1;
-        return p;
-    }
-    // Recul à l'impact
-    p.dx = m.sens > 0 ? m.recul * entre(a, 0, 0.25) : m.recul * Math.sin(entre(a, 0, 0.12) * Math.PI);
-    // Le boss titube avant de tomber
-    if (m.titube && a < m.titube) { p.dx += (Math.random() - 0.5) * 6; p.rot = 0.06 * Math.sin(a * 25); }
-    // Électrocuté : il tremble et clignote en bleu (on voit presque son squelette) avant de tomber
+    // Recul à l'impact : le buste est rejeté en arrière puis revient (ou part directement, pour « dos »)
+    if (s > 0) { p.dx = m.recul * lisse(entre(a, 0, 0.25)); p.buste += 0.25 * entre(a, 0, 0.15); }
+    else { p.dx = m.recul * Math.sin(entre(a, 0, 0.14) * Math.PI); p.buste += 0.22 * Math.sin(entre(a, 0, 0.16) * Math.PI); }
+
+    // Titube : petits balancements pendant qu'il fait encore quelques pas
+    if (a < m.titube) p.buste += 0.08 * Math.sin(a * 18) * (1 - a / m.titube);
+    if (m.tremble && a < m.titube) p.dx += (Math.random() - 0.5) * 6;
+
+    // Électrocuté : il tremble et clignote en bleu (on voit presque son squelette)
     if (m.electro && a < m.electro) {
         p.dx += (Math.random() - 0.5) * 5;
-        p.dy = (Math.random() - 0.5) * 3;
+        p.buste += (Math.random() - 0.5) * 0.15;
         p.filtre = Math.floor(a / 0.05) % 2 ? 'brightness(2.4) sepia(1) hue-rotate(160deg) saturate(5)' : 'invert(1) brightness(1.4)';
     }
-    // Genoux qui flanchent : le corps se tasse et se penche
-    const [g0, g1] = m.genoux || [m.chute[0] - 0.28, m.chute[0]];
-    const genoux = entre(a, g0, g1);
-    p.sy = 1 - 0.2 * genoux;
-    p.rot += m.sens * 0.15 * genoux;
-    // Chute (accélérée, comme sous l'effet de la gravité), puis petit rebond au sol
-    const chute = entre(a, m.chute[0], m.chute[1]);
-    p.rot += m.sens * (Math.PI / 2 - 0.15 * genoux) * chute * chute;
-    const rebond = entre(a, m.chute[1], m.chute[1] + 0.15);
-    if (rebond > 0 && rebond < 1) p.rot -= m.sens * 0.1 * Math.sin(rebond * Math.PI);
-    p.sy = chute > 0 ? 0.8 + 0.2 * chute : p.sy;   // une fois couché, il retrouve sa longueur
+
+    // Les genoux plient : les jambes se tassent, le buste s'affaisse vers le côté de la chute
+    p.plie = 1 - 0.4 * genoux;
+    p.buste += s * 0.35 * genoux;
+
+    // Chute : le buste bascule jusqu'au sol, les jambes se couchent de l'autre côté
+    p.buste += s * (Math.PI / 2 - 0.35 * genoux) * chuteG;
+    p.jambes = s * (Math.PI / 2) * chuteG;
+    p.plie += (0.9 - p.plie) * chuteG;                    // une fois couchées, les jambes se détendent
+
+    // Rebond au sol, puis dernier spasme
+    const rebond = entre(a, m.chute[1], m.chute[1] + 0.18);
+    if (rebond > 0 && rebond < 1) p.buste -= s * 0.14 * Math.sin(rebond * Math.PI);
+    const spasme = entre(a, m.chute[1] + 0.6, m.chute[1] + 0.9);
+    if (spasme > 0 && spasme < 1) { p.buste -= s * 0.05 * Math.sin(spasme * Math.PI * 6); p.jambes += s * 0.04 * Math.sin(spasme * Math.PI * 4); }
+
+    // Image affichée : il continue de marcher en titubant, puis se fige dans sa chute
+    const pas = Math.floor(Math.min(a, m.titube) / 0.12);
+    p.image = c.images[(c.etape + pas) % c.images.length];
     return p;
+}
+
+// Position de la hanche : les pieds restent au sol, la hanche suit les jambes qui basculent,
+// sans descendre sous l'épaisseur du corps allongé
+function position_hanche(c, p) {
+    const m = MORTS[c.style];
+    const longueur = c.taille * (1 - m.hanche) * p.plie;
+    const sol = c.y + c.taille;
+    return {
+        hx: c.x + c.taille / 2 + p.dx + Math.sin(p.jambes) * longueur,
+        hy: Math.min(sol - Math.cos(p.jambes) * longueur, sol - c.taille * 0.14)
+    };
+}
+
+// Haut du corps et jambes dessinés séparément autour de la hanche
+function dessiner_corps_articule(ctx, c, p) {
+    const m = MORTS[c.style];
+    const t = c.taille, img = p.image;
+    const nw = img.naturalWidth || img.width, nh = img.naturalHeight || img.height;
+    const { hx, hy } = position_hanche(c, p);
+
+    if (p.filtre) ctx.filter = p.filtre;
+    else if (p.flash) ctx.filter = 'brightness(3)';        // flash blanc à l'impact
+
+    ctx.save();                                            // jambes
+    ctx.translate(hx, hy);
+    ctx.rotate(p.jambes);
+    ctx.scale(1, p.plie);
+    ctx.drawImage(img, 0, nh * m.hanche, nw, nh * (1 - m.hanche), -t / 2, 0, t, t * (1 - m.hanche));
+    ctx.restore();
+    ctx.save();                                            // haut du corps
+    ctx.translate(hx, hy);
+    ctx.rotate(p.buste);
+    ctx.drawImage(img, 0, 0, nw, nh * m.hanche, -t / 2, -t * m.hanche, t, t * m.hanche);
+    ctx.restore();
 }
 
 function draw_cadavres(ctx) {
     for (const c of cadavres) {
         const m = MORTS[c.style];
-        const p = pose(c);
+        const fin = m.duree - 0.5;
+        const alpha = c.age < fin ? 1 : 1 - entre(c.age, fin, m.duree);
 
-        // Flaque qui s'étend sous le corps couché
-        if (m.flaque && m.chute) {
-            const f = entre(c.age, m.chute[1], m.chute[1] + 1.2);
-            if (f > 0) {
-                ctx.save();
-                ctx.globalAlpha = 0.75 * p.alpha;
-                ctx.fillStyle = m.flaque;
-                const cx = c.x + p.dx + c.taille * p.pivot + m.sens * c.taille * 0.45;
-                ctx.beginPath();
-                ctx.ellipse(cx, c.y + c.taille - 3, c.taille * 0.45 * f, c.taille * 0.11 * f, 0, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.restore();
-            }
-        }
-
-        // Le corps
-        ctx.save();
-        ctx.globalAlpha = p.alpha;
-        const px = c.x + p.dx + c.taille * p.pivot, py = c.y + p.dy + c.taille;
-        ctx.translate(px, py);
-        ctx.rotate(p.rot);
-        ctx.scale(p.sx, p.sy);
-        if (p.filtre) ctx.filter = p.filtre;
-        else if (p.flash) ctx.filter = 'brightness(3)';    // flash blanc à l'impact
         if (c.style === 'paillettes') {
-            // Dissolution de haut en bas : on ne dessine que la partie encore présente
+            // Magical girl : tourne sur elle-même en s'élevant, puis se dissout de haut en bas
             const coupe = c.taille * entre(c.age, 0.5, 1.3);
+            ctx.save();
+            ctx.translate(c.x + c.taille / 2, c.y + c.taille - 8 * entre(c.age, 0.1, 0.6));
+            ctx.scale(Math.cos(entre(c.age, 0.1, 0.9) * Math.PI * 4), 1);
+            if (c.age < 0.08) ctx.filter = 'brightness(3)';
             ctx.beginPath();
             ctx.rect(-c.taille, -c.taille + coupe, c.taille * 2, c.taille);
             ctx.clip();
+            ctx.drawImage(c.images[c.etape], -c.taille / 2, -c.taille, c.taille, c.taille);
+            ctx.restore();
+        } else {
+            const p = pose_articulee(c);
+            // Flaque qui s'étend sous le buste une fois au sol
+            const f = entre(c.age, m.chute[1], m.chute[1] + 1.2);
+            if (f > 0) {
+                const { hx } = position_hanche(c, p);
+                ctx.save();
+                ctx.globalAlpha = 0.75 * alpha;
+                ctx.fillStyle = m.flaque;
+                ctx.beginPath();
+                ctx.ellipse(hx + m.sens * c.taille * 0.3, c.y + c.taille - 3, c.taille * 0.42 * f, c.taille * 0.1 * f, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            dessiner_corps_articule(ctx, c, p);
+            ctx.restore();
         }
-        ctx.drawImage(c.image, -c.taille * p.pivot, -c.taille, c.taille, c.taille);
-        ctx.restore();
 
         // Poussière soulevée par la chute
         ctx.save();
