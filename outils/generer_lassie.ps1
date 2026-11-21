@@ -1,4 +1,5 @@
-param([string]$assets)
+param([string]$assets, [int]$queues = 1, [string]$sortie = '')
+# -queues 9 -sortie <path prefix> : nine-tailed variant (base of an outfit, see generer_tenues.ps1)
 # Lassie, the foxgirl: built from Mira's finished sprites (grenadier_*.png) so she
 # keeps the same pixel-art style. ASCII only (PowerShell 5.1).
 # Run AFTER generer_persos.ps1. Output: lassie_arret/tir/marche1..4.png
@@ -135,19 +136,45 @@ foreach ($fr in $frames) {
     $yh = 39; $xl = 64
     for ($x = 0; $x -lt 64; $x++) { if (-not (Vide $bmp $x $yh)) { $xl = $x; break } }
     $sw = $balance[$fr]
-    $boules = @(
-        @(($xl - 1), 39, 3.4, 'r'), @(($xl - 3), 43, 4.0, 'r'), @(($xl - 4 + $sw), 48, 4.4, 'r'),
-        @(($xl - 4 + $sw), 53, 4.0, 'r'), @(($xl - 3 + $sw), 57, 3.4, 'w'), @(($xl - 1 + $sw), 60, 2.4, 'w')
-    )
+    # Each ball: x, y, radius, 'r' (fur) or 'w' (white tip), tail number
+    if ($queues -le 1) {
+        $boules = @(
+            @(($xl - 1), 39, 3.4, 'r', 0), @(($xl - 3), 43, 4.0, 'r', 0), @(($xl - 4 + $sw), 48, 4.4, 'r', 0),
+            @(($xl - 4 + $sw), 53, 4.0, 'r', 0), @(($xl - 3 + $sw), 57, 3.4, 'w', 0), @(($xl - 1 + $sw), 60, 2.4, 'w', 0)
+        )
+    } else {
+        # Fan of thinner tails spreading out behind the hips, each curling a little upward
+        $boules = @()
+        $rayons = @(1.7, 2.0, 2.2, 2.2, 2.0, 1.6, 1.2)
+        for ($n = 0; $n -lt $queues; $n++) {
+            $angle = (-80 + 160 * $n / ($queues - 1)) * [Math]::PI / 180      # 0 = straight back
+            for ($b = 0; $b -lt 7; $b++) {
+                $a = $angle + $b * 0.06
+                $d = 1.5 + $b * 3.0
+                $bx = ($xl + 1) - [Math]::Cos($a) * $d + $sw * $b / 6
+                $by = 42 - [Math]::Sin($a) * $d
+                $boules += , @($bx, $by, $rayons[$b], $(if ($b -ge 5) { 'w' } else { 'r' }), $n)
+            }
+        }
+    }
     $queue = New-Object 'bool[,]' 64, 64
+    $numero = New-Object 'int[,]' 64, 64
     foreach ($bo in $boules) {
         for ($y = [int]($bo[1] - $bo[2] - 1); $y -le $bo[1] + $bo[2] + 1; $y++) { for ($x = [int]($bo[0] - $bo[2] - 1); $x -le $bo[0] + $bo[2] + 1; $x++) {
             if ($x -lt 0 -or $y -lt 0 -or $x -ge 64 -or $y -ge 64) { continue }
             if ((($x - $bo[0]) * ($x - $bo[0]) + ($y - $bo[1]) * ($y - $bo[1])) -gt $bo[2] * $bo[2]) { continue }
             if (-not (Vide $bmp $x $y) -and -not $queue[$x, $y]) { continue }
             $queue[$x, $y] = $true
+            $numero[$x, $y] = $bo[4]
             $ombre = ($x -lt $bo[0] - $bo[2] * 0.3) -or ($y -gt $bo[1] + $bo[2] * 0.4)
             Px $bmp $x $y $(if ($bo[3] -eq 'w') { if ($ombre) { $BLANCD } else { $BLANC } } else { if ($ombre) { $ROUXD } else { $ROUX } })
+        } }
+    }
+    # Several tails: a dark line where two of them overlap, so each one reads separately
+    if ($queues -gt 1) {
+        for ($y = 0; $y -lt 63; $y++) { for ($x = 0; $x -lt 63; $x++) {
+            if (-not $queue[$x, $y]) { continue }
+            if (($queue[($x + 1), $y] -and $numero[($x + 1), $y] -ne $numero[$x, $y]) -or ($queue[$x, ($y + 1)] -and $numero[$x, ($y + 1)] -ne $numero[$x, $y])) { Px $bmp $x $y $OUT }
         } }
     }
     for ($y = 0; $y -lt 64; $y++) { for ($x = 0; $x -lt 64; $x++) {
@@ -158,7 +185,8 @@ foreach ($fr in $frames) {
         }
     } }
 
-    $bmp.Save("$assets\lassie_$fr.png", [System.Drawing.Imaging.ImageFormat]::Png)
+    $fichier = if ($sortie) { "${sortie}_$fr.png" } else { "$assets\lassie_$fr.png" }
+    $bmp.Save($fichier, [System.Drawing.Imaging.ImageFormat]::Png)
     $bmp.Dispose()
 }
 "ok"

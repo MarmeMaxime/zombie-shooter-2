@@ -1,4 +1,4 @@
-param([string]$assets)
+param([string]$assets, [string]$seulement = '')   # -seulement lassie : only the outfits whose id starts with it
 # Outfit skins: recolor the base character sprites. ASCII only (PS 5.1).
 Add-Type -AssemblyName System.Drawing
 $ErrorActionPreference = 'Stop'
@@ -10,6 +10,7 @@ function BaseFile($base, $frame) {
         if ($frame -eq 'arret') { return "$assets\joueur_arr" + [char]0xEA + "t.png" }
         return "$assets\joueur_$frame.png"
     }
+    if ($base.Contains('\')) { return "${base}_$frame.png" }   # full path prefix (nine-tailed Lassie)
     return "$assets\${base}_$frame.png"
 }
 
@@ -17,7 +18,7 @@ function BaseFile($base, $frame) {
 # Each outfit can get details drawn relative to the character's eye, found on
 # every frame (so they follow the head while walking). $DECOS[outfit] is a
 # scriptblock(bmp, ex, ey) that draws with Pt (any pixel) / Po (opaque only).
-$COULEURS_OEIL = @{ 'joueur' = 'FA6A0A'; 'brute' = '1A1A1A'; 'grenadier' = '22305A' }
+$COULEURS_OEIL = @{ 'joueur' = 'FA6A0A'; 'brute' = '1A1A1A'; 'grenadier' = '22305A'; 'lassie' = '1E5A30' }
 function Pt($bmp, $x, $y, $hex) { if ($x -ge 0 -and $y -ge 0 -and $x -lt $bmp.Width -and $y -lt $bmp.Height) { $bmp.SetPixel($x, $y, (C $hex)) } }
 function Po($bmp, $x, $y, $hex) { if ($x -ge 0 -and $y -ge 0 -and $x -lt $bmp.Width -and $y -lt $bmp.Height -and $bmp.GetPixel($x, $y).A -gt 0) { $bmp.SetPixel($x, $y, (C $hex)) } }
 function Ligne($bmp, $x0, $x1, $y, $hex, [switch]$opaque) { for ($x = $x0; $x -le $x1; $x++) { if ($opaque) { Po $bmp $x $y $hex } else { Pt $bmp $x $y $hex } } }
@@ -33,9 +34,11 @@ $DECOS = @{}
 
 # value: 'RRGGBB' or 'camo:A,B,C' (patchy pattern) ; $special: scriptblock(k,x,y) -> hex or $null
 function Recolor($base, $out, $map, $special) {
+    if ($seulement -and -not $out.StartsWith($seulement)) { return }
+    $cleOeil = if ($base.Contains('lassie')) { 'lassie' } else { $base }
     foreach ($fr in $frames) {
         $s = [System.Drawing.Bitmap]::FromFile((BaseFile $base $fr)); $bmp = New-Object System.Drawing.Bitmap $s; $s.Dispose()
-        $posOeil = Oeil $bmp $COULEURS_OEIL[$base]
+        $posOeil = Oeil $bmp $COULEURS_OEIL[$cleOeil]
         for ($y = 0; $y -lt $bmp.Height; $y++) { for ($x = 0; $x -lt $bmp.Width; $x++) {
             $c = $bmp.GetPixel($x, $y); if ($c.A -eq 0) { continue }
             $k = '{0:X2}{1:X2}{2:X2}' -f $c.R, $c.G, $c.B
@@ -170,4 +173,63 @@ $m['F2F2F5'] = '1C1C28'; $m['C4C4D0'] = '0A0A10'; $m['B9B9C6'] = '0A0A10'
 $m['3E5E92'] = '1C1C28'; $m['283F66'] = '0A0A10'; $m['5C80B8'] = '2E2E48'; $m['8FA8D0'] = '3CF0FF'
 $m['E07A1F'] = '3CF0FF'; $m['3C4654'] = '1C1C28'; $m['4E5A6C'] = '2E2E48'
 Recolor 'grenadier' 'mira_cyber' $m $null
+
+# ---------------- LASSIE (base: lassie, or the nine-tailed variant) ----------------
+# Her colours (generer_lassie.ps1): fur/hair D8742E F0A060 A04E1C + hair shades 8A3A10 C8642A 5A2008,
+# white fur F4ECE0 C8BCA8, top 2A2F45 1A1D2C with FFD23C trim, shorts 26293A 16182A 3A3F58,
+# eye 1E5A30 3AD06A 2A9A50. (ex, ey) = top of her eye; lips at ey+3, top of the head at ey-4.
+function Fourrure($m, $clair, $base, $ombre, $c1, $c2, $c3) { $m['F0A060'] = $clair; $m['D8742E'] = $base; $m['A04E1C'] = $ombre; $m['C8642A'] = $c1; $m['8A3A10'] = $c2; $m['5A2008'] = $c3 }
+function Tenue($m, $haut, $hautOmbre, $bordure, $bas, $basOmbre, $basClair) { $m['2A2F45'] = $haut; $m['1A1D2C'] = $hautOmbre; $m['FFD23C'] = $bordure; $m['26293A'] = $bas; $m['16182A'] = $basOmbre; $m['3A3F58'] = $basClair }
+$MARQUES_KITSUNE = { param($b, $ex, $ey)                         # red markings on the cheek
+    Po $b ($ex - 1) ($ey + 2) 'C81E1E'; Po $b ($ex) ($ey + 2) 'E84040' }
+
+$DECOS['lassie_arctique'] = { param($b, $ex, $ey)                # snowflake hair clip
+    foreach ($p in @(@(-2, -4), @(-3, -3), @(-1, -3), @(-2, -2), @(-2, -3))) { Pt $b ($ex + $p[0]) ($ey + $p[1]) $(if ($p[0] -eq -2 -and $p[1] -eq -3) { '4AA8F0' } else { 'FFFFFF' }) } }
+$DECOS['lassie_kitsune'] = { param($b, $ex, $ey)                 # cheek markings + red ribbon in the hair
+    & $MARQUES_KITSUNE $b $ex $ey
+    Ligne $b ($ex - 7) ($ex - 5) ($ey + 5) 'C81E1E' -opaque; Po $b ($ex - 6) ($ey + 6) 'E84040' }
+$DECOS['lassie_tempete'] = { param($b, $ex, $ey)                 # sparks crackling around the ears
+    foreach ($p in @(@(5, -8, 'FFE63C'), @(6, -9, 'FFFFFF'), @(7, -8, 'FFE63C'), @(-7, -7, 'FFE63C'), @(-8, -8, 'FFFFFF'))) { Pt $b ($ex + $p[0]) ($ey + $p[1]) $p[2] } }
+$DECOS['lassie_pinup'] = { param($b, $ex, $ey)                   # red lips, beauty mark, polka-dot bow
+    Po $b ($ex) ($ey + 3) 'C8102E'; Po $b ($ex + 1) ($ey + 3) 'E8203A'
+    Po $b ($ex + 1) ($ey + 2) '3A1A10'
+    foreach ($p in @(@(-3, -5), @(1, -5), @(-3, -4), @(-2, -4), @(0, -4), @(1, -4), @(-3, -3), @(1, -3))) { Pt $b ($ex + $p[0]) ($ey + $p[1]) 'D42A2A' }
+    Pt $b ($ex - 1) ($ey - 4) '8A1010'                            # knot
+    Pt $b ($ex - 3) ($ey - 4) 'FFFFFF'; Pt $b ($ex + 1) ($ey - 4) 'FFFFFF' }   # white polka dots
+$DECOS['lassie_kyubi'] = { param($b, $ex, $ey)                   # markings + foxfire wisps
+    & $MARQUES_KITSUNE $b $ex $ey
+    foreach ($p in @(@(-12, -2, '9AF0FF'), @(-12, -3, 'FFFFFF'), @(-15, 2, '4AC8F0'), @(-15, 1, '9AF0FF'))) { Pt $b ($ex + $p[0]) ($ey + $p[1]) $p[2] } }
+
+# Renarde arctique (commun): white fur, icy blue outfit
+$m = @{}
+Fourrure $m 'FFFFFF' 'E4ECF2' 'A8B8C8' 'C8D4E0' '8896A8' '5A6678'
+Tenue $m '6AB4E0' '3A80B0' 'FFFFFF' '4A90C0' '2A6088' '7AC0E8'
+$m['F4ECE0'] = 'FFFFFF'; $m['C8BCA8'] = 'D0DAE4'; $m['3AD06A'] = '4AA8F0'; $m['2A9A50'] = '2A78C0'; $m['1E5A30'] = '1A3A6A'
+Recolor 'lassie' 'lassie_arctique' $m $null
+
+# Kitsune (rare): shrine maiden, white top with red trim, red hakama
+$m = @{}
+Tenue $m 'F4F4F4' 'C8C8D0' 'C81E1E' 'C81E1E' '8A1010' 'E84040'
+Recolor 'lassie' 'lassie_kitsune' $m $null
+
+# Tempete (rare): black outfit, electric yellow streaks in the fur, yellow eyes
+$m = @{}
+Fourrure $m 'FFE63C' '3A3A48' '22222C' '4A4A5A' '2A2A36' '14141C'
+Tenue $m '1A1A22' '0E0E14' 'FFE63C' '1A1A22' '0E0E14' '2E2E3A'
+$m['F4ECE0'] = 'FFE63C'; $m['C8BCA8'] = 'D8B820'; $m['3AD06A'] = 'FFE63C'; $m['2A9A50'] = 'C8A820'; $m['1E5A30'] = '6A5A10'
+Recolor 'lassie' 'lassie_tempete' $m $null
+
+# Pin-up (epique): the red swimsuit of the reference picture
+$m = @{}
+Tenue $m 'D42A2A' '9A1A1A' 'F05050' 'D42A2A' '9A1A1A' 'F05050'
+Recolor 'lassie' 'lassie_pinup' $m $null
+
+# Kyubi (legendaire): NINE tails, golden fur with foxfire tips, white and red outfit
+$neufQueues = "$env:TEMP\zs2_lassie9"
+& "$PSScriptRoot\generer_lassie.ps1" -assets $assets -queues 9 -sortie $neufQueues | Out-Null
+$m = @{}
+Fourrure $m 'FFF4D0' 'F2D48A' 'C8A050' 'E0C070' 'A88040' '705020'
+Tenue $m 'F8F4EC' 'D0C8B8' 'C81E1E' 'C81E1E' '8A1010' 'E84040'
+$m['F4ECE0'] = '9AF0FF'; $m['C8BCA8'] = '4AC8F0'; $m['3AD06A'] = 'FF5A3A'; $m['2A9A50'] = 'C82A1A'; $m['1E5A30'] = '6A1010'
+if (-not $seulement -or 'lassie_kyubi'.StartsWith($seulement)) { Recolor $neufQueues 'lassie_kyubi' $m $null }
 "ok"

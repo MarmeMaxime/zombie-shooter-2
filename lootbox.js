@@ -40,6 +40,12 @@ const LOOT = {
         mira_plage: { nom: 'Tenue de plage', rarete: 'epique', perso: 'grenadier' },
         mira_cyber: { nom: 'Néon Runner', rarete: 'legendaire', perso: 'grenadier' },
 
+        lassie_arctique: { nom: 'Renarde arctique', rarete: 'commun', perso: 'lassie' },
+        lassie_kitsune: { nom: 'Kitsune', rarete: 'rare', perso: 'lassie' },
+        lassie_tempete: { nom: 'Œil de la tempête', rarete: 'rare', perso: 'lassie' },
+        lassie_pinup: { nom: 'Pin-up', rarete: 'epique', perso: 'lassie' },
+        lassie_kyubi: { nom: 'Kyūbi aux neuf queues', rarete: 'legendaire', perso: 'lassie' },
+
         or: { nom: 'Or massif', rarete: 'legendaire', filtre: 'sepia(1) saturate(5) brightness(1.1)' },
         fantome: { nom: 'Fantôme', rarete: 'legendaire', filtre: 'grayscale(1) brightness(1.8) opacity(0.55)' },
         arcenciel: { nom: 'Arc-en-ciel RGB', rarete: 'mythique', anime: true }
