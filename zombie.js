@@ -138,7 +138,8 @@ function gerer_apparitions(dt, largeurCanvas, hauteurCanvas, tempsJeu) {
             creer_zombie(type, largeurCanvas, hauteurCanvas);
             if (special) {
                 speciaux++;
-                chronos.normal -= intervalle_apparition('normal', tempsJeu);   // il prend la place d'un zombie normal
+                // il prend la place d'un zombie normal (ou d'une partie)
+                chronos.normal -= parMode(CONFIG.apparitions.remplacement) * intervalle_apparition('normal', tempsJeu);
             }
         }
     }

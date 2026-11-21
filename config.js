@@ -86,8 +86,10 @@ const CONFIG = {
     },
 
     // Densité : un ennemi spécial (tout sauf le zombie normal) prend la place
-    // d'un zombie normal, et leur nombre à l'écran est plafonné (les suivants attendent).
+    // d'une partie d'un zombie normal (« remplacement » : 1 = un zombie entier),
+    // et leur nombre à l'écran est plafonné (les suivants attendent).
     apparitions: {
+        remplacement: 0.25,        // réglé par simulation pour retrouver la difficulté de la 1.0
         maxSpeciaux: { normal: 3, hardcore: 4 }
     },
 
