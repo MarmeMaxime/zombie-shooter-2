@@ -88,10 +88,11 @@ const partie_en_cours = () => etat.enCours && !etat.pause;
 /* ---------- Pause ---------- */
 const ecran_pause = document.getElementById('pause-overlay');
 
-function mettre_en_pause(valeur) {
+// ecran = false : pause sans l'écran « PAUSE » (quand le sergent parle)
+function mettre_en_pause(valeur, ecran = true) {
     if (!etat.enCours || etat.pause === valeur) return;
     etat.pause = valeur;
-    ecran_pause.classList.toggle('hidden', !valeur);
+    ecran_pause.classList.toggle('hidden', !(valeur && ecran));
     relacher_commandes();
     if (valeur) {
         if (idAnimation !== null) cancelAnimationFrame(idAnimation);
@@ -105,6 +106,7 @@ function mettre_en_pause(valeur) {
 }
 
 document.addEventListener('keydown', e => {
+    if (typeof Instructeur !== 'undefined' && Instructeur.ouvert()) return;   // le sergent attend une réponse
     if (Touches.action(e.code) === 'pause' && etat.enCours && !e.repeat) {
         e.preventDefault();
         mettre_en_pause(!etat.pause);

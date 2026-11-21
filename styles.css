@@ -113,19 +113,24 @@ button.active { background: #ff3333; border-color: #ff3333; }
 #btn-close-options { width: 100%; }
 #btn-conseils { font-size: 0.8rem; padding: 4px 8px; }
 
-/* Le sergent Mâchoire : bulle sous la barre d'infos (consignes, conseils) */
+/* Le Sergent : quand il parle, la partie est figée et son message est au centre */
 #instructeur {
-  position: absolute; top: 46px; left: 50%; transform: translateX(-50%); z-index: 6; zoom: var(--ui);
-  display: flex; align-items: flex-start; gap: 8px; width: min(560px, 92vw);
-  padding: 6px 10px 6px 6px; background: rgba(15, 15, 15, 0.9); border: 2px solid #b0985c; border-radius: 6px;
-  pointer-events: none;
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 30; zoom: var(--ui);
+  display: flex; align-items: flex-start; gap: 10px; width: min(560px, 90vw);
+  padding: 10px 12px 10px 10px; background: rgba(15, 15, 15, 0.96); border: 2px solid #b0985c; border-radius: 6px;
+  box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.45);   /* assombrit le terrain derrière */
 }
 #instructeur.hidden { display: none; }
-#instructeur-visage { width: 64px; height: 64px; flex: none; image-rendering: pixelated; background: #3a2e1e; border: 1px solid #b0985c; }
+#instructeur-visage { width: 80px; height: 80px; flex: none; image-rendering: pixelated; background: #3a2e1e; border: 1px solid #b0985c; }
 .instructeur-bulle strong { color: #e8c24a; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; }
-#instructeur-texte { margin: 3px 0 4px; color: #fff; font-size: 0.82rem; line-height: 1.35; }
+#instructeur-texte { margin: 4px 0 8px; color: #fff; font-size: 0.9rem; line-height: 1.4; }
 #instructeur-boutons { display: flex; gap: 6px; flex-wrap: wrap; }
-#instructeur-boutons button { pointer-events: auto; font-size: 0.72rem; padding: 3px 8px; }
+#instructeur-boutons button { font-size: 0.8rem; padding: 5px 12px; }
+/* « Passer l'entraînement » : toujours dans le coin droit pendant l'entraînement */
+#btn-passer-tuto { position: absolute; top: 66px; right: 20px; z-index: 31; zoom: var(--ui); font-size: 0.75rem; padding: 4px 10px; background: rgba(0, 0, 0, 0.6); }
+#btn-passer-tuto.hidden { display: none; }
+/* Écran « ? » : défile s'il est trop haut, pour toujours atteindre « À L'ATTAQUE ! » */
+#tutorial-overlay .mission-card { max-height: 94vh; overflow-y: auto; }
 #tuto-proposition { background: rgba(0, 0, 0, 0.8); z-index: 220; }
 #proposition-visage { width: 120px; height: 120px; image-rendering: pixelated; background: #3a2e1e; border: 2px solid #b0985c; margin-bottom: 8px; }
 #btn-entrainement { width: 100%; margin-bottom: 10px; border-color: #b0985c; color: #e8c24a; }

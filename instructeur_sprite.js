@@ -1,5 +1,5 @@
 /* =========================================================================
-   PORTRAIT DU SERGENT MÂCHOIRE (l'instructeur du tutoriel)
+   PORTRAIT DU SERGENT (l'instructeur du tutoriel)
    Pixel art généré au chargement (pixel_art.js), vu de face : chapeau
    d'instructeur à quatre creux, mâchoire carrée, sourcils froncés, grosse
    moustache, cicatrice, cigare et chemise kaki à galons. Grille 40×40.

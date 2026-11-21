@@ -1,6 +1,8 @@
 /* =========================================================================
-   TUTORIEL : le sergent Mâchoire (portrait : instructeur_sprite.js)
-   - Instructeur : la bulle en haut de l'écran, avec son visage qui parle.
+   TUTORIEL : le Sergent (portrait : instructeur_sprite.js)
+   - Instructeur : quand il parle, la partie se fige et son message s'affiche
+     au milieu de l'écran ; on l'accepte (bouton, Entrée, Espace ou A à la
+     manette), puis on joue. Il disparaît pendant qu'on joue.
    - Entraînement : une partie scriptée avec le Soldat, étape par étape. On
      ne peut pas y mourir et rien n'y est compté (succès, missions, stats).
      Proposé à la première partie, rejouable depuis l'écran « ? ».
@@ -10,7 +12,7 @@
 const Instructeur = (() => {
     const $i = id => document.getElementById(id);
     const boite = $i('instructeur'), texte = $i('instructeur-texte'), boutons = $i('instructeur-boutons');
-    let parleJusque = 0, animation = null, cacherApres = null;
+    let parleJusque = 0, animation = null, suite = null, aFige = false;
 
     // Visage dessiné dans un canvas (bouche ouverte ou fermée)
     function visage(canvas, ouvert) {
@@ -20,15 +22,17 @@ const Instructeur = (() => {
         g.drawImage(SPRITES_INSTRUCTEUR[ouvert ? 1 : 0], 0, 0, canvas.width, canvas.height);
     }
 
-    function parler(message, liste = [], duree = 0) {
+    // Le sergent parle : la partie se fige jusqu'à ce qu'on accepte (ensuite() est alors appelée)
+    function parler(message, bouton, ensuite) {
+        aFige = etat.enCours && !etat.pause;
+        if (aFige) mettre_en_pause(true, false);   // pause sans l'écran « PAUSE »
+        suite = ensuite || null;
         boite.classList.remove('hidden');
         texte.textContent = message;
-        boutons.replaceChildren(...liste.map(b => {
-            const el = document.createElement('button');
-            el.textContent = b.texte;
-            el.addEventListener('click', () => { Son.bouton(); el.blur(); b.action(); });
-            return el;
-        }));
+        const b = document.createElement('button');
+        b.textContent = bouton || T('Compris, sergent !');
+        b.addEventListener('click', () => { Son.bouton(); valider(); });
+        boutons.replaceChildren(b);
         // La bouche bouge le temps de « dire » la phrase
         parleJusque = performance.now() + Math.min(2600, 400 + message.length * 30);
         clearInterval(animation);
@@ -38,19 +42,36 @@ const Instructeur = (() => {
             visage($i('instructeur-visage'), ouvert);
             if (performance.now() >= parleJusque) clearInterval(animation);
         }, 130);
-        clearTimeout(cacherApres);
-        if (duree) cacherApres = setTimeout(cacher, duree);
+    }
+
+    function valider() {
+        if (!ouvert()) return;
+        const ensuite = suite;
+        cacher();
+        if (aFige) mettre_en_pause(false);
+        aFige = false;
+        if (ensuite) ensuite();
     }
 
     function cacher() {
         clearInterval(animation);
-        clearTimeout(cacherApres);
         boite.classList.add('hidden');
+        suite = null;
     }
+
+    const ouvert = () => !boite.classList.contains('hidden');
+
+    // Entrée ou Espace pour accepter, avant les autres raccourcis du jeu
+    window.addEventListener('keydown', e => {
+        if (!ouvert() || e.repeat || (e.code !== 'Enter' && e.code !== 'Space' && e.code !== 'NumpadEnter')) return;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        valider();
+    }, true);
 
     visage($i('instructeur-visage'), false);
     visage($i('proposition-visage'), false);
-    return { parler, cacher, visage };
+    return { parler, valider, cacher, ouvert, visage };
 })();
 
 // Nom d'une commande pour les consignes : la touche choisie, ou le bouton tactile
@@ -77,7 +98,7 @@ const Tutoriel = (() => {
 
     const ETAPES = [
         {   // 1. Se déplacer
-            texte: () => T('Recrue ! Bienvenue au camp d\'entraînement. Je suis le sergent Mâchoire et tu es en retard. Monte avec {haut}, descends avec {bas}. Exécution !', { haut: commande('haut'), bas: commande('bas') }),
+            texte: () => T('Recrue ! Bienvenue au camp d\'entraînement. Je suis ton sergent et tu es en retard. Monte avec {haut}, descends avec {bas}. Exécution !', { haut: commande('haut'), bas: commande('bas') }),
             debut() { suivi.yMin = suivi.yMax = joueur.y; },
             fini() {
                 suivi.yMin = Math.min(suivi.yMin, joueur.y);
@@ -113,9 +134,8 @@ const Tutoriel = (() => {
             },
             fini: () => suivi.lance && !vivants(suivi.cibles).length
         },
-        {   // 6. Les vies
-            texte: () => T('Écoute bien : si un zombie te touche ou passe derrière toi, tu perds une vie. À zéro, c\'est fini. Ici je suis gentil. Dehors, non.'),
-            bouton: 'Compris, sergent !'
+        {   // 6. Les vies (explication seulement)
+            texte: () => T('Écoute bien : si un zombie te touche ou passe derrière toi, tu perds une vie. À zéro, c\'est fini. Ici je suis gentil. Dehors, non.')
         },
         {   // 7. Fin
             texte: () => T('Entraînement terminé. Tu n\'es pas prêt : personne ne l\'est. Les monstres bizarres, je te les présenterai sur le terrain. Rompez !'),
@@ -124,15 +144,19 @@ const Tutoriel = (() => {
         }
     ];
 
+    // Le sergent donne la consigne (partie figée) ; l'étape se joue une fois la consigne acceptée
     function suivant() {
+        const reussie = etape >= 0;
         etape++;
         suivi = {};
         const e = ETAPES[etape];
-        if (e.debut) e.debut();
-        const liste = [];
-        if (e.bouton) liste.push({ texte: T(e.bouton), action: e.fin ? terminer : suivant });
-        if (!e.fin) liste.push({ texte: T('Passer l\'entraînement'), action: terminer });
-        Instructeur.parler(e.texte(), liste);
+        const message = (reussie && etape < ETAPES.length - 1 ? T('Bien.') + ' ' : '') + e.texte();
+        Instructeur.parler(message, e.bouton ? T(e.bouton) : null, () => {
+            if (e.fin) return terminer();
+            if (!e.fini) return suivant();   // simple explication : on passe à la suite
+            if (e.debut) e.debut();
+            suivi.enCours = true;
+        });
     }
 
     function demarrer() {
@@ -142,19 +166,19 @@ const Tutoriel = (() => {
         init_game('normal', 'soldat');
         etat.tuto = true;
         etape = -1;
+        document.getElementById('btn-passer-tuto').classList.remove('hidden');
         suivant();
     }
 
     // Appelée à chaque image de la partie (main.js)
     function maj(dt) {
-        if (!etat.tuto || etape < 0) return;
+        if (!etat.tuto || etape < 0 || !suivi.enCours) return;
         const e = ETAPES[etape];
         if (e.maj) e.maj(dt);
         if (!e.fini || !e.fini()) return;
-        // Étape réussie : un « Bien. » et on enchaîne
+        // Étape réussie : un court instant, puis la consigne suivante
         suivi.bravo = (suivi.bravo || 0) + dt;
-        if (suivi.bravo === dt) Instructeur.parler(T('Bien.'));
-        if (suivi.bravo > 0.9) suivant();
+        if (suivi.bravo > 0.6) suivant();
     }
 
     function terminer() {
@@ -165,8 +189,10 @@ const Tutoriel = (() => {
     function arreter() {
         etape = -1;
         Instructeur.cacher();
+        document.getElementById('btn-passer-tuto').classList.add('hidden');
     }
 
+    document.getElementById('btn-passer-tuto').addEventListener('click', () => { Son.bouton(); terminer(); });
     return { demarrer, maj, arreter };
 })();
 
@@ -177,7 +203,7 @@ const Conseils = (() => {
         if (!options.conseils || etat.tuto || !etat.enCours || options.conseilsVus.includes(cle)) return;
         options.conseilsVus.push(cle);
         Sauvegarde.sauver();
-        Instructeur.parler(message, [], 6500);
+        Instructeur.parler(message);   // la partie attend qu'on ait lu
     }
     return {
         monstre(type) {

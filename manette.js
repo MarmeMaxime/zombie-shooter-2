@@ -44,6 +44,10 @@ const Manette = (() => {
 
     function dans_les_ecrans(b, appui) {
         if (tirManette || axeManette) { relacher_commandes(); tirManette = axeManette = false; }
+        if (typeof Instructeur !== 'undefined' && Instructeur.ouvert()) {   // le sergent attend : A pour accepter
+            if (appui('a') || appui('start')) Instructeur.valider();
+            return;
+        }
         if (visible('ecran-titre') && !document.getElementById('ecran-titre').classList.contains('sortie')) {
             // « Appuie sur une touche » : n'importe quel bouton de la manette
             if (Object.keys(BOUTONS).some(appui)) document.dispatchEvent(new KeyboardEvent('keydown', { code: 'Enter' }));
