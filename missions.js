@@ -102,6 +102,20 @@ const MISSIONS = {
 // (on ajoute toujours à la fin d'une liste : les missions déjà terminées gardent leur identifiant)
 for (const [perso, liste] of Object.entries(MISSIONS)) liste.forEach((m, i) => { m.id = `${perso}_${i + 1}`; m.perso = perso; });
 
+/* Ordre d'affichage : de la première partie aux défis de fin (ennemis dans
+   l'ordre où on les croise, puis difficulté). Les numéros sont ceux des
+   identifiants (<perso>_<numéro>) : ils ne changent pas, la sauvegarde reste valable. */
+const ORDRE_MISSIONS = {
+    soldat:    [1, 4, 6, 2, 11, 13, 7, 12, 8, 14, 9, 15, 5, 3, 10],
+    brute:     [1, 4, 8, 2, 11, 6, 14, 12, 13, 7, 5, 15, 9, 3, 10],
+    grenadier: [1, 4, 7, 2, 5, 11, 12, 8, 15, 13, 9, 14, 6, 3, 10],
+    lassie:    [1, 4, 7, 2, 5, 11, 8, 13, 15, 12, 9, 6, 14, 3, 10]
+};
+for (const [perso, ordre] of Object.entries(ORDRE_MISSIONS)) {
+    const rang = m => { const i = ordre.indexOf(Number(m.id.split('_').pop())); return i < 0 ? ordre.length : i; };
+    MISSIONS[perso].sort((a, b) => rang(a) - rang(b));
+}
+
 // Les succès « Vétéran » et « Légende » suivent le nombre de missions
 {
     const noms = { soldat: 'du Soldat', brute: 'de Brutus', grenadier: 'de Mira', lassie: 'de Lassie' };

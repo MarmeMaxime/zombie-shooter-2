@@ -64,6 +64,22 @@ const SUCCES = [
         valeur: () => ['normal', 'tank', 'magicalgirl', 'joggeur', 'emeute', 'pondeuse', 'larve', 'infirmier', 'boxeur', 'boss', 'fossoyeur'].filter(t => (SV().stats.tues[t] || 0) > 0).length }
 ];
 
+/* Ordre d'affichage : progression d'un joueur, du premier zombie aux défis
+   de fin (le code au-dessus reste rangé par thème). Un succès absent de la
+   liste s'affiche à la fin. */
+const ORDRE_SUCCES = [
+    'premier_sang', 'super_pouvoir', 'premier_footing', 'dispersion', 'centurion', 'geologue', 'survivant',
+    'ouvre_boite', 'carton_rouge', 'tueur_geant', 'fossoyeur', 'polyvalent', 'securite_sociale', 'desinsectisation',
+    'casseur', 'naissances', 'pas_de_soin', 'fashion', 'torero', 'recruteur', 'machine', 'chasseur_mg',
+    'maintien_ordre', 'ultime', 'profanateur', 'pigeon', 'increvable', 'coeur_brise', 'marathon', 'fleau',
+    'sparring', 'ko', 'exterminateur', 'elu', 'rentier', 'inarretable', 'naturaliste', 'bestiaire', 'perpetuite',
+    'pouvoir_100', 'baleine', 'veteran_soldat', 'veteran_brute', 'veteran_mira', 'veteran_lassie', 'legende'
+];
+SUCCES.sort((a, b) => {
+    const rang = s => { const i = ORDRE_SUCCES.indexOf(s.id); return i < 0 ? ORDRE_SUCCES.length : i; };
+    return rang(a) - rang(b);
+});
+
 const Succes = (() => {
     const $s = id => document.getElementById(id);
     let secondes = 0;
