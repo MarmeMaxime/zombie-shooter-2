@@ -348,52 +348,164 @@ function toucher_zombie(z, degats = 1) {
     if (typeof Succes !== 'undefined') Succes.zombie_tue(z.type);
 }
 
-/* ---------- Animation de mort ----------
-   Le zombie tué flashe en blanc, bascule en arrière, s'effondre et disparaît
-   dans une gerbe de sang (ou d'étoiles roses pour la magical girl). */
-const DUREE_MORT = 0.9;
+/* ---------- Animations de mort ----------
+   Chaque espèce meurt à sa façon. Le corps est animé par phases (impact,
+   genoux qui flanchent, chute, rebond, corps au sol, disparition) :
+   - normal  : s'effondre en avant, face contre terre
+   - tank    : projetée en arrière, tombe sur le dos
+   - joggeur : abattu en plein sprint, il s'écrase et glisse sur le ventre
+   - magical girl : tourne sur elle-même et se dissout en étoiles
+   - boss    : titube, tombe à genoux, s'écroule (séisme et poussière)
+   Le corps reste un moment au sol, sur une flaque qui s'étend. */
+const MORTS = {
+    face: { duree: 2.4, chute: [0.4, 0.7], sens: -1, pivot: 0.3, recul: 4, flaque: '#5a0808' },
+    dos: { duree: 2.4, chute: [0.3, 0.6], sens: 1, pivot: 0.7, recul: 12, flaque: '#5a0808' },
+    glissade: { duree: 2.4, chute: [0.05, 0.25], sens: -1, pivot: 0.3, recul: 0, flaque: '#5a0808', glisse: 70 },
+    paillettes: { duree: 1.5 },
+    colosse: { duree: 3.6, chute: [1.3, 1.9], sens: -1, pivot: 0.25, recul: 0, flaque: '#4a6a1a', genoux: [0.8, 1.3], titube: 0.8 }
+};
 let cadavres = [];
 
+const entre = (t, a, b) => Math.max(0, Math.min(1, (t - a) / (b - a)));   // progression 0 -> 1 entre a et b
+
 function ajouter_cadavre(z) {
-    const couleurs = z.type === 'magicalgirl' ? ['#ff6ec7', '#ffe14d', '#ffffff'] : ['#8a0f0f', '#b01818', '#5a0808'];
-    const nombre = z.type === 'boss' ? 60 : z.type === 'tank' ? 18 : 12;
+    const style = z.type === 'boss' ? 'colosse'
+        : z.type === 'magicalgirl' ? 'paillettes'
+        : z.type === 'tank' ? 'dos'
+        : z.type === 'joggeur' && z.joggeur && z.joggeur.etat === 'course' ? 'glissade'
+        : 'face';
+    const couleurs = style === 'paillettes' ? ['#ff6ec7', '#ffe14d', '#ffffff']
+        : style === 'colosse' ? ['#6a8a2a', '#8fa83e', '#3a5a1a'] : ['#8a0f0f', '#b01818', '#5a0808'];
+    const nombre = style === 'colosse' ? 60 : z.type === 'tank' ? 18 : 12;
+    const sens = MORTS[style].sens || 1;
     const particules = Array.from({ length: nombre }, () => ({
         x: z.x + z.taille / 2, y: z.y + z.taille * 0.4,
-        vx: 40 + Math.random() * 160, vy: -60 - Math.random() * 140,
+        vx: (30 + Math.random() * 140) * (sens < 0 ? 0.6 : 1), vy: -60 - Math.random() * 140,
         taille: 2 + Math.random() * 3,
         couleur: couleurs[Math.floor(Math.random() * couleurs.length)]
     }));
-    cadavres.push({ image: TYPES_ZOMBIE[z.type].images[z.etape], x: z.x, y: z.y, taille: z.taille, age: 0, particules, etoiles: z.type === 'magicalgirl' });
+    cadavres.push({
+        style, image: TYPES_ZOMBIE[z.type].images[z.etape], x: z.x, y: z.y, taille: z.taille,
+        age: 0, particules, poussiere: [], impact: false, etoiles: style === 'paillettes'
+    });
 }
 
 function update_cadavres(dt) {
     for (const c of cadavres) {
         c.age += dt;
-        c.x += 25 * dt;   // l'impact les repousse un peu en arrière
+        const m = MORTS[c.style];
         for (const p of c.particules) { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 420 * dt; }
+        for (const p of c.poussiere) { p.age += dt; p.x += p.vx * dt; p.y -= 8 * dt; }
+        c.poussiere = c.poussiere.filter(p => p.age < 0.7);
+
+        // Moment où le corps touche le sol : poussière (et séisme pour le boss)
+        if (m.chute && !c.impact && c.age >= m.chute[1]) {
+            c.impact = true;
+            const nb = c.style === 'colosse' ? 14 : 5;
+            for (let k = 0; k < nb; k++) {
+                c.poussiere.push({ x: c.x + c.taille * (0.2 + Math.random() * 0.6), y: c.y + c.taille - 4, vx: (Math.random() - 0.5) * 60, age: 0, r: c.style === 'colosse' ? 10 : 5 });
+            }
+            if (c.style === 'colosse') { secouer_ecran(3); Son.effet('explosion'); }
+        }
+        // Le joggeur glisse sur le ventre avec son élan
+        if (m.glisse && c.age > m.chute[0]) c.x -= m.glisse * Math.exp(-3 * (c.age - m.chute[0])) * dt * 3;
+        // La magical girl lâche des étoiles en se dissolvant
+        if (c.style === 'paillettes' && c.age > 0.5 && c.age < 1.3 && Math.random() < 0.7) {
+            const coupe = c.y + c.taille * entre(c.age, 0.5, 1.3);
+            c.particules.push({ x: c.x + 16 + Math.random() * 32, y: coupe, vx: (Math.random() - 0.5) * 40, vy: -40 - Math.random() * 60, taille: 2 + Math.random() * 2, couleur: ['#ff6ec7', '#ffe14d', '#ffffff'][Math.floor(Math.random() * 3)] });
+        }
     }
-    cadavres = cadavres.filter(c => c.age < DUREE_MORT);
+    cadavres = cadavres.filter(c => c.age < MORTS[c.style].duree);
+}
+
+// Pose du corps à un instant donné : décalage, rotation autour des pieds, écrasement
+function pose(c) {
+    const m = MORTS[c.style], a = c.age;
+    const p = { dx: 0, dy: 0, rot: 0, sx: 1, sy: 1, pivot: m.pivot || 0.5, alpha: 1, flash: a < 0.08 };
+    const fin = m.duree - 0.5;
+    p.alpha = a < fin ? 1 : 1 - entre(a, fin, m.duree);
+
+    if (c.style === 'paillettes') {
+        // Tourne sur elle-même (on la voit de face puis de dos) en s'élevant un peu
+        p.sx = Math.cos(entre(a, 0.1, 0.9) * Math.PI * 4);
+        p.dy = -8 * entre(a, 0.1, 0.6);
+        p.alpha = 1;
+        return p;
+    }
+    // Recul à l'impact
+    p.dx = m.sens > 0 ? m.recul * entre(a, 0, 0.25) : m.recul * Math.sin(entre(a, 0, 0.12) * Math.PI);
+    // Le boss titube avant de tomber
+    if (m.titube && a < m.titube) { p.dx += (Math.random() - 0.5) * 6; p.rot = 0.06 * Math.sin(a * 25); }
+    // Genoux qui flanchent : le corps se tasse et se penche
+    const [g0, g1] = m.genoux || [m.chute[0] - 0.28, m.chute[0]];
+    const genoux = entre(a, g0, g1);
+    p.sy = 1 - 0.2 * genoux;
+    p.rot += m.sens * 0.15 * genoux;
+    // Chute (accélérée, comme sous l'effet de la gravité), puis petit rebond au sol
+    const chute = entre(a, m.chute[0], m.chute[1]);
+    p.rot += m.sens * (Math.PI / 2 - 0.15 * genoux) * chute * chute;
+    const rebond = entre(a, m.chute[1], m.chute[1] + 0.15);
+    if (rebond > 0 && rebond < 1) p.rot -= m.sens * 0.1 * Math.sin(rebond * Math.PI);
+    p.sy = chute > 0 ? 0.8 + 0.2 * chute : p.sy;   // une fois couché, il retrouve sa longueur
+    return p;
 }
 
 function draw_cadavres(ctx) {
     for (const c of cadavres) {
-        const t = c.age / DUREE_MORT;                      // 0 -> 1
-        const chute = Math.min(1, c.age / 0.35);           // bascule pendant 0,35 s
+        const m = MORTS[c.style];
+        const p = pose(c);
+
+        // Flaque qui s'étend sous le corps couché
+        if (m.flaque && m.chute) {
+            const f = entre(c.age, m.chute[1], m.chute[1] + 1.2);
+            if (f > 0) {
+                ctx.save();
+                ctx.globalAlpha = 0.75 * p.alpha;
+                ctx.fillStyle = m.flaque;
+                const cx = c.x + p.dx + c.taille * p.pivot + m.sens * c.taille * 0.45;
+                ctx.beginPath();
+                ctx.ellipse(cx, c.y + c.taille - 3, c.taille * 0.45 * f, c.taille * 0.11 * f, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        // Le corps
         ctx.save();
-        ctx.globalAlpha = t < 0.55 ? 1 : 1 - (t - 0.55) / 0.45;
-        // Pivot aux pieds : il tombe en arrière (vers la droite)
-        ctx.translate(c.x + c.taille / 2, c.y + c.taille);
-        ctx.rotate(chute * chute * Math.PI / 2);
-        if (c.age < 0.08) ctx.filter = 'brightness(3)';     // flash blanc à l'impact
-        ctx.drawImage(c.image, -c.taille / 2, -c.taille, c.taille, c.taille);
+        ctx.globalAlpha = p.alpha;
+        const px = c.x + p.dx + c.taille * p.pivot, py = c.y + p.dy + c.taille;
+        ctx.translate(px, py);
+        ctx.rotate(p.rot);
+        ctx.scale(p.sx, p.sy);
+        if (p.flash) ctx.filter = 'brightness(3)';         // flash blanc à l'impact
+        if (c.style === 'paillettes') {
+            // Dissolution de haut en bas : on ne dessine que la partie encore présente
+            const coupe = c.taille * entre(c.age, 0.5, 1.3);
+            ctx.beginPath();
+            ctx.rect(-c.taille, -c.taille + coupe, c.taille * 2, c.taille);
+            ctx.clip();
+        }
+        ctx.drawImage(c.image, -c.taille * p.pivot, -c.taille, c.taille, c.taille);
         ctx.restore();
 
+        // Poussière soulevée par la chute
         ctx.save();
-        ctx.globalAlpha = Math.max(0, 1 - t * 1.2);
-        for (const p of c.particules) {
-            ctx.fillStyle = p.couleur;
-            if (c.etoiles) dessiner_etoile(ctx, p.x, p.y, p.taille + 1);
-            else ctx.fillRect(p.x, p.y, p.taille, p.taille);
+        ctx.fillStyle = '#c8a878';
+        for (const d of c.poussiere) {
+            ctx.globalAlpha = 0.5 * (1 - d.age / 0.7);
+            ctx.beginPath();
+            ctx.arc(d.x, d.y, d.r * (1 + d.age * 2), 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.restore();
+
+        // Gerbe de sang (ou d'étoiles)
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, 1 - c.age * 0.9);
+        for (const q of c.particules) {
+            ctx.fillStyle = q.couleur;
+            if (c.etoiles) dessiner_etoile(ctx, q.x, q.y, q.taille + 1);
+            else ctx.fillRect(q.x, q.y, q.taille, q.taille);
         }
         ctx.restore();
     }
