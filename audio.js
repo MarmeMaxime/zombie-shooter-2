@@ -173,7 +173,7 @@ const Son = (() => {
         suspendreMusique,
         reprendreMusique,
         estActif: () => actif,
-        tir: (vitesse) => jouerEffet(sonTir, vitesse),
+        contexte,   // contexte Web Audio partagé (aussi utilisé par les sons de lootbox)
         bouton: () => jouerEffet(sonBouton)
     };
 })();

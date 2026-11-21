@@ -304,12 +304,6 @@ span#score.score-ready {
   position: absolute; top: 0; bottom: 0; left: 50%; width: 3px; margin-left: -1px;
   background: #ffe14d; box-shadow: 0 0 8px #ffe14d;
 }
-#loot-fenetre.loot-jackpot { animation: jackpot 1.2s ease-out; }
-@keyframes jackpot {
-  0% { box-shadow: 0 0 0 #ff9a1a; border-color: #444; }
-  20% { box-shadow: 0 0 40px #ff9a1a, inset 0 0 30px #ff2e4d; border-color: #ffe14d; }
-  100% { box-shadow: 0 0 0 #ff9a1a; border-color: #444; }
-}
 
 #loot-resultat { min-height: 2.6em; font-size: 0.85rem; color: #ccc; display: flex; flex-direction: column; gap: 2px; margin-bottom: 8px; }
 #loot-resultat strong { font-size: 1rem; }
@@ -451,3 +445,4 @@ span#score.score-ready {
 .succes-texte { display: flex; flex-direction: column; }
 .succes-texte small { color: #999; }
 .succes-ligne.ok .succes-texte small { color: #c9b26a; }
+.tuto-astuce { color: #bbb; font-size: 0.75rem; line-height: 1.4; margin-bottom: 14px; }

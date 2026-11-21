@@ -155,12 +155,9 @@ const Loot = (() => {
    SONS DE LOOTBOX (synthétisés avec Web Audio : aucun fichier à charger)
    ========================================================================= */
 const SonLoot = (() => {
+    // Même contexte audio que le reste du jeu (audio.js)
     let ac = null;
-    const contexte = () => {
-        if (!ac) { const AC = window.AudioContext || window.webkitAudioContext; if (AC) ac = new AC(); }
-        if (ac && ac.state === 'suspended') ac.resume();
-        return ac;
-    };
+    const contexte = () => (ac = Son.contexte());
 
     // Une note : fréquence (ou glissando de f1 à f2), départ et durée en secondes
     function note(f1, debut, duree, { type = 'square', vol = 0.08, f2 = null, sortie = null, absolu = false } = {}) {

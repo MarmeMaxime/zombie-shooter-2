@@ -50,10 +50,10 @@ const CONFIG = {
     },
 
     armes: {
-        fusil: { nom: 'Fusil', delai: 0.5, vitesse: 1200, degats: 1, son: 1 },
+        fusil: { nom: 'Fusil', delai: 0.5, vitesse: 1200, degats: 1 },
         // Équilibrées par simulation : les 3 armes tiennent indéfiniment dans les 2 modes
-        pompe: { nom: 'Fusil à pompe', delai: 0.7, vitesse: 900, degats: 1, plombs: 5, ecartDegres: 10, portee: 460, son: 0.75 },
-        grenade: { nom: 'Lance-grenades', delai: 0.7, vitesse: 750, degats: 2, rayon: 95, portee: 650, son: 0.55 }
+        pompe: { nom: 'Fusil à pompe', delai: 0.7, vitesse: 900, degats: 1, plombs: 5, ecartDegres: 10, portee: 460 },
+        grenade: { nom: 'Lance-grenades', delai: 0.7, vitesse: 750, degats: 2, rayon: 95, portee: 650 }
     },
 
     zombie: {
