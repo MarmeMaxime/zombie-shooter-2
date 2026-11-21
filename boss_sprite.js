@@ -37,17 +37,23 @@ const SPRITES_BOSS = (() => {
         for (let i = 0; i < hauteur; i++) { poser(g, x, base - i, c); if (i < hauteur / 2) poser(g, x + 1, base - i, c === 'B' ? 'b' : c); }
     }
 
-    // pas : 0..3 (cycle de marche) ; charge : gueule ouverte et pustules allumées
-    function dessiner_corps(pas, charge) {
+    const IMAGES = 8;   // images par cycle de marche
+
+    // i : 0..7 (position dans le cycle de marche) ; charge : gueule ouverte, pustules allumées
+    function dessiner_corps(i, charge) {
         const g = grille();
-        const balance = [0, 1, 0, -1][pas];                 // jambes qui alternent
-        const souffle = pas % 2 === 1 ? 1 : 0;              // le corps monte et descend
+        const a = (i / IMAGES) * Math.PI * 2;              // angle du cycle
+        const balance = Math.round(1.8 * Math.sin(a));     // jambes qui avancent / reculent
+        const bras = Math.round(1.8 * Math.sin(a + Math.PI));   // le bras va à l'opposé de la jambe avant
+        const souffle = Math.cos(2 * a) < 0 ? 1 : 0;       // le corps monte et descend deux fois par pas
+        const leveAvant = Math.cos(a) > 0.6 ? 1 : 0;       // le pied qui passe devant se soulève
+        const leveArriere = Math.cos(a) < -0.6 ? 1 : 0;
 
         // Jambes et pieds (la jambe arrière est dessinée en premier, plus sombre)
-        rect(g, 19 - balance, 23, 22 - balance, 29, 't');
-        rect(g, 18 - balance, 30, 23 - balance, 31, 'g');
-        rect(g, 11 + balance, 23, 15 + balance, 29, 'T');
-        rect(g, 9 + balance, 30, 15 + balance, 31, 'G');
+        rect(g, 19 - balance, 23, 22 - balance, 29 - leveArriere, 't');
+        rect(g, 18 - balance, 30 - leveArriere, 23 - balance, 31 - leveArriere, 'g');
+        rect(g, 11 + balance, 23, 15 + balance, 29 - leveAvant, 'T');
+        rect(g, 9 + balance, 30 - leveAvant, 15 + balance, 31 - leveAvant, 'G');
         rect(g, 10, 20 + souffle, 25, 23, 'T');            // bassin, pantalon
         for (let x = 11; x <= 24; x += 3) poser(g, x, 24, null);   // bas déchiré
 
@@ -67,22 +73,29 @@ const SPRITES_BOSS = (() => {
 
         // Bras-massue devant, qui se balance (partie « A », devant tout le reste)
         ellipse(g, 10, 16 + souffle, 3.4, 4.2, 'A');        // épaule
-        rect(g, 5 - balance, 18 + souffle, 10 - balance, 24, 'A');
-        ellipse(g, 6.5 - balance, 25.5, 4.2, 3.4, 'A');     // poing énorme
-        poser(g, 3 - balance, 24, 'B'); poser(g, 3 - balance, 26, 'B');   // os des phalanges
+        const poingY = 25.5 + souffle * 0.5;
+        rect(g, 5 + bras, 18 + souffle, 10 + bras, 24, 'A');
+        ellipse(g, 6.5 + bras, poingY, 4.2, 3.4, 'A');      // poing énorme
+        poser(g, 3 + bras, 24, 'B'); poser(g, 3 + bras, 26, 'B');   // os des phalanges
 
         // Côtes apparentes et cicatrices
         for (const y of [15, 17]) for (let x = 14; x <= 18; x++) poser(g, x, y + souffle, x % 2 ? 'B' : 'b');
         poser(g, 20, 16 + souffle, 'S'); poser(g, 21, 17 + souffle, 'S'); poser(g, 22, 18 + souffle, 'S');
 
-        // Pustules d'acide (elles s'allument avant le crachat)
-        for (const [x, y] of [[21, 9], [23, 12], [16, 10], [25, 15], [12, 19], [19, 11]]) poser(g, x, y + souffle, charge ? 'p' : 'P');
+        // Pustules d'acide : elles palpitent pendant la marche et clignotent avant le crachat
+        const pustules = [[21, 9], [23, 12], [16, 10], [25, 15], [12, 19], [19, 11]];
+        pustules.forEach(([x, y], k) => {
+            const allumee = charge ? (i + k) % 2 === 0 : (i + k) % 4 === 0;
+            poser(g, x, y + souffle, allumee ? 'p' : 'P');
+        });
 
-        // Visage : œil jaune, gueule (grande ouverte en charge)
+        // Visage : œil jaune, gueule (en charge, elle s'ouvre et se referme en grondant)
         if (charge) {
-            rect(g, 2, 12 + souffle, 8, 16 + souffle, 'R');
-            for (let x = 2; x <= 8; x += 2) { poser(g, x, 12 + souffle, 'W'); poser(g, x + 1, 16 + souffle, 'W'); }
-            poser(g, 1, 14 + souffle, 'P'); poser(g, 0, 15 + souffle, 'P');   // bave acide
+            const ouverture = i % 2;                         // 0 = grande ouverte, 1 = encore plus
+            rect(g, 2, 12 + souffle, 8, 16 + souffle + ouverture, 'R');
+            for (let x = 2; x <= 8; x += 2) { poser(g, x, 12 + souffle, 'W'); poser(g, x + 1, 16 + souffle + ouverture, 'W'); }
+            poser(g, 1, 14 + souffle, 'P'); poser(g, 0, 15 + souffle + ouverture, 'P');   // bave acide
+            if (ouverture) poser(g, 0, 17 + souffle, 'p');
         } else {
             rect(g, 4, 13 + souffle, 8, 13 + souffle, 'R');
             for (let x = 4; x <= 8; x += 2) poser(g, x, 13 + souffle, 'W');
@@ -133,7 +146,7 @@ const SPRITES_BOSS = (() => {
     }
 
     return {
-        marche: [0, 1, 2, 3].map(pas => en_image(dessiner_corps(pas, false))),
-        charge: [0, 1, 2, 3].map(pas => en_image(dessiner_corps(pas, true)))
+        marche: Array.from({ length: IMAGES }, (_, i) => en_image(dessiner_corps(i, false))),
+        charge: Array.from({ length: IMAGES }, (_, i) => en_image(dessiner_corps(i, true)))
     };
 })();

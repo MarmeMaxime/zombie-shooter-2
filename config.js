@@ -109,7 +109,7 @@ const CONFIG = {
         pvParBoss: 4,
         pvMax: 36,
         vitesse: 20,
-        dureeImage: 0.3,
+        dureeImage: 0.15,         // 8 images par pas (boss_sprite.js)
         points: 500,
         // Équilibré par simulation : les 3 persos battent tous les boss sur 45 min
         delaiCrachat: 3.5,        // crache de l'acide sur la ligne du joueur
