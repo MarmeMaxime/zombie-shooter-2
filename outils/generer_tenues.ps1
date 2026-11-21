@@ -22,9 +22,9 @@ $COULEURS_OEIL = @{ 'joueur' = 'FA6A0A'; 'brute' = '1A1A1A'; 'grenadier' = '2230
 function Pt($bmp, $x, $y, $hex) { if ($x -ge 0 -and $y -ge 0 -and $x -lt $bmp.Width -and $y -lt $bmp.Height) { $bmp.SetPixel($x, $y, (C $hex)) } }
 function Po($bmp, $x, $y, $hex) { if ($x -ge 0 -and $y -ge 0 -and $x -lt $bmp.Width -and $y -lt $bmp.Height -and $bmp.GetPixel($x, $y).A -gt 0) { $bmp.SetPixel($x, $y, (C $hex)) } }
 function Ligne($bmp, $x0, $x1, $y, $hex, [switch]$opaque) { for ($x = $x0; $x -le $x1; $x++) { if ($opaque) { Po $bmp $x $y $hex } else { Pt $bmp $x $y $hex } } }
-function Oeil($bmp, $couleur) {
+function Oeil($bmp, $couleur, $yMax) {
     $res = $null
-    for ($y = 0; $y -le 14; $y++) { for ($x = 0; $x -lt $bmp.Width; $x++) {
+    for ($y = 0; $y -le $yMax; $y++) { for ($x = 0; $x -lt $bmp.Width; $x++) {
         $c = $bmp.GetPixel($x, $y)
         if ($c.A -gt 0 -and ('{0:X2}{1:X2}{2:X2}' -f $c.R, $c.G, $c.B) -eq $couleur -and (-not $res -or $x -gt $res[0])) { $res = @($x, $y) }
     } }
@@ -38,7 +38,12 @@ function Recolor($base, $out, $map, $special) {
     $cleOeil = if ($base.Contains('lassie')) { 'lassie' } else { $base }
     foreach ($fr in $frames) {
         $s = [System.Drawing.Bitmap]::FromFile((BaseFile $base $fr)); $bmp = New-Object System.Drawing.Bitmap $s; $s.Dispose()
-        $posOeil = Oeil $bmp $COULEURS_OEIL[$cleOeil]
+        $posOeil = Oeil $bmp $COULEURS_OEIL[$cleOeil] $(if ($cleOeil -eq 'lassie') { 18 } else { 14 })   # Lassie bobs lower while walking
+        if (-not $posOeil -and $cleOeil -eq 'lassie') {
+            # On one walk frame her eye has no dark top pixel: use the bright iris, one row lower
+            $iris = Oeil $bmp '3AD06A' 18
+            if ($iris) { $posOeil = @($iris[0], ($iris[1] - 1)) }
+        }
         for ($y = 0; $y -lt $bmp.Height; $y++) { for ($x = 0; $x -lt $bmp.Width; $x++) {
             $c = $bmp.GetPixel($x, $y); if ($c.A -eq 0) { continue }
             $k = '{0:X2}{1:X2}{2:X2}' -f $c.R, $c.G, $c.B
@@ -190,12 +195,38 @@ $DECOS['lassie_kitsune'] = { param($b, $ex, $ey)                 # cheek marking
     Ligne $b ($ex - 7) ($ex - 5) ($ey + 5) 'C81E1E' -opaque; Po $b ($ex - 6) ($ey + 6) 'E84040' }
 $DECOS['lassie_tempete'] = { param($b, $ex, $ey)                 # sparks crackling around the ears
     foreach ($p in @(@(5, -8, 'FFE63C'), @(6, -9, 'FFFFFF'), @(7, -8, 'FFE63C'), @(-7, -7, 'FFE63C'), @(-8, -8, 'FFFFFF'))) { Pt $b ($ex + $p[0]) ($ey + $p[1]) $p[2] } }
-$DECOS['lassie_pinup'] = { param($b, $ex, $ey)                   # red lips, beauty mark, polka-dot bow
+function Hex($b, $x, $y) { $c = $b.GetPixel($x, $y); if ($c.A -eq 0) { return '' }; '{0:X2}{1:X2}{2:X2}' -f $c.R, $c.G, $c.B }
+$DECOS['lassie_pinup'] = { param($b, $ex, $ey)                   # 1950s pin-up
+    # Polka-dot swimsuit: white dots on the red, staggered every other row of dots
+    for ($y = 0; $y -lt 64; $y++) { for ($x = 0; $x -lt 64; $x++) {
+        if ($y % 3 -ne 1 -or ($x + [Math]::Floor($y / 3) * 2) % 4 -ne 0) { continue }
+        $k = Hex $b $x $y
+        if ($k -eq 'D42A2A') { Pt $b $x $y 'FFFFFF' } elseif ($k -eq '9A1A1A') { Pt $b $x $y 'D8C8C8' }
+    } }
+    # Bare legs and red pumps instead of the boots: in each column, the lowest
+    # 3 boot pixels are the shoe (it follows the feet while walking), the rest is skin
+    for ($x = 0; $x -lt 64; $x++) {
+        $bas = -1
+        for ($y = 40; $y -lt 64; $y++) { $k = Hex $b $x $y; if ($k -eq '2D1B1E' -or $k -eq '0E0C0C') { $bas = $y } }
+        if ($bas -lt 0) { continue }
+        for ($y = 40; $y -le $bas; $y++) {
+            $k = Hex $b $x $y
+            if ($k -ne '2D1B1E' -and $k -ne '0E0C0C') { continue }
+            $ombre = $k -eq '0E0C0C'
+            if ($y -gt $bas - 3) { Pt $b $x $y $(if ($ombre) { '9A1020' } else { 'E0203A' }) }
+            else { Pt $b $x $y $(if ($ombre) { 'C98E66' } else { 'EDB98F' }) }
+        }
+    }
+    # Red lips, beauty mark, cat-eye liner
     Po $b ($ex) ($ey + 3) 'C8102E'; Po $b ($ex + 1) ($ey + 3) 'E8203A'
     Po $b ($ex + 1) ($ey + 2) '3A1A10'
-    foreach ($p in @(@(-3, -5), @(1, -5), @(-3, -4), @(-2, -4), @(0, -4), @(1, -4), @(-3, -3), @(1, -3))) { Pt $b ($ex + $p[0]) ($ey + $p[1]) 'D42A2A' }
-    Pt $b ($ex - 1) ($ey - 4) '8A1010'                            # knot
-    Pt $b ($ex - 3) ($ey - 4) 'FFFFFF'; Pt $b ($ex + 1) ($ey - 4) 'FFFFFF' }   # white polka dots
+    Po $b ($ex + 1) ($ey) '111111'; Po $b ($ex + 2) ($ey - 1) '111111'
+    # Polka-dot headscarf around the head, knotted at the back with two hanging ends
+    foreach ($dy in @(-4, -3)) { for ($dx = -6; $dx -le 2; $dx++) {
+        Po $b ($ex + $dx) ($ey + $dy) $(if ($dy -eq -4 -and ($dx + 7) % 3 -eq 0) { 'FFFFFF' } elseif ($dy -eq -3) { 'A81C1C' } else { 'D42A2A' })
+    } }
+    foreach ($p in @(@(-8, -5), @(-7, -5), @(-8, -4), @(-7, -4), @(-7, -3), @(-8, -2), @(-9, -1), @(-8, -1), @(-9, 0))) { Pt $b ($ex + $p[0]) ($ey + $p[1]) 'D42A2A' }
+    Pt $b ($ex - 7) ($ey - 4) 'FFFFFF'; Pt $b ($ex - 8) ($ey - 1) 'FFFFFF' }
 $DECOS['lassie_kyubi'] = { param($b, $ex, $ey)                   # markings + foxfire wisps
     & $MARQUES_KITSUNE $b $ex $ey
     foreach ($p in @(@(-12, -2, '9AF0FF'), @(-12, -3, 'FFFFFF'), @(-15, 2, '4AC8F0'), @(-15, 1, '9AF0FF'))) { Pt $b ($ex + $p[0]) ($ey + $p[1]) $p[2] } }
