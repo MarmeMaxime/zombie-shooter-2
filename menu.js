@@ -105,10 +105,18 @@ $('btn-close-perso').addEventListener('click', () => afficher(ecrans.perso, fals
 $('btn-start').addEventListener('click', () => {
     // Toute première partie : le sergent propose son entraînement
     if (typeof proposer_entrainement === 'function' && proposer_entrainement()) return;
+    $('choix-variante').classList.remove('hidden');   // Classique ou Vagues ?
+});
+
+function lancer_combat(variante) {
+    $('choix-variante').classList.add('hidden');
     afficher(ecrans.menu, false);
     afficher(ecrans.jeu, true);
-    init_game(difficulte_choisie, perso_choisi);
-});
+    init_game(difficulte_choisie, perso_choisi, false, variante);
+}
+$('btn-classique').addEventListener('click', () => lancer_combat('classique'));
+$('btn-vagues').addEventListener('click', () => lancer_combat('vagues'));
+$('btn-close-variante').addEventListener('click', () => $('choix-variante').classList.add('hidden'));
 
 function retour_menu_principal() {
     afficher(ecrans.jeu, false);

@@ -95,6 +95,26 @@
         </div>
       </div>
 
+      <div id="choix-variante" class="hidden">
+        <div class="mission-card">
+          <h2>MODE DE JEU</h2>
+          <div class="choix-variantes">
+            <button id="btn-classique"><strong>♾ CLASSIQUE</strong><small>Les zombies arrivent sans fin, de plus en plus nombreux.</small></button>
+            <button id="btn-vagues"><strong>🌊 VAGUES</strong><small>Une vague à la fois, une boutique entre chaque vague, un boss toutes les 5 vagues.</small></button>
+          </div>
+          <button id="btn-close-variante">RETOUR</button>
+        </div>
+      </div>
+
+      <div id="boutique-overlay" class="hidden">
+        <div class="mission-card loot-card boutique-card">
+          <h2 id="boutique-titre">VAGUE TERMINÉE</h2>
+          <p class="boutique-solde">Points : <span id="boutique-points">0</span></p>
+          <div id="boutique-liste"></div>
+          <button id="btn-vague-suivante">VAGUE SUIVANTE ▶</button>
+        </div>
+      </div>
+
       <div id="tuto-proposition" class="hidden">
         <div class="mission-card">
           <canvas id="proposition-visage" width="120" height="120"></canvas>
@@ -150,6 +170,7 @@
           <span>Vies : <span id="vies">3</span></span>
           <span>Temps : <span id="temps">0</span></span>
           <span><span>Vie</span> (<span data-touche="vie">V</span>) : <span id="prix-vie">100</span></span>
+          <span id="hud-vague" class="hidden"><span>Vague</span> <span id="vague-num">1</span> · 🧟 <span id="vague-reste">0</span></span>
           <span><span id="pouvoir-hud">★ 0%</span><span class="touche-pc"> (<span data-touche="pouvoir">E</span>)</span></span>
         </div>
         
@@ -181,6 +202,8 @@
             <div id="instructeur-boutons"></div>
           </div>
         </div>
+
+        <p id="bandeau-vague" class="hidden"></p>
 
         <canvas id="jeu" width="800" height="400"></canvas>
       </div>
@@ -214,6 +237,7 @@
             <p class="stat-cranes">
               +<span id="final-cranes">0</span> 💀 pour les caisses
             </p>
+            <p id="bilan-vague"></p>
             <p id="bilan-records"></p>
           </div>
 
@@ -341,6 +365,7 @@
     <script src="./menu.js"></script>
     <script src="./ecran_titre.js"></script>
     <script src="./tutoriel.js"></script>
+    <script src="./vagues.js"></script>
     <script src="./manette.js"></script>
     <script>Langue.traduire_page(); Touches.maj_affichages();</script>
 

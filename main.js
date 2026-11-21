@@ -107,6 +107,7 @@ function mettre_en_pause(valeur, ecran = true) {
 
 document.addEventListener('keydown', e => {
     if (typeof Instructeur !== 'undefined' && Instructeur.ouvert()) return;   // le sergent attend une réponse
+    if (typeof Vagues !== 'undefined' && Vagues.enBoutique()) return;        // la boutique est ouverte
     if (Touches.action(e.code) === 'pause' && etat.enCours && !e.repeat) {
         e.preventDefault();
         mettre_en_pause(!etat.pause);
@@ -199,7 +200,8 @@ function arreter_boucle() {
 /* ---------- Début / fin de partie ---------- */
 // tuto = true : entraînement (tutoriel.js), connu dès le départ pour que la toute
 // première image montre déjà le camp et que la marche démarre directement
-function init_game(mode, perso, tuto = false) {
+// variante : 'classique' (infini) ou 'vagues' (vagues.js)
+function init_game(mode, perso, tuto = false, variante = 'classique') {
     arreter_boucle(); // garantit qu'une seule boucle tourne à la fois
 
     Object.assign(etat, {
@@ -210,6 +212,8 @@ function init_game(mode, perso, tuto = false) {
         score: 0,
         gagnes: 0,
         tuto,                // entraînement (tutoriel.js)
+        variante: tuto ? 'classique' : variante,
+        vague: 0,
         vies: CONFIG.viesDepart,
         temps: 0,
         prixVie: CONFIG.prixVieDepart,
@@ -236,6 +240,7 @@ function init_game(mode, perso, tuto = false) {
     Son.reprendreMusique();
     Son.jouerAmbiance(tuto ? 'entrainement' : mode);
 
+    if (typeof Vagues !== 'undefined') { Vagues.arreter(); if (etat.variante === 'vagues') Vagues.demarrer(); }
     redimensionner();   // le canvas vient de s'afficher : on prend la taille de l'écran
     dernierInstant = performance.now();
     idAnimation = requestAnimationFrame(boucle);
@@ -243,6 +248,7 @@ function init_game(mode, perso, tuto = false) {
 
 function quitter_partie() {
     arreter_boucle();
+    if (typeof Vagues !== 'undefined') Vagues.arreter();
     if (typeof Tutoriel !== 'undefined') Tutoriel.arreter();
     if (typeof Instructeur !== 'undefined') Instructeur.cacher();
     relacher_commandes();
@@ -272,6 +278,7 @@ function remplir_bilan() {
     const records = [];
     if (etat.recordAvant.temps > 0 && Math.floor(etat.temps) > etat.recordAvant.temps) records.push(T('temps (avant : {n} s)', { n: etat.recordAvant.temps }));
     if (etat.recordAvant.score > 0 && etat.gagnes > etat.recordAvant.score) records.push(T('score (avant : {n})', { n: etat.recordAvant.score }));
+    $b('bilan-vague').textContent = etat.variante === 'vagues' ? T('🌊 Vague atteinte : {n}', { n: etat.vague }) : '';
     $b('bilan-records').textContent = records.length ? T('🏅 Nouveau record : {liste} !', { liste: records.join(T(' et ')) }) : '';
 
     // Victimes par espèce, avec la vignette du monstre (boss en premier, puis les plus nombreux)
@@ -297,7 +304,7 @@ function remplir_bilan() {
     $b('bilan-succes').textContent = liste(T('🏆 Succès débloqués'), etat.succes);
 }
 
-document.getElementById('btn-retry').addEventListener('click', () => init_game(etat.mode, etat.perso));
+document.getElementById('btn-retry').addEventListener('click', () => init_game(etat.mode, etat.perso, false, etat.variante));
 document.getElementById('btn-return-menu').addEventListener('click', () => {
     quitter_partie();
     retour_menu_principal();

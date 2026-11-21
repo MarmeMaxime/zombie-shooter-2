@@ -57,6 +57,7 @@ function reset_joueur(mode, perso) {
     joueur.tempsImage = 0;
     joueur.etapeMarche = 0;
     joueur.rechargeTir = 0;
+    joueur.multCadence = 1;
     joueur.animTir = 0;
     joueur.gachetteRelachee = true;
     relacher_commandes();
@@ -84,7 +85,7 @@ function update_joueur(dt, hauteurCanvas) {
     if (!commandes.tir || commandes.tirAuto) joueur.gachetteRelachee = true;
     if (commandes.tir && joueur.gachetteRelachee && joueur.rechargeTir === 0) {
         joueur.gachetteRelachee = false;
-        joueur.rechargeTir = joueur.arme.delai;
+        joueur.rechargeTir = joueur.arme.delai * joueur.multCadence;   // boutique des vagues : tir plus rapide
         joueur.animTir = CONFIG.joueur.dureeAnimTir;
         tirer(joueur);
     }

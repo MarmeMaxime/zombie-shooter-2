@@ -145,7 +145,7 @@ const Tutoriel = (() => {
             debut() { suivi.cibles = []; suivi.lance = false; },
             maj() {
                 if (pouvoir.rafale > 0) suivi.lance = true;
-                if (!suivi.lance && !pouvoir_pret()) { pouvoir.charge = cfg_pouvoir().kills; maj_hud_pouvoir(); }
+                if (!suivi.lance && !pouvoir_pret()) { pouvoir.charge = kills_requis(); maj_hud_pouvoir(); }
                 // Un troupeau à balayer (il revient tant que le pouvoir n'a pas servi)
                 if (!vivants(suivi.cibles).length && !suivi.lance) suivi.cibles = [60, 110, 160, 210, 260, 310].map((y, i) => zombie(0.68 + (i % 2) * 0.06, y, 18));
                 repousser(suivi.cibles);

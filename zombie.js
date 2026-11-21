@@ -212,7 +212,8 @@ function toucher_zombie(z, degats = 1, tir) {
 function update_zombies(dt, largeurCanvas, hauteurCanvas, tempsJeu) {
     // Pendant le combat de boss, seuls ses invocations arrivent
     // Entraînement : seuls les zombies placés par le sergent
-    if (!boss && !etat.tuto) gerer_apparitions(dt, largeurCanvas, hauteurCanvas, tempsJeu);
+    if (etat.variante === 'vagues' && !etat.tuto) Vagues.maj(dt);   // mode Vagues : la vague décide
+    else if (!boss && !etat.tuto) gerer_apparitions(dt, largeurCanvas, hauteurCanvas, tempsJeu);
     if (!etat.tuto) gerer_boss(dt, largeurCanvas, hauteurCanvas, tempsJeu);
     update_crachats(dt);
 

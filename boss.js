@@ -58,7 +58,8 @@ const secouer_ecran = niveau => EffetsLoot.trembler(niveau);
 
 function gerer_boss(dt, largeurCanvas, hauteurCanvas, tempsJeu) {
     if (!boss) {
-        if (tempsJeu >= prochainBoss) faire_apparaitre_boss(largeurCanvas, hauteurCanvas);
+        // En mode Vagues, c'est la vague qui fait venir le boss (vagues.js)
+        if (etat.variante !== 'vagues' && tempsJeu >= prochainBoss) faire_apparaitre_boss(largeurCanvas, hauteurCanvas);
         return;
     }
     const cfg = CONFIG.boss;

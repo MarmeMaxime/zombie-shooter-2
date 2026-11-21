@@ -132,6 +132,32 @@ button.active { background: #ff3333; border-color: #ff3333; }
 /* Écran « ? » : défile s'il est trop haut, pour toujours atteindre « À L'ATTAQUE ! » */
 #tutorial-overlay .mission-card { max-height: 94vh; overflow-y: auto; }
 #tuto-proposition { background: rgba(0, 0, 0, 0.8); z-index: 220; }
+
+/* Mode Vagues : choix au lancement, bandeau « VAGUE n », boutique */
+#choix-variante, #boutique-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; background: rgba(0, 0, 0, 0.8); z-index: 220; }
+#choix-variante.hidden, #boutique-overlay.hidden { display: none; }
+.choix-variantes { display: flex; gap: 10px; margin-bottom: 12px; }
+.choix-variantes button { flex: 1; display: flex; flex-direction: column; gap: 6px; padding: 12px; text-align: left; }
+.choix-variantes strong { font-size: 1rem; color: #fff; }
+.choix-variantes small { font-size: 0.72rem; color: #bbb; line-height: 1.35; }
+#btn-close-variante, #btn-vague-suivante { width: 100%; }
+#btn-vague-suivante { background: #ff3333; color: #fff; border: none; font-weight: bold; padding: 10px; }
+#bandeau-vague { position: absolute; top: 38%; left: 0; width: 100%; text-align: center; z-index: 7; margin: 0; pointer-events: none; zoom: var(--ui);
+  color: #ffd23c; font-size: 2.4rem; font-weight: bold; letter-spacing: 6px; text-shadow: 0 0 12px #000, 3px 3px 0 #8a0000; }
+#bandeau-vague.hidden { display: none; }
+#bandeau-vague.anime { animation: bandeau-vague 2.4s ease-out forwards; }
+@keyframes bandeau-vague { 0% { opacity: 0; transform: scale(1.6); } 15% { opacity: 1; transform: scale(1); } 75% { opacity: 1; } 100% { opacity: 0; } }
+.boutique-solde { color: #ffd23c; font-weight: bold; margin: 0 0 10px; }
+#boutique-liste { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.article { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 10px; text-align: left; }
+.article-texte { display: flex; flex-direction: column; gap: 3px; }
+.article-texte strong { color: #fff; font-size: 0.85rem; }
+.article-texte small { color: #aaa; font-size: 0.7rem; }
+.article-prix { color: #ffd23c; font-weight: bold; white-space: nowrap; }
+.article.indisponible { opacity: 0.45; cursor: not-allowed; }
+#bilan-vague { color: #8fc0ff; font-weight: bold; margin-top: 6px; font-size: 0.9rem; }
+#bilan-vague:empty { display: none; }
+#hud-vague.hidden { display: none; }
 #proposition-visage { width: 120px; height: 120px; image-rendering: pixelated; background: #3a2e1e; border: 2px solid #b0985c; margin-bottom: 8px; }
 #btn-entrainement { width: 100%; margin-bottom: 10px; border-color: #b0985c; color: #e8c24a; }
 
