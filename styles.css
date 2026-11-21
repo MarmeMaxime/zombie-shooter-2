@@ -509,6 +509,8 @@ span#score.score-ready {
   text-shadow: 0 0 12px rgba(255, 0, 0, 0.8), 4px 4px 0 #3a0000, -2px -2px 0 #000;
   animation: apparition 1s ease-out 0.3s both, gresillement 4s infinite 1.5s;
 }
+.titre-version { color: #888; font-size: 0.8rem; letter-spacing: 3px; margin: 4px 0 0; animation: apparition 1s ease-out 0.9s both; }
+#main-menu h1 .version { font-size: 0.45em; color: #aaa; vertical-align: super; }
 .titre-geant span { color: #fff; text-shadow: 0 0 16px #ff2a2a, 4px 4px 0 #8a0000; }
 .titre-slogan { color: #ddd; font-style: italic; margin-top: 14px; font-size: 1rem; animation: apparition 1s ease-out 0.9s both; }
 .titre-invite { color: #ffe14d; margin-top: 34px; font-weight: bold; letter-spacing: 2px; animation: apparition 0.6s ease-out 1.4s both, clignote 1.2s steps(2) infinite 2s; }
