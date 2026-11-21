@@ -26,6 +26,7 @@
         </div>
 
         <button id="btn-tuto">?</button>
+        <button id="btn-sauvegarde" title="Sauvegarde">💾</button>
         <button id="btn-start">PLAY</button>
       </div>
 
@@ -65,6 +66,25 @@
           <div id="vestiaire-liste"></div>
           <p id="vestiaire-dechets"></p>
           <button id="btn-close-vestiaire">FERMER</button>
+        </div>
+      </div>
+
+      <div id="save-overlay" class="hidden">
+        <div class="mission-card loot-card">
+          <h2>SAUVEGARDE</h2>
+          <p id="save-resume"></p>
+
+          <div class="loot-boutons">
+            <button id="btn-telecharger">⬇ TÉLÉCHARGER</button>
+            <button id="btn-importer">⬆ IMPORTER</button>
+          </div>
+          <input id="input-import" type="file" accept=".json,application/json" hidden />
+          <p id="save-message" aria-live="polite"></p>
+
+          <h3 class="save-titre">Historique (points de restauration automatiques)</h3>
+          <div id="save-historique"></div>
+
+          <button id="btn-close-save">FERMER</button>
         </div>
       </div>
 
@@ -156,6 +176,7 @@
     </div> 
     
     <script src="./config.js"></script>
+    <script src="./sauvegarde.js"></script>
     <script src="./audio.js"></script>
     <script src="./deplacement_joueur.js"></script>
     <script src="./tir_joueur.js"></script>

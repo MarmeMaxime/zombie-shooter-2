@@ -29,7 +29,8 @@ function choisir_perso(id) {
     perso_choisi = id;
     $('nom-perso').textContent = CONFIG.personnages[id].nom;
     for (const carte of liste_persos.children) carte.classList.toggle('active', carte.dataset.perso === id);
-    try { localStorage.setItem('perso', id); } catch { /* stockage indisponible */ }
+    Sauvegarde.donnees.perso = id;
+    Sauvegarde.sauver();
 }
 
 for (const [id, perso] of Object.entries(CONFIG.personnages)) {
@@ -64,9 +65,8 @@ function rafraichir_cartes_persos() {
 }
 rafraichir_cartes_persos();
 
-let perso_memorise = null;
-try { perso_memorise = localStorage.getItem('perso'); } catch { /* stockage indisponible */ }
-choisir_perso(CONFIG.personnages[perso_memorise] ? perso_memorise : 'soldat');
+// Un perso retiré par une mise à jour ? On retombe sur le soldat.
+choisir_perso(CONFIG.personnages[Sauvegarde.donnees.perso] ? Sauvegarde.donnees.perso : 'soldat');
 
 /* ---------- Boutons (son de clic + perte du focus) ---------- */
 document.querySelectorAll('button').forEach(bouton => {
@@ -116,6 +116,75 @@ function retour_menu_principal() {
     Son.jouerAmbiance('menu');
 }
 
+/* ---------- Sauvegarde : téléchargement, import, historique ---------- */
+const ecran_save = $('save-overlay');
+const message_save = $('save-message');
+
+function resume(donnees) {
+    const l = donnees.loot || {};
+    const skins = Array.isArray(l.possedes) ? l.possedes.length : 0;
+    return `${l.cranes || 0} 💀 · ${skins} skin${skins > 1 ? 's' : ''} · ${l.ouvertes || 0} caisse${(l.ouvertes || 0) > 1 ? 's' : ''} ouverte${(l.ouvertes || 0) > 1 ? 's' : ''}`;
+}
+
+function remplir_ecran_save() {
+    $('save-resume').textContent = `Actuellement : ${resume(Sauvegarde.donnees)}`;
+    const liste = $('save-historique');
+    const h = Sauvegarde.historique();
+    if (!h.length) {
+        liste.textContent = 'Aucun point de restauration pour l\'instant. Il s\'en crée un après chaque partie.';
+        return;
+    }
+    liste.replaceChildren(...h.map((entree, i) => {
+        const ligne = document.createElement('div');
+        ligne.className = 'save-ligne';
+        const texte = document.createElement('span');
+        const date = new Date(entree.date);
+        texte.textContent = `${date.toLocaleDateString('fr-FR')} ${date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} — ${entree.raison} — ${resume(entree.donnees || {})}`;
+        const bouton = document.createElement('button');
+        bouton.textContent = 'Restaurer';
+        bouton.addEventListener('click', () => {
+            if (!confirm('Revenir à ce point ? L\'état actuel sera lui-même gardé dans l\'historique.')) return;
+            if (Sauvegarde.restaurer(i)) location.reload();
+        });
+        ligne.append(texte, bouton);
+        return ligne;
+    }));
+}
+
+$('btn-sauvegarde').addEventListener('click', () => {
+    message_save.textContent = '';
+    remplir_ecran_save();
+    afficher(ecran_save, true);
+});
+$('btn-close-save').addEventListener('click', () => afficher(ecran_save, false));
+
+$('btn-telecharger').addEventListener('click', () => {
+    Sauvegarde.telecharger();
+    message_save.style.color = '#3cff7a';
+    message_save.textContent = 'Fichier téléchargé. Garde-le précieusement (ou envoie-le à tes amis pour les narguer).';
+});
+
+$('btn-importer').addEventListener('click', () => $('input-import').click());
+$('input-import').addEventListener('change', async e => {
+    const fichier = e.target.files[0];
+    e.target.value = '';           // permet de réimporter le même fichier
+    if (!fichier) return;
+
+    const analyse = Sauvegarde.analyser(await fichier.text());
+    if (!analyse.ok) {
+        message_save.style.color = '#ff3333';
+        message_save.textContent = analyse.message;
+        return;
+    }
+    const question = analyse.retouche
+        ? 'Ce fichier a été modifié à la main ou est abîmé (empreinte invalide). L\'importer quand même ?'
+        : `Importer cette sauvegarde (${resume(analyse.obj.donnees)}) ? L'état actuel sera gardé dans l'historique.`;
+    if (!confirm(question)) return;
+    Sauvegarde.importer(analyse.obj);
+    location.reload();
+});
+
 /* ---------- Démarrage ---------- */
+Sauvegarde.point_de_restauration('Lancement du jeu');
 maj_bouton_son();
 Son.jouerAmbiance('menu'); // ne joue réellement qu'une fois le son activé

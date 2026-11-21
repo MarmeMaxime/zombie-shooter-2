@@ -43,18 +43,12 @@ const LOOT = {
 };
 
 const Loot = (() => {
-    const CLE = 'zs2-loot';
-    const etatVide = () => ({ cranes: 0, possedes: [], dechets: {}, equipes: {}, ouvertes: 0, depuisLegendaire: 0 });
-
-    let etatLoot = etatVide();
-    try {
-        const brut = localStorage.getItem(CLE);
-        if (brut) etatLoot = Object.assign(etatVide(), JSON.parse(brut));
-    } catch { /* stockage indisponible : la progression ne sera pas sauvegardée */ }
-
-    function sauver() {
-        try { localStorage.setItem(CLE, JSON.stringify(etatLoot)); } catch { /* idem */ }
-    }
+    // La progression vit dans la sauvegarde (sauvegarde.js). On la relit à chaque
+    // accès : après une restauration ou un import, c'est toujours la bonne.
+    const L = () => Sauvegarde.donnees.loot;
+    const sauver = () => Sauvegarde.sauver();
+    // Un skin retiré par une future mise à jour reste dans la sauvegarde, mais n'est pas proposé
+    const connu = skin => Object.prototype.hasOwnProperty.call(LOOT.skins, skin);
 
     const hasard = tableau => tableau[Math.floor(Math.random() * tableau.length)];
     const rarete = id => LOOT.raretes.find(r => r.id === id);
@@ -80,22 +74,22 @@ const Loot = (() => {
     }
 
     function ouvrir() {
-        if (etatLoot.cranes < LOOT.prix) return null;
-        etatLoot.cranes -= LOOT.prix;
-        etatLoot.ouvertes++;
+        if (L().cranes < LOOT.prix) return null;
+        L().cranes -= LOOT.prix;
+        L().ouvertes++;
 
-        const garanti = etatLoot.depuisLegendaire >= LOOT.garantie - 1;
+        const garanti = L().depuisLegendaire >= LOOT.garantie - 1;
         const objet = tirer_objet(garanti);
         const haut = objet.rarete.id === 'legendaire' || objet.rarete.id === 'mythique';
-        etatLoot.depuisLegendaire = haut ? 0 : etatLoot.depuisLegendaire + 1;
+        L().depuisLegendaire = haut ? 0 : L().depuisLegendaire + 1;
 
         let doublon = false;
         if (objet.type === 'skin') {
-            doublon = etatLoot.possedes.includes(objet.id);
-            if (doublon) etatLoot.cranes += LOOT.compensationDoublon;
-            else etatLoot.possedes.push(objet.id);
+            doublon = L().possedes.includes(objet.id);
+            if (doublon) L().cranes += LOOT.compensationDoublon;
+            else L().possedes.push(objet.id);
         } else {
-            etatLoot.dechets[objet.id] = (etatLoot.dechets[objet.id] || 0) + 1;
+            L().dechets[objet.id] = (L().dechets[objet.id] || 0) + 1;
         }
         sauver();
         return { objet, doublon, garanti };
@@ -103,21 +97,21 @@ const Loot = (() => {
 
     function gagner(score) {
         const gain = Math.floor(score / LOOT.pointsParCrane);
-        etatLoot.cranes += gain;
+        L().cranes += gain;
         sauver();
         return gain;
     }
 
     function equiper(perso, skin) {
-        if (skin && !etatLoot.possedes.includes(`${perso}:${skin}`)) return;
-        if (skin) etatLoot.equipes[perso] = skin;
-        else delete etatLoot.equipes[perso];
+        if (skin && !L().possedes.includes(`${perso}:${skin}`)) return;
+        if (skin) L().equipes[perso] = skin;
+        else delete L().equipes[perso];
         sauver();
     }
 
     // Filtre à appliquer au sprite du perso (t en secondes, pour l'arc-en-ciel animé)
     function filtre(perso, t = 0) {
-        const skin = LOOT.skins[etatLoot.equipes[perso]];
+        const skin = LOOT.skins[L().equipes[perso]];
         if (!skin) return '';
         if (skin.anime) return `hue-rotate(${Math.round((t * 120) % 360)}deg) saturate(1.8)`;
         return skin.filtre;
@@ -125,11 +119,12 @@ const Loot = (() => {
 
     return {
         ouvrir, gagner, equiper, filtre, tirer_objet, rarete,
-        solde: () => etatLoot.cranes,
-        equipe: perso => etatLoot.equipes[perso] || null,
-        skinsDe: perso => etatLoot.possedes.filter(id => id.startsWith(perso + ':')).map(id => id.split(':')[1]),
-        dechets: () => etatLoot.dechets,
-        stats: () => ({ ouvertes: etatLoot.ouvertes, avantGarantie: LOOT.garantie - etatLoot.depuisLegendaire })
+        solde: () => L().cranes,
+        equipe: perso => (connu(L().equipes[perso]) ? L().equipes[perso] : null),
+        skinsDe: perso => L().possedes.filter(id => typeof id === 'string' && id.startsWith(perso + ':'))
+            .map(id => id.split(':')[1]).filter(connu),
+        dechets: () => Object.fromEntries(Object.entries(L().dechets).filter(([id]) => LOOT.dechets[id])),
+        stats: () => ({ ouvertes: L().ouvertes, avantGarantie: LOOT.garantie - L().depuisLegendaire })
     };
 })();
 
@@ -284,7 +279,11 @@ const LootUI = (() => {
 
     /* ---------- Branchements ---------- */
     $l('btn-caisses').addEventListener('click', () => { maj_soldes(); $l('loot-overlay').classList.remove('hidden'); });
-    $l('btn-close-loot').addEventListener('click', () => { if (!enCours) $l('loot-overlay').classList.add('hidden'); });
+    $l('btn-close-loot').addEventListener('click', () => {
+        if (enCours) return;
+        $l('loot-overlay').classList.add('hidden');
+        Sauvegarde.point_de_restauration('Après les caisses');
+    });
     $l('btn-ouvrir').addEventListener('click', ouvrir_caisse);
     $l('btn-vestiaire').addEventListener('click', () => { remplir_vestiaire(); $l('vestiaire-overlay').classList.remove('hidden'); });
     $l('btn-close-vestiaire').addEventListener('click', () => $l('vestiaire-overlay').classList.add('hidden'));

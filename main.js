@@ -132,6 +132,7 @@ function game_over() {
     ui.tempsFinal.textContent = Math.floor(etat.temps);
     ui.cranesGagnes.textContent = Loot.gagner(etat.score);
     LootUI.maj_soldes();
+    Sauvegarde.point_de_restauration(`Fin de partie (${CONFIG.personnages[etat.perso].nom}, score ${etat.score})`);
 
     ui.gameOver.classList.remove('hidden');
 }
