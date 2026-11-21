@@ -31,10 +31,10 @@ body {
 }
 
 /* Gestion des couches (Z-Index) */
-#main-menu, #game-view, #tutorial-overlay, #perso-overlay, #game-over-overlay {
+#main-menu, #game-view, #tutorial-overlay, #perso-overlay, #loot-overlay, #vestiaire-overlay, #game-over-overlay {
   position: absolute; top: 0; left: 0; width: 100%; height: 100%;
 }
-#main-menu, #tutorial-overlay, #perso-overlay, #game-over-overlay {
+#main-menu, #tutorial-overlay, #perso-overlay, #loot-overlay, #vestiaire-overlay, #game-over-overlay {
   display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10; 
 }
 #game-view { display: block; z-index: 1; }
@@ -107,7 +107,7 @@ span#score.score-ready {
 /* =========================================================================
    6. MODALES (TUTO & GAME OVER)
    ========================================================================= */
-#tutorial-overlay, #perso-overlay, #game-over-overlay { 
+#tutorial-overlay, #perso-overlay, #loot-overlay, #vestiaire-overlay, #game-over-overlay { 
   background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(5px); z-index: 100; 
 }
 #game-over-overlay { background: rgba(50, 0, 0, 0.9); z-index: 200; }
@@ -157,7 +157,7 @@ span#score.score-ready {
 .stat-value { color: white; }
 
 /* Boutons Communs */
-#btn-close-tuto, #btn-retry, #btn-close-perso {
+#btn-close-tuto, #btn-retry, #btn-close-perso, #btn-ouvrir, #btn-close-vestiaire {
   background: #ff3333; color: white; border: none; font-size: 1.1rem; padding: 10px 20px; 
   width: 100%; font-weight: bold; text-transform: uppercase; cursor: pointer; border-radius: 4px; 
   transition: transform 0.1s;
@@ -268,4 +268,81 @@ span#score.score-ready {
 @media (max-width: 600px) {
   .carte-perso img { width: 48px; height: 48px; }
   .carte-perso .description { display: none; }
+}
+
+/* =========================================================================
+   9. LOOTBOX ET VESTIAIRE
+   ========================================================================= */
+.menu-row { order: 4; display: flex; gap: 10px; }
+#btn-caisses {
+  font-size: 0.95rem; padding: 6px 14px;
+  border-color: #ff9a1a; color: #ffb04a;
+  animation: caisse-pulse 1.6s ease-in-out infinite;
+}
+#btn-caisses:hover { background: #ff9a1a; color: #000; }
+@keyframes caisse-pulse {
+  0%, 100% { box-shadow: 0 0 0 rgba(255, 154, 26, 0); }
+  50% { box-shadow: 0 0 14px rgba(255, 154, 26, 0.8); }
+}
+
+.stat-cranes { color: #ffb04a; font-size: 0.95rem; margin-top: 4px; }
+
+.mission-card.loot-card { max-width: 640px; padding: 12px 18px; }
+.loot-card h2 { margin-bottom: 6px; font-size: 1.2rem; }
+.loot-solde { color: #ffb04a; font-weight: bold; margin-bottom: 8px; }
+
+#loot-fenetre {
+  position: relative; height: 84px; overflow: hidden; margin-bottom: 8px;
+  background: #0d0d0d; border: 2px solid #444; border-radius: 6px;
+}
+#loot-bande { display: flex; gap: 8px; padding: 8px 0 0 4px; will-change: transform; }
+.loot-case {
+  flex: 0 0 64px; height: 64px; border: 2px solid; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+}
+.loot-case img { width: 56px; height: 56px; image-rendering: pixelated; }
+.loot-emoji { font-size: 2rem; }
+#loot-curseur {
+  position: absolute; top: 0; bottom: 0; left: 50%; width: 3px; margin-left: -1px;
+  background: #ffe14d; box-shadow: 0 0 8px #ffe14d;
+}
+#loot-fenetre.loot-jackpot { animation: jackpot 1.2s ease-out; }
+@keyframes jackpot {
+  0% { box-shadow: 0 0 0 #ff9a1a; border-color: #444; }
+  20% { box-shadow: 0 0 40px #ff9a1a, inset 0 0 30px #ff2e4d; border-color: #ffe14d; }
+  100% { box-shadow: 0 0 0 #ff9a1a; border-color: #444; }
+}
+
+#loot-resultat { min-height: 2.6em; font-size: 0.85rem; color: #ccc; display: flex; flex-direction: column; gap: 2px; margin-bottom: 8px; }
+#loot-resultat strong { font-size: 1rem; }
+
+.loot-boutons { display: flex; gap: 8px; margin-bottom: 6px; }
+.loot-boutons button { flex: 1; font-size: 0.9rem; padding: 8px 6px; }
+#btn-ouvrir:disabled { opacity: 0.4; cursor: default; }
+
+#btn-payer {
+  width: 100%; font-size: 0.8rem; padding: 4px; margin-bottom: 4px;
+  border: 1px dashed #3cff7a; color: #3cff7a;
+}
+#btn-payer:hover { background: #3cff7a; color: #000; }
+#loot-stats { font-size: 0.7rem; color: #999; }
+#loot-taux { font-size: 0.55rem; color: #555; margin-top: 2px; }
+
+#vestiaire-liste { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; max-height: 230px; overflow-y: auto; }
+.vestiaire-ligne { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; background: #222; padding: 6px 8px; border-radius: 6px; }
+.vestiaire-nom { width: 70px; color: #fff; font-weight: bold; text-transform: uppercase; font-size: 0.85rem; text-align: left; }
+.vestiaire-skin { font-size: 0.7rem; padding: 3px 8px; border-color: #666; }
+.vestiaire-skin.active { background: #ff3333; border-color: #ff3333 !important; }
+#vestiaire-dechets { font-size: 0.75rem; color: #999; margin-bottom: 10px; }
+
+/* Skin mythique : couleurs qui tournent en boucle */
+.arcenciel { animation: arcenciel 3s linear infinite; }
+@keyframes arcenciel {
+  from { filter: hue-rotate(0deg) saturate(1.8); }
+  to { filter: hue-rotate(360deg) saturate(1.8); }
+}
+
+@media (max-width: 600px) {
+  .menu-row { flex-direction: column; }
+  #loot-taux, #loot-stats { display: none; }
 }

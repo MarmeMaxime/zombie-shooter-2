@@ -53,6 +53,17 @@ for (const [id, perso] of Object.entries(CONFIG.personnages)) {
     liste_persos.appendChild(carte);
 }
 
+// Les cartes montrent le skin équipé (l'arc-en-ciel animé passe par une classe CSS)
+function rafraichir_cartes_persos() {
+    for (const carte of liste_persos.children) {
+        const img = carte.querySelector('img');
+        const skin = LOOT.skins[Loot.equipe(carte.dataset.perso)];
+        img.classList.toggle('arcenciel', Boolean(skin && skin.anime));
+        img.style.filter = skin && !skin.anime ? skin.filtre : '';
+    }
+}
+rafraichir_cartes_persos();
+
 let perso_memorise = null;
 try { perso_memorise = localStorage.getItem('perso'); } catch { /* stockage indisponible */ }
 choisir_perso(CONFIG.personnages[perso_memorise] ? perso_memorise : 'soldat');

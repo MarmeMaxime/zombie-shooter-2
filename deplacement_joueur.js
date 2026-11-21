@@ -101,7 +101,17 @@ function draw_joueur(ctx) {
     let img = joueur.sprites.arret;
     if (joueur.animTir > 0) img = joueur.sprites.tir;
     else if (joueur.bouge) img = joueur.sprites.marche[joueur.etapeMarche];
-    ctx.drawImage(img, joueur.x, joueur.y, joueur.taille, joueur.taille);
+
+    // Skin équipé (gagné dans les caisses) = filtre de couleur sur le sprite
+    const filtre = Loot.filtre(joueur.perso, performance.now() / 1000);
+    if (filtre) {
+        ctx.save();
+        ctx.filter = filtre;
+        ctx.drawImage(img, joueur.x, joueur.y, joueur.taille, joueur.taille);
+        ctx.restore();
+    } else {
+        ctx.drawImage(img, joueur.x, joueur.y, joueur.taille, joueur.taille);
+    }
 }
 
 /* =========================================================================

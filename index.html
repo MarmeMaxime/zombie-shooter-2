@@ -20,7 +20,10 @@
           <button id="btn-hardcore">Hardcore</button>
         </div>
 
-        <button id="btn-perso">PERSONNAGE : <span id="nom-perso">Soldat</span></button>
+        <div class="menu-row">
+          <button id="btn-perso">PERSONNAGE : <span id="nom-perso">Soldat</span></button>
+          <button id="btn-caisses">CAISSES · <span id="solde-menu">0</span> 💀</button>
+        </div>
 
         <button id="btn-tuto">?</button>
         <button id="btn-start">PLAY</button>
@@ -31,6 +34,37 @@
           <h2>CHOIX DU PERSONNAGE</h2>
           <div id="liste-persos"></div>
           <button id="btn-close-perso">VALIDER</button>
+        </div>
+      </div>
+
+      <div id="loot-overlay" class="hidden">
+        <div class="mission-card loot-card">
+          <h2>CAISSE DE RAVITAILLEMENT DOUTEUSE</h2>
+          <p class="loot-solde">Solde : <span id="solde-loot">0</span> 💀</p>
+
+          <div id="loot-fenetre">
+            <div id="loot-bande"></div>
+            <div id="loot-curseur"></div>
+          </div>
+          <p id="loot-resultat" aria-live="polite">Une caisse = 50 💀. Que la chance soit (rarement) avec vous.</p>
+
+          <div class="loot-boutons">
+            <button id="btn-ouvrir">OUVRIR (50 💀)</button>
+            <button id="btn-vestiaire">VESTIAIRE</button>
+            <button id="btn-close-loot">RETOUR</button>
+          </div>
+          <button id="btn-payer">💳 1 000 💀 pour seulement 9,99 € !</button>
+          <p id="loot-stats"></p>
+          <p id="loot-taux"></p>
+        </div>
+      </div>
+
+      <div id="vestiaire-overlay" class="hidden">
+        <div class="mission-card loot-card">
+          <h2>VESTIAIRE</h2>
+          <div id="vestiaire-liste"></div>
+          <p id="vestiaire-dechets"></p>
+          <button id="btn-close-vestiaire">FERMER</button>
         </div>
       </div>
 
@@ -70,6 +104,9 @@
             </p>
             <p class="stat-score">
               SCORE : <span id="final-score" class="stat-value">0</span>
+            </p>
+            <p class="stat-cranes">
+              +<span id="final-cranes">0</span> 💀 pour les caisses
             </p>
           </div>
 
@@ -124,6 +161,7 @@
     <script src="./tir_joueur.js"></script>
     <script src="./zombie.js"></script>
     <script src="./main.js"></script>
+    <script src="./lootbox.js"></script>
     <script src="./menu.js"></script>
 
   </body>

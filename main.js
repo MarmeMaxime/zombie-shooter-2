@@ -13,7 +13,8 @@ const ui = {
     prixVie: document.getElementById('prix-vie'),
     gameOver: document.getElementById('game-over-overlay'),
     scoreFinal: document.getElementById('final-score'),
-    tempsFinal: document.getElementById('final-time')
+    tempsFinal: document.getElementById('final-time'),
+    cranesGagnes: document.getElementById('final-cranes')
 };
 
 const etat = {
@@ -129,6 +130,8 @@ function game_over() {
 
     ui.scoreFinal.textContent = etat.score;
     ui.tempsFinal.textContent = Math.floor(etat.temps);
+    ui.cranesGagnes.textContent = Loot.gagner(etat.score);
+    LootUI.maj_soldes();
 
     ui.gameOver.classList.remove('hidden');
 }
