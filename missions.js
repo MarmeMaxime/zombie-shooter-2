@@ -62,6 +62,18 @@ const MISSIONS = {
         M.intouchable(120, 'Insaisissable', 180),
         M.boss(2, 'Démolition', 200),
         M.hardcore(480, 'Reine du chaos', 300)
+    ],
+    lassie: [
+        M.tues(50, 'Étincelle', 40),
+        M.tues(300, 'Survoltée', 100),
+        M.tues(1000, 'Orage', 300),
+        M.coup(2, 'Court-circuit', 80),
+        M.coup(3, 'Réaction en chaîne', 200),
+        M.type('magicalgirl', 10, 'Paratonnerre', 'Tuer 10 magical girls', 120),
+        M.type('joggeur', 15, 'Coupe-circuit', 'Tuer 15 Joggeurs', 120),
+        M.intouchable(90, 'Mise à la terre', 150),
+        M.boss(2, 'Haute tension', 200),
+        M.hardcore(480, 'Tempête', 300)
     ]
 };
 // Identifiant unique de chaque mission : <perso>_<numéro>
@@ -134,7 +146,7 @@ const Missions = (() => {
         $m('missions-onglets').replaceChildren(...Object.keys(MISSIONS).map(perso => {
             const b = document.createElement('button');
             b.className = 'missions-onglet' + (perso === onglet ? ' active' : '');
-            b.textContent = `${CONFIG.personnages[perso].nom} · ${terminees(perso)}/10`;
+            b.textContent = `${CONFIG.personnages[perso].nom} · ${terminees(perso)}/${MISSIONS[perso].length}`;
             b.addEventListener('click', () => { onglet = perso; remplir(); });
             return b;
         }));

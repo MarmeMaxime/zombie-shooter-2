@@ -361,6 +361,7 @@ const MORTS = {
     face: { duree: 2.4, chute: [0.4, 0.7], sens: -1, pivot: 0.3, recul: 4, flaque: '#5a0808' },
     dos: { duree: 2.4, chute: [0.3, 0.6], sens: 1, pivot: 0.7, recul: 12, flaque: '#5a0808' },
     glissade: { duree: 2.4, chute: [0.05, 0.25], sens: -1, pivot: 0.3, recul: 0, flaque: '#5a0808', glisse: 70 },
+    electro: { duree: 2.4, chute: [0.65, 0.95], sens: -1, pivot: 0.3, recul: 0, flaque: '#5a0808', electro: 0.6 },
     paillettes: { duree: 1.5 },
     colosse: { duree: 3.6, chute: [1.3, 1.9], sens: -1, pivot: 0.25, recul: 0, flaque: '#4a6a1a', genoux: [0.8, 1.3], titube: 0.8 }
 };
@@ -373,8 +374,10 @@ function ajouter_cadavre(z) {
         : z.type === 'magicalgirl' ? 'paillettes'
         : z.type === 'tank' ? 'dos'
         : z.type === 'joggeur' && z.joggeur && z.joggeur.etat === 'course' ? 'glissade'
+        : z.foudroye ? 'electro'
         : 'face';
     const couleurs = style === 'paillettes' ? ['#ff6ec7', '#ffe14d', '#ffffff']
+        : style === 'electro' ? ['#5ae6ff', '#c8f8ff', '#2ab8ff']
         : style === 'colosse' ? ['#6a8a2a', '#8fa83e', '#3a5a1a'] : ['#8a0f0f', '#b01818', '#5a0808'];
     const nombre = style === 'colosse' ? 60 : z.type === 'tank' ? 18 : 12;
     const sens = MORTS[style].sens || 1;
@@ -436,6 +439,12 @@ function pose(c) {
     p.dx = m.sens > 0 ? m.recul * entre(a, 0, 0.25) : m.recul * Math.sin(entre(a, 0, 0.12) * Math.PI);
     // Le boss titube avant de tomber
     if (m.titube && a < m.titube) { p.dx += (Math.random() - 0.5) * 6; p.rot = 0.06 * Math.sin(a * 25); }
+    // Électrocuté : il tremble et clignote en bleu (on voit presque son squelette) avant de tomber
+    if (m.electro && a < m.electro) {
+        p.dx += (Math.random() - 0.5) * 5;
+        p.dy = (Math.random() - 0.5) * 3;
+        p.filtre = Math.floor(a / 0.05) % 2 ? 'brightness(2.4) sepia(1) hue-rotate(160deg) saturate(5)' : 'invert(1) brightness(1.4)';
+    }
     // Genoux qui flanchent : le corps se tasse et se penche
     const [g0, g1] = m.genoux || [m.chute[0] - 0.28, m.chute[0]];
     const genoux = entre(a, g0, g1);
@@ -477,7 +486,8 @@ function draw_cadavres(ctx) {
         ctx.translate(px, py);
         ctx.rotate(p.rot);
         ctx.scale(p.sx, p.sy);
-        if (p.flash) ctx.filter = 'brightness(3)';         // flash blanc à l'impact
+        if (p.filtre) ctx.filter = p.filtre;
+        else if (p.flash) ctx.filter = 'brightness(3)';    // flash blanc à l'impact
         if (c.style === 'paillettes') {
             // Dissolution de haut en bas : on ne dessine que la partie encore présente
             const coupe = c.taille * entre(c.age, 0.5, 1.3);

@@ -161,6 +161,16 @@ const Son = (() => {
             ton(80, 0, 1.5, { type: 'sawtooth', vol: 0.2, f2: 25 });
             [523, 659, 784, 1047].forEach((f, i) => ton(f, 0.9 + i * 0.12, 0.5, { type: 'square', vol: 0.06 }));
         },
+        // Pistolet électrique : « bzzt » aigu
+        foudre: () => {
+            ton(1800, 0, 0.12, { type: 'square', vol: 0.07, f2: 600 });
+            bruit(0, 0.1, { vol: 0.15, filtre: 4000, type: 'highpass' });
+        },
+        // Crépitement de la foudre qui saute de zombie en zombie
+        foudreImpact: () => {
+            for (let k = 0; k < 4; k++) bruit(k * 0.05, 0.06, { vol: 0.22, filtre: 3000, type: 'highpass' });
+            ton(140, 0, 0.25, { type: 'sawtooth', vol: 0.08, f2: 60 });
+        },
         // Cri aigu du Joggeur avant sa charge
         cri: () => {
             ton(950, 0, 0.4, { type: 'sawtooth', vol: 0.12, f2: 380 });

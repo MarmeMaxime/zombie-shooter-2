@@ -7,10 +7,12 @@ const img_balle = chargerImage('./assets/bullet.jpg');
 
 let projectiles = [];
 let explosions = [];
+let arcs = [];          // arcs électriques de la foudre en chaîne
 
 function reset_balles() {
     projectiles = [];
     explosions = [];
+    arcs = [];
 }
 
 function creer_projectile(tireur, arme, props) {
@@ -51,8 +53,42 @@ const TIRS = {
     // Une grenade qui explose au premier contact ou en fin de portée
     grenade(tireur, arme) {
         creer_projectile(tireur, arme, { type: 'grenade', largeur: 10, hauteur: 10, rotation: 0, rayon: arme.rayon });
+    },
+
+    // Un éclair rapide ; au contact, la foudre saute de zombie en zombie (voir foudroyer)
+    foudre(tireur, arme) {
+        creer_projectile(tireur, arme, { type: 'eclair', largeur: 22, hauteur: 6, sauts: arme.sauts, rayonSaut: arme.rayonSaut });
     }
 };
+
+/* ---------- Foudre en chaîne ----------
+   Le zombie touché est foudroyé, puis la foudre saute vers le zombie le plus
+   proche de LUI (dans le rayon), puis depuis celui-là, etc. Jamais deux fois
+   le même zombie. Les dégâts tombent tout de suite ; l'arc se dessine saut
+   par saut. */
+function foudroyer(p, premier) {
+    const centre = z => ({ x: z.x + z.taille / 2, y: z.y + z.taille / 2 });
+    const touches = [premier];
+    for (let k = 0; k < p.sauts; k++) {
+        const de = centre(touches[touches.length - 1]);
+        let suivant = null, meilleure = Infinity;
+        for (const z of zombies) {
+            if (touches.includes(z)) continue;
+            const c = centre(z);
+            // Distance comptée en unités de référence (même portée de saut sur tout écran)
+            const d = Math.hypot((c.x - de.x) / MONDE.echelleX, c.y - de.y);
+            if (d <= p.rayonSaut && d < meilleure) { meilleure = d; suivant = z; }
+        }
+        if (!suivant) break;
+        touches.push(suivant);
+    }
+    arcs.push({ points: [{ x: p.x, y: p.y + p.hauteur / 2 }, ...touches.map(centre)], age: 0 });
+    for (const z of touches) {
+        z.foudroye = true;                 // pour son animation de mort « électrocuté »
+        toucher_zombie(z, p.degats);
+    }
+    Son.effet('foudreImpact');
+}
 
 function tirer(tireur) {
     const arme = tireur.arme;
@@ -99,6 +135,7 @@ function update_balles(dt, largeurCanvas, hauteurCanvas) {
         const cible = trouver_cible(trajet);
         if (cible) {
             if (p.type === 'grenade') exploser(p);
+            else if (p.type === 'eclair') foudroyer(p, cible);
             else toucher_zombie(cible, p.degats);
             return false;
         }
@@ -111,6 +148,48 @@ function update_balles(dt, largeurCanvas, hauteurCanvas) {
 
     for (const e of explosions) e.age += dt;
     explosions = explosions.filter(e => e.age < 0.4);
+    for (const a of arcs) a.age += dt;
+    arcs = arcs.filter(a => a.age < DUREE_ARC);
+}
+
+/* ---------- Arcs électriques ---------- */
+const DUREE_ARC = 0.35, DELAI_SAUT = 0.05;   // chaque saut apparaît un peu après le précédent
+
+// Ligne brisée entre deux points, redessinée à chaque image pour qu'elle grésille
+function zigzag(ctx, a, b) {
+    const n = Math.max(3, Math.round(Math.hypot(b.x - a.x, b.y - a.y) / 12));
+    ctx.moveTo(a.x, a.y);
+    for (let k = 1; k < n; k++) {
+        const t = k / n;
+        ctx.lineTo(a.x + (b.x - a.x) * t + (Math.random() - 0.5) * 10, a.y + (b.y - a.y) * t + (Math.random() - 0.5) * 10);
+    }
+    ctx.lineTo(b.x, b.y);
+}
+
+function draw_arcs(ctx) {
+    for (const arc of arcs) {
+        const visible = Math.min(arc.points.length - 1, Math.floor(arc.age / DELAI_SAUT) + 1);
+        const alpha = 1 - arc.age / DUREE_ARC;
+        ctx.save();
+        ctx.lineJoin = 'round';
+        for (const [largeur, couleur, a] of [[7, '#2ab8ff', 0.35], [3, '#5ae6ff', 0.9], [1.5, '#ffffff', 1]]) {
+            ctx.globalAlpha = alpha * a;
+            ctx.strokeStyle = couleur;
+            ctx.lineWidth = largeur;
+            ctx.beginPath();
+            for (let k = 0; k < visible; k++) zigzag(ctx, arc.points[k], arc.points[k + 1]);
+            ctx.stroke();
+        }
+        // Éclat sur chaque zombie atteint
+        ctx.fillStyle = '#c8f8ff';
+        for (let k = 1; k <= visible; k++) {
+            ctx.globalAlpha = alpha;
+            ctx.beginPath();
+            ctx.arc(arc.points[k].x, arc.points[k].y, 6 + 4 * Math.random(), 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.restore();
+    }
 }
 
 /* ---------- Dessin ---------- */
@@ -121,6 +200,16 @@ function draw_balles(ctx) {
         } else if (p.type === 'plomb') {
             ctx.fillStyle = '#ffd541';
             ctx.fillRect(p.x, p.y, p.largeur, p.hauteur);
+        } else if (p.type === 'eclair') {
+            // Trait d'énergie bleu avec un halo
+            ctx.save();
+            ctx.globalAlpha = 0.4;
+            ctx.fillStyle = '#2ab8ff';
+            ctx.fillRect(p.x - 6, p.y - 2, p.largeur + 6, p.hauteur + 4);
+            ctx.globalAlpha = 1;
+            ctx.fillStyle = '#c8f8ff';
+            ctx.fillRect(p.x, p.y + 1, p.largeur, p.hauteur - 2);
+            ctx.restore();
         } else {
             // Grenade : boule vert sombre qui tourne, avec une mèche
             ctx.save();
@@ -138,6 +227,8 @@ function draw_balles(ctx) {
             ctx.restore();
         }
     }
+
+    draw_arcs(ctx);
 
     for (const e of explosions) {
         const progression = e.age / 0.4;
