@@ -39,18 +39,21 @@ maj_echelle_ui();
 window.addEventListener('resize', () => { maj_echelle_ui(); redimensionner(); });
 
 function dessiner() {
+    // Décor : la photo du désert, ou le camp d'entraînement pendant le tutoriel (pixel art, non lissé)
+    const camp = etat.tuto && typeof decor_entrainement === 'function' ? decor_entrainement() : null;
+    const fond = camp || img_fond;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     if (MONDE.decalageY > 0) {
         // Écran plus haut que le monde : le décor remplit aussi les bandes, assombri
-        ctx.imageSmoothingEnabled = true;
-        ctx.drawImage(img_fond, 0, 0, canvas.width, canvas.height);
+        ctx.imageSmoothingEnabled = !camp;
+        ctx.drawImage(fond, 0, 0, canvas.width, canvas.height);
         ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
     ctx.setTransform(MONDE.echelle, 0, 0, MONDE.echelle, 0, MONDE.decalageY);
 
-    ctx.imageSmoothingEnabled = true;     // le décor (photo) est lissé
-    ctx.drawImage(img_fond, 0, 0, MONDE.largeur, MONDE.hauteur);
+    ctx.imageSmoothingEnabled = !camp;    // la photo est lissée, le camp reste net
+    ctx.drawImage(fond, 0, 0, MONDE.largeur, MONDE.hauteur);
     ctx.imageSmoothingEnabled = false;    // le pixel art reste net, sans flou
     draw_zombies(ctx);
     draw_balles(ctx);

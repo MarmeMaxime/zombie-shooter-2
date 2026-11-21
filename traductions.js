@@ -333,5 +333,6 @@ const TRADUCTIONS = {
     'Bien.': ['Good.', 'Bien.'],
     '{nom} en approche ! {conseil}': ['{nom} incoming! {conseil}', '¡{nom} se acerca! {conseil}'],
     'Ta jauge ★ est pleine ! Lance ton pouvoir avec {touche}.': ['Your ★ gauge is full! Use your power with {touche}.', '¡Tu barra ★ está llena! Usa tu poder con {touche}.'],
-    'Ton score est vert : {touche} pour acheter une vie.': ['Your score is green: {touche} to buy a life.', 'Tus puntos están en verde: {touche} para comprar una vida.']
+    'Ton score est vert : {touche} pour acheter une vie.': ['Your score is green: {touche} to buy a life.', 'Tus puntos están en verde: {touche} para comprar una vida.'],
+    'CAMP D\'ENTRAÎNEMENT': ['BOOT CAMP', 'CAMPO DE ENTRENAMIENTO']
 };
