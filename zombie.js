@@ -227,6 +227,7 @@ function update_zombies(dt, largeurCanvas, hauteurCanvas, tempsJeu) {
         if (!z.vu) { z.vu = true; if (typeof Bestiaire !== 'undefined') Bestiaire.rencontre(z.type); }
         if (z.joggeur && !etourdi) gerer_joggeur(z, dt);
         if (comp.maj && !etourdi) comp.maj(z, dt);
+        if (z.retirer) { zombies.splice(i, 1); continue; }   // retiré par son comportement (tombe ouverte)
         z.vitesseActuelle = etourdi ? 0 : z.joggeur ? vitesse_joggeur(z) : z.emeute ? vitesse_emeute(z) : comp.vitesse ? comp.vitesse(z) : z.vitesse;
         z.x -= z.vitesseActuelle * MONDE.echelleX * dt;   // même temps de traversée sur tout écran
         if (z.teleport && !etourdi) gerer_teleport(z, dt, hauteurCanvas);
@@ -330,7 +331,7 @@ function draw_zombies(ctx) {
     for (const z of zombies) {
         if (z.teleport && z.teleport.annonce) dessiner_annonce(ctx, z);
 
-        if (z === boss) {
+        if (z === boss && z.type === 'boss') {
             // Avant de cracher : gueule ouverte, pustules allumées, il gonfle et tremble
             const charge = z.charge;
             const gonfle = charge ? 1 + 0.05 * Math.sin(performance.now() / 40) : 1;
@@ -355,6 +356,7 @@ function draw_zombies(ctx) {
         else ctx.drawImage(images_zombie(z)[z.etape % images_zombie(z).length], z.x, z.y, z.taille, z.taille);
 
         if (z.etourdi > 0) dessiner_etourdi(ctx, z);
+        if (z === boss) continue;   // la barre de vie d'un boss est en haut de l'écran
 
         // Barre de vie des zombies blessés
         if (z.pv < z.pvMax) {

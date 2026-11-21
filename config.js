@@ -238,6 +238,40 @@ const CONFIG = {
         rechargeEsquive: 4         // après une esquive, il est essoufflé : 4 s pour le toucher
     },
 
+    // Boss « Le Fossoyeur » : alterne avec le Mastodonte (fossoyeur.js). Il reste
+    // à distance, jette des pelletées là où est le joueur et creuse des tombes.
+    fossoyeur: {
+        invoque: true,
+        nom: 'LE FOSSOYEUR',
+        taille: 128,
+        points: 500,
+        pvBase: 22,
+        pvParBoss: 4,
+        pvMax: 34,
+        vitesseMin: 26,
+        vitesseAleatoire: 0,
+        dureeImage: 0.16,          // 8 images par pas (fossoyeur_sprite.js)
+        xArret: 0.55,              // il s'arrête ici (fraction de la largeur) : à portée du fusil à pompe
+        suivi: 30,                 // vitesse à laquelle il suit la ligne du joueur
+        delaiPelletee: 3.2,
+        annoncePelletee: 1.1,      // temps entre le lancer et l'impact (cercle au sol)
+        rayonPelletee: 34,
+        delaiTombes: 8,
+        tombes: 2,
+        dureeTombe: 3.2,           // temps avant qu'un zombie sorte de la tombe
+        colere: 45,                // au bout de 45 s, il avance sur le joueur
+        vitesseColere: 28
+    },
+    tombe: {
+        invoque: true,
+        taille: 32,
+        points: 5,
+        pv: 2,
+        vitesseMin: 0,
+        vitesseAleatoire: 0,
+        dureeImage: 1
+    },
+
     // Boss « Le Mastodonte » : arrive toutes les 3 minutes, plus résistant à chaque fois.
     // Pendant le combat, les apparitions normales sont suspendues (il invoque ses propres zombies).
     boss: {

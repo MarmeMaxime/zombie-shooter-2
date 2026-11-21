@@ -54,7 +54,12 @@ const FICHES = [
     {
         type: 'boss', nom: 'Le Mastodonte', boss: true,
         description: 'Deux mètres cinquante de chair verdâtre. Des pustules qui clignotent comme des guirlandes de Noël, une haleine qui décolle le papier peint, un crachat d\'acide qui troue le bitume. Elle sent le fromage oublié tout l\'été dans une voiture. Les autres zombies changent de trottoir quand elle passe. Et pourtant… elle t\'aime. Vraiment. Chaque crachat est une déclaration, chaque zombie qu\'elle invoque, un bouquet de fleurs. Son petit nom, c\'est Alana.',
-        conseil: 'Elle arrive toutes les 3 minutes. Sors de la ligne de son crachat. Ne lui brise pas le cœur trop vite.'
+        conseil: 'Elle arrive une fois sur deux. Sors de la ligne de son crachat. Ne lui brise pas le cœur trop vite.'
+    },
+    {
+        type: 'fossoyeur', nom: 'Le Fossoyeur', boss: true,
+        description: 'Il a enterré tout le village, puis le village d\'à côté, puis lui-même. Il ne s\'en est jamais remis. Maintenant il creuse pour les autres, il te réserve une place au premier rang et il prend les mesures à distance, à coups de pelle. Il est très professionnel : chaque tombe est livrée avec son occupant.',
+        conseil: 'Sors du cercle avant que la pelletée tombe. Casse les tombes avant qu\'elles s\'ouvrent, ou tape le patron.'
     }
 ];
 

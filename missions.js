@@ -22,7 +22,7 @@ const M = {
     hardcore: (sec, nom, recompense) => ({ nom, desc: `Survivre ${sec / 60} min en hardcore`, objectif: sec, unite: 's', recompense, valeur: p => p.meilleurTemps.hardcore || 0 }),
     intouchable: (sec, nom, recompense) => ({ nom, desc: `Tenir ${sec} s sans perdre de vie`, objectif: sec, unite: 's', recompense, valeur: p => p.sansDegat }),
     score: (n, nom, recompense) => ({ nom, desc: `Gagner ${n} points en une partie`, objectif: n, recompense, valeur: p => p.meilleurScore }),
-    boss: (n, nom, recompense) => ({ nom, desc: `Vaincre ${n} Mastodonte${n > 1 ? 's' : ''}`, objectif: n, recompense, valeur: p => p.boss }),
+    boss: (n, nom, recompense) => ({ nom, desc: `Vaincre ${n} boss`, objectif: n, recompense, valeur: p => p.boss }),
     coup: (n, nom, recompense) => ({ nom, desc: `Tuer ${n} zombies d'un seul coup`, objectif: n, recompense, valeur: p => p.coupMax })
 };
 
@@ -106,7 +106,7 @@ const Missions = (() => {
         const p = statsPerso(etat.perso);
         p.tues[type] = (p.tues[type] || 0) + 1;
         p.total++;
-        if (type === 'boss') p.boss++;
+        if (est_boss(type)) p.boss++;
         killsImage++;
         verifier();
     }

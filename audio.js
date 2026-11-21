@@ -216,6 +216,10 @@ const Son = (() => {
         },
         soin: () => [523, 659, 880].forEach((f, i) => ton(f, i * 0.06, 0.3, { type: 'sine', vol: 0.07, attaque: 0.02 })),
         esquive: () => bruit(0, 0.14, { vol: 0.12, filtre: 900, filtreFin: 3000, type: 'bandpass' }),
+        // Le Fossoyeur : la pelletée part, retombe ; les tombes sortent de terre
+        pelletee: () => { bruit(0, 0.25, { vol: 0.2, filtre: 600, filtreFin: 2500, type: 'bandpass' }); ton(220, 0, 0.2, { type: 'triangle', vol: 0.05, f2: 440 }); },
+        impactTerre: () => { bruit(0, 0.3, { vol: 0.35, filtre: 500, filtreFin: 80 }); ton(70, 0, 0.25, { vol: 0.2, f2: 40 }); },
+        tombe: () => { bruit(0, 0.6, { vol: 0.25, filtre: 300, filtreFin: 900 }); ton(55, 0, 0.6, { type: 'sawtooth', vol: 0.08, f2: 45 }); },
         succes: () => [784, 988, 1175, 1568].forEach((f, i) => ton(f, i * 0.09, 0.35, { type: 'triangle', vol: 0.15 })),
         degat: () => { ton(220, 0, 0.25, { type: 'square', vol: 0.12, f2: 90 }); bruit(0, 0.15, { vol: 0.15, filtre: 800 }); }
     };

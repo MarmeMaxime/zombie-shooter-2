@@ -13,8 +13,8 @@ const SUCCES = [
     { id: 'exterminateur', nom: 'Exterminateur', desc: 'Tuer 1 000 zombies', titre: 'Exterminateur', recompense: 200, objectif: 1000, valeur: totalTues },
     { id: 'ouvre_boite', nom: 'Ouvre-boîte', desc: 'Tuer 25 tanks', titre: 'Ouvre-boîte', recompense: 80, objectif: 25, valeur: () => SV().stats.tues.tank || 0 },
     { id: 'chasseur_mg', nom: 'Désenchanteur', desc: 'Tuer 10 magical girls', titre: 'Chasseur de magical girls', recompense: 100, objectif: 10, valeur: () => SV().stats.tues.magicalgirl || 0 },
-    { id: 'tueur_geant', nom: 'Tueur de géant', desc: 'Vaincre un Mastodonte', titre: 'Tueur de géant', recompense: 150, objectif: 1, valeur: () => SV().stats.bossTues },
-    { id: 'fleau', nom: 'Fléau des Mastodontes', desc: 'Vaincre 5 Mastodontes', titre: 'Fléau des Mastodontes', recompense: 400, objectif: 5, valeur: () => SV().stats.bossTues },
+    { id: 'tueur_geant', nom: 'Tueur de géant', desc: 'Vaincre un boss', titre: 'Tueur de géant', recompense: 150, objectif: 1, valeur: () => SV().stats.bossTues },
+    { id: 'fleau', nom: 'Fléau des boss', desc: 'Vaincre 5 boss', titre: 'Fléau des Mastodontes', recompense: 400, objectif: 5, valeur: () => SV().stats.bossTues },
     { id: 'survivant', nom: 'Survivant', desc: 'Survivre 5 minutes', titre: 'Survivant', recompense: 100, objectif: 300, unite: 's', valeur: () => meilleur(SV().stats.meilleurTemps) },
     { id: 'increvable', nom: 'Increvable', desc: 'Survivre 10 minutes en hardcore', titre: 'Increvable', recompense: 300, objectif: 600, unite: 's', valeur: () => SV().stats.meilleurTemps.hardcore || 0 },
     { id: 'machine', nom: 'Machine de guerre', desc: 'Gagner 5 000 points en une partie', titre: 'Machine de guerre', recompense: 200, objectif: 5000, valeur: () => meilleur(SV().stats.meilleurScore) },
@@ -46,8 +46,11 @@ const SUCCES = [
     { id: 'desinsectisation', nom: 'Désinsectisation', desc: 'Tuer 100 larves', titre: 'Exterminateur d\'asticots', recompense: 120, objectif: 100, valeur: () => SV().stats.tues.larve || 0 },
     { id: 'pas_de_soin', nom: 'Faute professionnelle', desc: 'Tuer 25 Infirmiers', titre: 'Radié de l\'ordre', recompense: 120, objectif: 25, valeur: () => SV().stats.tues.infirmier || 0 },
     { id: 'ko', nom: 'K.-O.', desc: 'Tuer 20 Boxeurs (hardcore)', titre: 'Champion poids lourd', recompense: 200, objectif: 20, valeur: () => SV().stats.tues.boxeur || 0 },
-    { id: 'bestiaire', nom: 'Bestiaire complet', desc: 'Tuer au moins un monstre de chaque espèce', titre: 'Zoologiste', recompense: 250, objectif: 10,
-        valeur: () => ['normal', 'tank', 'magicalgirl', 'joggeur', 'emeute', 'pondeuse', 'larve', 'infirmier', 'boxeur', 'boss'].filter(t => (SV().stats.tues[t] || 0) > 0).length }
+    // Le Fossoyeur
+    { id: 'fossoyeur', nom: 'Enterrement de première classe', desc: 'Vaincre le Fossoyeur', titre: 'Croque-mort', recompense: 200, objectif: 1, valeur: () => SV().stats.tues.fossoyeur || 0 },
+    { id: 'profanateur', nom: 'Profanateur', desc: 'Détruire 30 tombes avant qu\'elles s\'ouvrent', titre: 'Pilleur de tombes', recompense: 150, objectif: 30, valeur: () => SV().stats.tues.tombe || 0 },
+    { id: 'bestiaire', nom: 'Bestiaire complet', desc: 'Tuer au moins un monstre de chaque espèce', titre: 'Zoologiste', recompense: 250, objectif: 11,
+        valeur: () => ['normal', 'tank', 'magicalgirl', 'joggeur', 'emeute', 'pondeuse', 'larve', 'infirmier', 'boxeur', 'boss', 'fossoyeur'].filter(t => (SV().stats.tues[t] || 0) > 0).length }
 ];
 
 const Succes = (() => {
@@ -95,7 +98,7 @@ const Succes = (() => {
     function zombie_tue(type) {
         const t = SV().stats.tues;
         t[type] = (Number(t[type]) || 0) + 1;
-        if (type === 'boss') SV().stats.bossTues++;
+        if (est_boss(type)) SV().stats.bossTues++;
         if (typeof Missions !== 'undefined') Missions.zombie_tue(type);
         verifier();
     }
