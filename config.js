@@ -55,6 +55,7 @@ const CONFIG = {
             arme: 'pompe',
             pouvoir: 'onde',
             sprites: 'brute',
+            vitesse: 1.12,      // le plus lent avec Mira, mais assez pour couvrir les lignes en hardcore (simulation)
             description: '5 plombs en éventail : pas besoin de viser juste, mais portée limitée.'
         },
         grenadier: {
