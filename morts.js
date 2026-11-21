@@ -32,7 +32,7 @@ const lisse = t => t * t * (3 - 2 * t);                                     // d
 function ajouter_cadavre(z) {
     const style = z.type === 'boss' ? 'colosse'
         : z.type === 'magicalgirl' ? 'paillettes'
-        : z.type === 'tank' ? 'dos'
+        : z.type === 'tank' || z.type === 'emeute' ? 'dos'
         : z.type === 'joggeur' && z.joggeur && z.joggeur.etat === 'course' ? 'glissade'
         : z.foudroye ? 'electro'
         : 'face';
@@ -48,7 +48,8 @@ function ajouter_cadavre(z) {
         couleur: couleurs[Math.floor(Math.random() * couleurs.length)]
     }));
     // Images de marche (celles de la course pour un joggeur en plein sprint)
-    const images = z.joggeur && z.joggeur.etat === 'course' ? SPRITES_JOGGEUR.course : TYPES_ZOMBIE[z.type].images;
+    const images = z.joggeur && z.joggeur.etat === 'course' ? SPRITES_JOGGEUR.course
+        : z.emeute ? images_emeute(z) : TYPES_ZOMBIE[z.type].images;
     cadavres.push({
         style, images, etape: z.etape % images.length, x: z.x, y: z.y, taille: z.taille,
         age: 0, particules, poussiere: [], impact: false, etoiles: style === 'paillettes'

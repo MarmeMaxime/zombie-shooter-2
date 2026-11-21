@@ -15,6 +15,7 @@ function reset_balles() {
     arcs = [];
 }
 
+let compteurTirs = 0;
 function creer_projectile(tireur, arme, props) {
     projectiles.push({
         x: tireur.x + CONFIG.canon.x,
@@ -25,6 +26,7 @@ function creer_projectile(tireur, arme, props) {
         hauteur: 10,
         degats: arme.degats,
         portee: arme.portee || Infinity,  // distance restante avant disparition
+        tir: compteurTirs,                // les plombs d'une même salve partagent ce numéro
         ...props
     });
 }
@@ -64,12 +66,13 @@ const TIRS = {
 /* ---------- Foudre en chaîne ----------
    Le zombie touché est foudroyé, puis la foudre saute vers le zombie le plus
    proche de LUI (dans le rayon), puis depuis celui-là, etc. Jamais deux fois
-   le même zombie. Les dégâts tombent tout de suite ; l'arc se dessine saut
+   le même zombie ; elle s'arrête sur un Anti-émeute. Les dégâts tombent tout de suite ; l'arc se dessine saut
    par saut. */
 function foudroyer(p, premier) {
     const centre = z => ({ x: z.x + z.taille / 2, y: z.y + z.taille / 2 });
     const touches = [premier];
     for (let k = 0; k < p.sauts; k++) {
+        if (touches[touches.length - 1].emeute) break;   // l'Anti-émeute arrête la foudre
         const de = centre(touches[touches.length - 1]);
         let suivant = null, meilleure = Infinity;
         for (const z of zombies) {
@@ -85,7 +88,7 @@ function foudroyer(p, premier) {
     arcs.push({ points: [{ x: p.x, y: p.y + p.hauteur / 2 }, ...touches.map(centre)], age: 0 });
     for (const z of touches) {
         z.foudroye = true;                 // pour son animation de mort « électrocuté »
-        toucher_zombie(z, p.degats);
+        toucher_zombie(z, p.degats, p.tir);
     }
     Son.effet('foudreImpact');
 }
@@ -93,6 +96,7 @@ function foudroyer(p, premier) {
 function tirer(tireur) {
     const arme = tireur.arme;
     Son.effet(CONFIG.personnages[tireur.perso].arme);   // chaque arme a son propre son
+    compteurTirs++;
     TIRS[CONFIG.personnages[tireur.perso].arme](tireur, arme);
 }
 
@@ -108,7 +112,7 @@ function exploser(p) {
         // Distance entre le centre de l'explosion et le point le plus proche de la hitbox
         const dx = Math.max(h.x - cx, 0, cx - (h.x + h.largeur));
         const dy = Math.max(h.y - cy, 0, cy - (h.y + h.hauteur));
-        if (dx * dx + dy * dy <= rayon * rayon) toucher_zombie(z, p.degats);
+        if (dx * dx + dy * dy <= rayon * rayon) toucher_zombie(z, p.degats, p.tir);
     }
     explosions.push({ x: cx, y: cy, rayon, age: 0 });
     Son.effet('explosion');
@@ -136,7 +140,7 @@ function update_balles(dt, largeurCanvas, hauteurCanvas) {
         if (cible) {
             if (p.type === 'grenade') exploser(p);
             else if (p.type === 'eclair') foudroyer(p, cible);
-            else toucher_zombie(cible, p.degats);
+            else toucher_zombie(cible, p.degats, p.tir);
             return false;
         }
         if (p.portee <= 0) {

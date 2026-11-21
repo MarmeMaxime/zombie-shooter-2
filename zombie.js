@@ -1,7 +1,7 @@
 /* =========================================================================
    ZOMBIES : types, apparitions, collisions, dégâts, mise à jour et dessin.
-   Tous les monstres (normaux, tanks, magical girls, joggeurs, boss) sont dans
-   la même liste « zombies ». Mécaniques à part : boss.js, joggeur.js ;
+   Tous les monstres (normaux, tanks, magical girls, joggeurs, anti-émeutes, boss) sont dans
+   la même liste « zombies ». Mécaniques à part : boss.js, joggeur.js, emeute.js ;
    animations de mort : morts.js.
    ========================================================================= */
 const imagesNumerotees = (prefixe, nombre) =>
@@ -25,6 +25,11 @@ const TYPES_ZOMBIE = {
     joggeur: {
         config: CONFIG.joggeur,
         images: SPRITES_JOGGEUR.marche
+    },
+    // Sprite dessiné dans emeute_sprite.js (bouclier levé, puis brisé)
+    emeute: {
+        config: CONFIG.emeute,
+        images: SPRITES_EMEUTE.garde
     }
 };
 
@@ -37,6 +42,7 @@ function reset_zombies(mode) {
     zombies = [];
     effets = [];
     cadavres = [];
+    eclats = [];
     reset_boss();
     difficulte = mode;
     for (const type in TYPES_ZOMBIE) chronos[type] = 0;
@@ -88,12 +94,13 @@ function creer_zombie(type, largeurCanvas, hauteurCanvas) {
     };
     if (cfg.delaiTeleport) z.teleport = { chrono: cfg.delaiTeleport, annonce: false, y: z.y };
     if (type === 'joggeur') z.joggeur = { etat: 'marche', chrono: 0, recharge: 0 };
+    if (type === 'emeute') z.emeute = nouvel_emeute();
     zombies.push(z);
 }
 
 function intervalle_apparition(type, tempsJeu) {
     const cfg = TYPES_ZOMBIE[type].config;
-    if (type !== 'normal') return cfg.intervalle;
+    if (type !== 'normal') return parMode(cfg.intervalle);
     return Math.max(parMode(cfg.intervalleMin), cfg.intervalleDepart - tempsJeu * cfg.accelerationParSeconde);
 }
 
@@ -102,7 +109,7 @@ function gerer_apparitions(dt, largeurCanvas, hauteurCanvas, tempsJeu) {
         if (type === 'boss') continue;   // le boss a sa propre logique
         const cfg = TYPES_ZOMBIE[type].config;
         if (cfg.modes && !cfg.modes.includes(difficulte)) continue;
-        if (tempsJeu < (cfg.premiereApparition || 0)) continue;
+        if (tempsJeu < (parMode(cfg.premiereApparition) || 0)) continue;
 
         chronos[type] += dt;
         if (chronos[type] >= intervalle_apparition(type, tempsJeu)) {
@@ -145,11 +152,20 @@ function ajouter_effet(x, y) {
 }
 
 /* ---------- Dégâts ---------- */
-function toucher_zombie(z, degats = 1) {
+function toucher_zombie(z, degats = 1, tir) {
     const index = zombies.indexOf(z);
     if (index < 0) return;   // déjà mort (sinon splice(-1) retirerait le dernier zombie de la liste)
+    if (z.emeute) {
+        // Un seul PV par tir, quelle que soit l'arme (une salve de plombs = un tir)
+        if (tir !== undefined && z.emeute.dernierTir === tir) return;
+        z.emeute.dernierTir = tir;
+        degats = 1;
+    }
     z.pv -= degats;
-    if (z.pv > 0) return;
+    if (z.pv > 0) {
+        if (z.emeute) emeute_blesse(z);
+        return;
+    }
     zombies.splice(index, 1);
     ajouter_cadavre(z);
     ajouter_score(TYPES_ZOMBIE[z.type].config.points);
@@ -176,7 +192,7 @@ function update_zombies(dt, largeurCanvas, hauteurCanvas, tempsJeu) {
         const z = zombies[i];
         const type = TYPES_ZOMBIE[z.type];
         if (z.joggeur) gerer_joggeur(z, dt);
-        z.vitesseActuelle = z.joggeur ? vitesse_joggeur(z) : z.vitesse;
+        z.vitesseActuelle = z.joggeur ? vitesse_joggeur(z) : z.emeute ? vitesse_emeute(z) : z.vitesse;
         z.x -= z.vitesseActuelle * MONDE.echelleX * dt;   // même temps de traversée sur tout écran
         if (z.teleport) gerer_teleport(z, dt, hauteurCanvas);
 
@@ -203,6 +219,7 @@ function update_zombies(dt, largeurCanvas, hauteurCanvas, tempsJeu) {
 
     for (const e of effets) e.age += dt;
     effets = effets.filter(e => e.age < 0.35);
+    update_eclats(dt);
     update_cadavres(dt);
 }
 
@@ -285,6 +302,7 @@ function draw_zombies(ctx) {
             continue;   // sa barre de vie est en haut de l'écran
         }
         if (z.joggeur) dessiner_joggeur(ctx, z);
+        else if (z.emeute) dessiner_emeute(ctx, z);
         else ctx.drawImage(TYPES_ZOMBIE[z.type].images[z.etape], z.x, z.y, z.taille, z.taille);
 
         // Barre de vie des zombies blessés
@@ -297,4 +315,5 @@ function draw_zombies(ctx) {
         }
     }
     dessiner_effets(ctx);
+    draw_eclats(ctx);
 }

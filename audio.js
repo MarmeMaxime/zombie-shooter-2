@@ -186,6 +186,16 @@ const Son = (() => {
             ton(1400, 0.02, 0.3, { type: 'square', vol: 0.05, f2: 700 });
             bruit(0, 0.3, { vol: 0.15, filtre: 2500, type: 'bandpass' });
         },
+        // Balle qui ricoche sur le bouclier de l'Anti-émeute
+        ricochet: () => {
+            ton(2400, 0, 0.12, { type: 'triangle', vol: 0.08, f2: 3200 });
+            bruit(0, 0.05, { vol: 0.12, filtre: 5000, type: 'highpass' });
+        },
+        // Bouclier qui vole en éclats
+        bouclierBrise: () => {
+            for (let k = 0; k < 5; k++) bruit(k * 0.04, 0.08, { vol: 0.2, filtre: 2500 + k * 600, type: 'highpass' });
+            ton(520, 0, 0.3, { type: 'square', vol: 0.06, f2: 180 });
+        },
         succes: () => [784, 988, 1175, 1568].forEach((f, i) => ton(f, i * 0.09, 0.35, { type: 'triangle', vol: 0.15 })),
         degat: () => { ton(220, 0, 0.25, { type: 'square', vol: 0.12, f2: 90 }); bruit(0, 0.15, { vol: 0.15, filtre: 800 }); }
     };

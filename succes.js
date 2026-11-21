@@ -35,8 +35,12 @@ const SUCCES = [
     { id: 'marathon', nom: 'Marathonien', desc: 'Tuer 50 Joggeurs', titre: 'Marathonien', recompense: 150, objectif: 50, valeur: () => SV().stats.tues.joggeur || 0 },
     { id: 'carton_rouge', nom: 'Carton rouge', desc: 'Abattre un Joggeur en plein sprint', titre: 'Arbitre', recompense: 80, objectif: 1, valeur: () => SV().stats.sprintsStoppes },
     { id: 'torero', nom: 'Torero', desc: 'Esquiver 10 charges de Joggeur', titre: 'Torero', recompense: 150, objectif: 10, valeur: () => SV().stats.esquives },
-    { id: 'bestiaire', nom: 'Bestiaire complet', desc: 'Tuer au moins un monstre de chaque espèce', titre: 'Zoologiste', recompense: 250, objectif: 5,
-        valeur: () => ['normal', 'tank', 'magicalgirl', 'joggeur', 'boss'].filter(t => (SV().stats.tues[t] || 0) > 0).length }
+    // L'Anti-émeute
+    { id: 'dispersion', nom: 'Dispersion', desc: 'Tuer un Anti-émeute', titre: 'Fauteur de troubles', recompense: 30, objectif: 1, valeur: () => SV().stats.tues.emeute || 0 },
+    { id: 'casseur', nom: 'Casseur', desc: 'Briser 20 boucliers', titre: 'Casseur', recompense: 120, objectif: 20, valeur: () => SV().stats.bouclierBrises || 0 },
+    { id: 'maintien_ordre', nom: 'Désordre public', desc: 'Tuer 30 Anti-émeutes', titre: 'Insurgé', recompense: 150, objectif: 30, valeur: () => SV().stats.tues.emeute || 0 },
+    { id: 'bestiaire', nom: 'Bestiaire complet', desc: 'Tuer au moins un monstre de chaque espèce', titre: 'Zoologiste', recompense: 250, objectif: 6,
+        valeur: () => ['normal', 'tank', 'magicalgirl', 'joggeur', 'emeute', 'boss'].filter(t => (SV().stats.tues[t] || 0) > 0).length }
 ];
 
 const Succes = (() => {

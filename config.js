@@ -129,6 +129,21 @@ const CONFIG = {
         recharge: 2.5              // délai avant de pouvoir recharger
     },
 
+    // L'Anti-émeute (normal et hardcore) : 3 PV, mais il ne perd qu'un PV par tir
+    // quelle que soit l'arme (salve de pompe, grenade…) et la foudre s'arrête sur lui.
+    // 1er tir : bouclier fendu ; 2e : bouclier brisé, il fonce ; 3e : mort.
+    emeute: {
+        taille: 64,
+        points: 35,
+        pv: 3,
+        vitesseMin: { normal: 42, hardcore: 46 },
+        vitesseAleatoire: 10,
+        vitesseSansBouclier: { normal: 95, hardcore: 115 },
+        dureeImage: 0.1,           // 12 images par pas (emeute_sprite.js)
+        intervalle: { normal: 18, hardcore: 40 },   // en hardcore il bouche une ligne : plus rare
+        premiereApparition: { normal: 40, hardcore: 180 }
+    },
+
     // Boss « Le Mastodonte » : arrive toutes les 3 minutes, plus résistant à chaque fois.
     // Pendant le combat, les apparitions normales sont suspendues (il invoque ses propres zombies).
     boss: {
