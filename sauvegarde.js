@@ -25,9 +25,13 @@ const Sauvegarde = (() => {
         perso: 'soldat',
         loot: { cranes: 0, possedes: [], dechets: {}, equipes: {}, ouvertes: 0, depuisLegendaire: 0 },
         // Ajoutés après coup : les anciennes sauvegardes les reçoivent vides, sans migration
-        stats: { tues: {}, parties: 0, bossTues: 0, persosJoues: [], meilleurTemps: {}, meilleurScore: {}, mythiques: 0, persos: {}, esquives: 0, sprintsStoppes: 0, bouclierBrises: 0, pouvoirs: 0 },
+        stats: { tues: {}, parties: 0, bossTues: 0, persosJoues: [], meilleurTemps: {}, meilleurScore: {}, mythiques: 0, persos: {}, esquives: 0, sprintsStoppes: 0, bouclierBrises: 0, pouvoirs: 0, soins: 0, esquivesBoxeur: 0 },
         succes: [],
         missions: [],
+        persosDebloques: ['soldat'],
+        son: { actif: true, musique: 0.8, effets: 0.8, vibrations: true },   // réglages du son (activé de base)
+        options: { langue: 'fr', touches: {} },                               // langue, touches choisies (options.js)
+        bestiaire: [],
         titre: ''
     });
 
@@ -146,7 +150,7 @@ const Sauvegarde = (() => {
     function restaurer(index) {
         const entree = historique()[index];
         if (!entree) return false;
-        point_de_restauration('Avant restauration');
+        point_de_restauration(typeof T === 'function' ? T('Avant restauration') : 'Avant restauration');
         remplacer(migrer(Math.min(entree.version || 1, VERSION), entree.donnees));
         return true;
     }
@@ -168,16 +172,16 @@ const Sauvegarde = (() => {
     // Renvoie { ok, message, retouche } ; n'applique rien si le fichier est invalide
     function analyser(texte) {
         let obj;
-        try { obj = JSON.parse(texte); } catch { return { ok: false, message: 'Ce fichier n\'est pas une sauvegarde lisible.' }; }
+        try { obj = JSON.parse(texte); } catch { return { ok: false, message: T('Ce fichier n\'est pas une sauvegarde lisible.') }; }
         if (!obj || obj.format !== FORMAT || !estObjet(obj.donnees)) {
-            return { ok: false, message: 'Ce fichier n\'est pas une sauvegarde de Zombie Shooter 2.' };
+            return { ok: false, message: T('Ce fichier n\'est pas une sauvegarde de Zombie Shooter 2.') };
         }
         const retouche = obj.empreinte !== empreinte(JSON.stringify(obj.donnees));
         return { ok: true, obj, retouche };
     }
 
     function importer(obj) {
-        point_de_restauration('Avant import');
+        point_de_restauration(typeof T === 'function' ? T('Avant import') : 'Avant import');
         versionFichier = Math.max(obj.version || 0, VERSION);
         remplacer(migrer(Math.min(obj.version || 0, VERSION), obj.donnees));
     }

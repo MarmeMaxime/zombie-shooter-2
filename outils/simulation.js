@@ -30,7 +30,7 @@ const ctx = vm.createContext({
     performance: { now: () => 0 }, requestAnimationFrame: () => 1, cancelAnimationFrame() {},
     Math: Object.assign(Object.create(Math), { random: rand }), console, localStorage: { getItem() {}, setItem() {} }
 });
-for (const f of ['config.js', 'sauvegarde.js', 'audio.js', 'pixel_art.js', 'boss_sprite.js', 'joggeur_sprite.js', 'emeute_sprite.js', 'deplacement_joueur.js', 'tir_joueur.js', 'zombie.js', 'boss.js', 'joggeur.js', 'emeute.js', 'morts.js', 'pouvoirs.js', 'main.js', 'lootbox.js', 'succes.js', 'missions.js', 'menu.js']) {
+for (const f of ['config.js', 'sauvegarde.js', 'traductions.js', 'i18n.js', 'audio.js', 'options.js', 'pixel_art.js', 'boss_sprite.js', 'joggeur_sprite.js', 'emeute_sprite.js', 'pondeuse_sprite.js', 'infirmier_sprite.js', 'boxeur_sprite.js', 'fossoyeur_sprite.js', 'deplacement_joueur.js', 'tir_joueur.js', 'zombie.js', 'boss.js', 'joggeur.js', 'emeute.js', 'morts.js', 'pondeuse.js', 'infirmier.js', 'boxeur.js', 'fossoyeur.js', 'pouvoirs.js', 'main.js', 'lootbox.js', 'succes.js', 'missions.js', 'menu.js']) {
     vm.runInContext(fs.readFileSync(path.join(dir, f), 'utf8'), ctx, { filename: f });
 }
 
@@ -57,7 +57,7 @@ const resultat = vm.runInContext(`
     let pertesMinute = 0;
 
     const yVise = z => {
-        if (z.type === 'boss') {
+        if (est_boss(z.type)) {
             // Le boss est grand : rester où on est si on le touche déjà, sinon rejoindre le bord le plus proche
             const h = hitbox_zombie(z), y0 = joueur.y + CONFIG.canon.y;
             if (y0 + 10 > h.y + 6 && y0 < h.y + h.hauteur - 6) return joueur.y;
@@ -115,14 +115,19 @@ const resultat = vm.runInContext(`
             const hb = hitbox(joueur.x, y, joueur.taille);
             return proches.some(z => collision(hb, hitbox(z.x - (z.vitesseActuelle || z.vitesse) * 0.25, z.y, z.taille)))
                 || zombies.some(z => z.joggeur && z.joggeur.etat !== 'marche' && z.joggeur.etat !== 'essouffle' && collision(hb, { x: 0, y: z.y + 10, largeur: 2000, hauteur: z.taille - 20 }))
+                || pelletees.some(p => Math.hypot((joueur.x + joueur.taille / 2 - p.x) / MONDE.echelleX, y + joueur.taille / 2 - p.y) < CONFIG.fossoyeur.rayonPelletee + 22)
                 || crachats.some(c => c.x > joueur.x && c.x - joueur.x < 700 && collision(hb, { x: c.x - 700, y: c.y - 4, largeur: c.taille + 700, hauteur: c.taille + 8 }));
         };
         const dir = commandes.bas ? 1 : commandes.haut ? -1 : 0;
         if (danger(joueur.y) && !(pret && joueur.rechargeTir === 0)) {
-            const pas = joueur.vitesse * 0.4;
-            const hautOk = !danger(joueur.y - pas) && joueur.y - pas >= CONFIG.margeHaut;
-            const basOk = !danger(joueur.y + pas) && joueur.y + pas <= 400 - CONFIG.margeBas;
-            if (hautOk || basOk) { commandes.haut = hautOk && (!basOk || dir <= 0); commandes.bas = !commandes.haut; pret = false; }
+            // Cherche une issue de plus en plus loin (un perso lent a besoin de plusieurs pas
+            // pour sortir d'un grand danger, comme le cercle d'une pelletée)
+            for (const duree of [0.4, 0.7, 1.0]) {
+                const pas = joueur.vitesse * duree;
+                const hautOk = !danger(joueur.y - pas) && joueur.y - pas >= CONFIG.margeHaut;
+                const basOk = !danger(joueur.y + pas) && joueur.y + pas <= 400 - CONFIG.margeBas;
+                if (hautOk || basOk) { commandes.haut = hautOk && (!basOk || dir <= 0); commandes.bas = !commandes.haut; pret = false; break; }
+            }
         } else if (dir && danger(joueur.y + dir * joueur.vitesse * 0.15)) {
             commandes.haut = commandes.bas = false;
         }
@@ -143,7 +148,7 @@ const resultat = vm.runInContext(`
             pertesMinute = pertes;
         }
     }
-    return { pouvoirsUtilises, joggeurs: (Sauvegarde.donnees.stats.tues.joggeur || 0) + ' tués, ' + Sauvegarde.donnees.stats.esquives + ' esquives, ' + Sauvegarde.donnees.stats.sprintsStoppes + ' sprints stoppés', missionsRatees: MISSIONS[perso].filter(m => !Sauvegarde.donnees.missions.includes(m.id)).map(m => m.nom + ' ' + m.valeur(statsPerso(perso)) + '/' + m.objectif).join(' | '), coupMax: statsPerso(perso).coupMax, crachatsRecus, bossPasses, dureesBoss: dureesBoss.join(','), boss: Sauvegarde.donnees.stats.bossTues, bossApparus, causes, survie: Math.round(etat.temps), vivant: etat.enCours, vies: etat.vies, pertes, achats, pertesParMinute: pertesParMinute.join('') };
+    return { tues: Sauvegarde.donnees.stats.tues, pouvoirsUtilises, joggeurs: (Sauvegarde.donnees.stats.tues.joggeur || 0) + ' tués, ' + Sauvegarde.donnees.stats.esquives + ' esquives, ' + Sauvegarde.donnees.stats.sprintsStoppes + ' sprints stoppés', missionsRatees: MISSIONS[perso].filter(m => !Sauvegarde.donnees.missions.includes(m.id)).map(m => m.nom + ' ' + m.valeur(statsPerso(perso)) + '/' + m.objectif).join(' | '), coupMax: statsPerso(perso).coupMax, crachatsRecus, bossPasses, dureesBoss: dureesBoss.join(','), boss: Sauvegarde.donnees.stats.bossTues, bossApparus, causes, survie: Math.round(etat.temps), vivant: etat.enCours, vies: etat.vies, pertes, achats, pertesParMinute: pertesParMinute.join('') };
 })`, ctx)(mode, Number(minutes) * 60, Number(reaction), process.env.PERSO || 'soldat');
 
 console.log(JSON.stringify({ perso: process.env.PERSO || 'soldat', mode, reaction: Number(reaction), ...resultat }));

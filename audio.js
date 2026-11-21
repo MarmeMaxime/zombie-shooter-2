@@ -25,7 +25,12 @@ const Son = (() => {
     const sonTir = new Audio('./assets/son/america.mp3');
     sonTir.volume = 0.4;
 
-    let actif = false;          // coupé par défaut (les navigateurs bloquent l'autoplay)
+    // Réglages gardés dans la sauvegarde : son activé de base, volumes de 0 à 1.
+    // Les navigateurs bloquent le son tant que la page n'a pas été touchée :
+    // la musique démarre à la première touche ou au premier clic (écran titre).
+    const reglages = Sauvegarde.donnees.son;
+    let actif = reglages.actif;
+    let volumeBase = 0.1;       // volume propre au morceau en cours (avant le réglage « musique »)
     let ambiance = null;        // 'menu' | 'normal' | 'hardcore' | null
     let indexHardcore = 0;
 
@@ -34,7 +39,8 @@ const Son = (() => {
 
     function chargerPiste(src, volume, enBoucle) {
         musique.src = src;
-        musique.volume = volume;
+        volumeBase = volume;
+        musique.volume = volume * reglages.musique;
         musique.loop = enBoucle;
         musique.currentTime = 0;
     }
@@ -65,6 +71,8 @@ const Son = (() => {
 
     function setActif(valeur) {
         actif = valeur;
+        reglages.actif = valeur;
+        Sauvegarde.sauver();
         if (!ambiance) return;
         if (actif && !suspendue) lire(musique);
         else musique.pause();
@@ -80,14 +88,14 @@ const Son = (() => {
         if (!actif) return;
         // cloneNode permet de superposer plusieurs tirs rapprochés
         const copie = audio.cloneNode();
-        copie.volume = audio.volume;
+        copie.volume = audio.volume * reglages.effets;
         copie.preservesPitch = false;
         copie.playbackRate = vitesse;
         lire(copie);
     }
 
     /* ---------- Bruitages synthétisés (Web Audio, aucun fichier) ---------- */
-    let ac = null, bruitBlanc = null;
+    let ac = null, bruitBlanc = null, sortieEffets = null, sortieMusique = null;
     function contexte() {
         if (!ac) {
             const AC = window.AudioContext || window.webkitAudioContext;
@@ -97,6 +105,13 @@ const Son = (() => {
             bruitBlanc = ac.createBuffer(1, ac.sampleRate, ac.sampleRate);
             const d = bruitBlanc.getChannelData(0);
             for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+            // Deux volumes généraux : les bruitages, et les musiques jouées en Web Audio (caisses)
+            sortieEffets = ac.createGain();
+            sortieEffets.gain.value = reglages.effets;
+            sortieEffets.connect(ac.destination);
+            sortieMusique = ac.createGain();
+            sortieMusique.gain.value = reglages.musique;
+            sortieMusique.connect(ac.destination);
         }
         if (ac.state === 'suspended') ac.resume();
         return ac;
@@ -113,7 +128,7 @@ const Son = (() => {
         const g = c.createGain();
         g.gain.setValueAtTime(vol, t);
         g.gain.exponentialRampToValueAtTime(0.0001, t + duree);
-        src.connect(f).connect(g).connect(c.destination);
+        src.connect(f).connect(g).connect(sortieEffets);
         src.start(t, Math.random() * 0.5); src.stop(t + duree + 0.05);
     }
 
@@ -135,7 +150,7 @@ const Son = (() => {
             g.gain.setValueAtTime(vol, t);
         }
         g.gain.exponentialRampToValueAtTime(0.0001, t + duree);
-        o.connect(g).connect(sortie || c.destination);
+        o.connect(g).connect(sortie || sortieEffets);
         o.start(t); o.stop(t + duree + 0.05);
     }
 
@@ -208,12 +223,65 @@ const Son = (() => {
             bruit(0, 1.2, { vol: 0.6, filtre: 6000, filtreFin: 200 });
             ton(45, 0.05, 1.0, { type: 'sawtooth', vol: 0.15, f2: 30 });
         },
+        // La Pondeuse éclate, l'Infirmier soigne, le Boxeur esquive
+        eclatement: () => {
+            bruit(0, 0.35, { vol: 0.35, filtre: 700, filtreFin: 120 });
+            ton(160, 0, 0.3, { type: 'sawtooth', vol: 0.1, f2: 50 });
+            for (let k = 0; k < 3; k++) bruit(0.12 + k * 0.06, 0.05, { vol: 0.12, filtre: 1800, type: 'bandpass' });
+        },
+        soin: () => [523, 659, 880].forEach((f, i) => ton(f, i * 0.06, 0.3, { type: 'sine', vol: 0.07, attaque: 0.02 })),
+        esquive: () => bruit(0, 0.14, { vol: 0.12, filtre: 900, filtreFin: 3000, type: 'bandpass' }),
+        // Le Fossoyeur : la pelletée part, retombe ; les tombes sortent de terre
+        pelletee: () => { bruit(0, 0.25, { vol: 0.2, filtre: 600, filtreFin: 2500, type: 'bandpass' }); ton(220, 0, 0.2, { type: 'triangle', vol: 0.05, f2: 440 }); },
+        impactTerre: () => { bruit(0, 0.3, { vol: 0.35, filtre: 500, filtreFin: 80 }); ton(70, 0, 0.25, { vol: 0.2, f2: 40 }); },
+        tombe: () => { bruit(0, 0.6, { vol: 0.25, filtre: 300, filtreFin: 900 }); ton(55, 0, 0.6, { type: 'sawtooth', vol: 0.08, f2: 45 }); },
         succes: () => [784, 988, 1175, 1568].forEach((f, i) => ton(f, i * 0.09, 0.35, { type: 'triangle', vol: 0.15 })),
         degat: () => { ton(220, 0, 0.25, { type: 'square', vol: 0.12, f2: 90 }); bruit(0, 0.15, { vol: 0.15, filtre: 800 }); }
     };
 
+    // Réglage d'un volume ('musique' ou 'effets', de 0 à 1), gardé dans la sauvegarde
+    function setVolume(quoi, valeur) {
+        reglages[quoi] = Math.max(0, Math.min(1, valeur));
+        if (quoi === 'musique') {
+            musique.volume = volumeBase * reglages.musique;
+            if (sortieMusique) sortieMusique.gain.value = reglages.musique;
+        } else if (sortieEffets) {
+            sortieEffets.gain.value = reglages.effets;
+        }
+        Sauvegarde.sauver();
+    }
+
+    /* Vibrations : téléphone (navigator.vibrate, Android) et manette (vibreurs).
+       force de 0 à 1, duree en millisecondes. Désactivables dans le panneau du son. */
+    function vibrer(force, duree) {
+        if (!reglages.vibrations || typeof navigator === 'undefined') return;
+        // Le téléphone ne vibre qu'après un premier contact avec la page (sinon le navigateur proteste)
+        const actifPage = !navigator.userActivation || navigator.userActivation.hasBeenActive;
+        try { if (navigator.vibrate && actifPage) navigator.vibrate(Math.round(duree)); } catch { /* refusé par le navigateur */ }
+        const manettes = navigator.getGamepads ? [...navigator.getGamepads()] : [];
+        for (const gp of manettes) {
+            if (gp && gp.vibrationActuator && gp.vibrationActuator.playEffect) {
+                gp.vibrationActuator.playEffect('dual-rumble', { duration: duree, strongMagnitude: force, weakMagnitude: Math.min(1, force * 0.6 + 0.2) }).catch(() => {});
+            }
+        }
+    }
+    function setVibrations(valeur) { reglages.vibrations = valeur; Sauvegarde.sauver(); }
+
+    // Première interaction avec la page : le navigateur autorise enfin le son
+    function debloquer() {
+        if (actif && ambiance && !suspendue) lire(musique);
+        if (actif) contexte();
+    }
+    for (const evt of ['pointerdown', 'keydown']) document.addEventListener(evt, debloquer, { once: true, capture: true });
+
     return {
         jouerAmbiance,
+        setVolume,
+        vibrer,
+        setVibrations,
+        vibrations: () => reglages.vibrations,
+        volume: quoi => reglages[quoi],
+        sortieMusique: () => (contexte(), sortieMusique),
         effet: nom => { if (BRUITAGES[nom]) BRUITAGES[nom](); },
         arreterMusique,
         setActif,

@@ -1,4 +1,4 @@
-# Zombie Shooter 2 — version 1.0
+# Zombie Shooter 2 — version 1.1
 
 Jeu de tir en pixel art dans le navigateur : les zombies arrivent par la droite,
 tu les retiens le plus longtemps possible. Deux modes (Normal et Hardcore),
@@ -10,13 +10,16 @@ Ouvre `index.html` dans un navigateur récent (aucune installation, aucun serveu
 La progression est enregistrée dans le navigateur ; elle peut être téléchargée et
 réimportée depuis le menu 💾.
 
-| Action | Clavier | Tactile |
-|---|---|---|
-| Monter / descendre | ↑ ↓, Z / W, S | joystick |
-| Tirer | Espace | TIR (maintenu : tir auto) |
-| Pouvoir spécial | E ou Maj | ★ |
-| Acheter une vie | V | V |
-| Pause | Échap ou P | ⏸ |
+| Action | Clavier | Tactile | Manette |
+|---|---|---|---|
+| Monter / descendre | ↑ ↓, Z / W, S | joystick | stick gauche, croix |
+| Tirer | Espace | TIR (maintenu : tir auto) | A ou gâchette droite (maintenu : tir auto) |
+| Pouvoir spécial | E ou Maj | ★ | X, LB ou RB |
+| Acheter une vie | V | V | Y |
+| Pause | Échap ou P | ⏸ | Start |
+
+Dans les menus, à la manette : A pour jouer ou valider, B pour revenir.
+Vibrations (téléphone Android et manette) : réglables dans le panneau 🔊.
 
 ## Personnages
 
@@ -30,7 +33,10 @@ réimportée depuis le menu 💾.
 ## Ennemis
 
 Zombie, Tank, Magical girl (hardcore, se téléporte), Joggeur (charge quand il est
-aligné), Anti-émeute (3 PV, un seul par tir, arrête la foudre) et le boss, le Mastodonte.
+aligné), Anti-émeute (3 PV, un seul par tir, arrête la foudre), Pondeuse (éclate en
+larves), Infirmier (soigne les zombies autour de lui), Boxeur (hardcore, esquive un
+tir puis s'essouffle) et le boss, le Mastodonte. Un ennemi spécial prend la place
+d'un zombie normal, et leur nombre à l'écran est plafonné.
 
 ## Contenu
 

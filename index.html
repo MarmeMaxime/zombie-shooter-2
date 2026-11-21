@@ -18,15 +18,15 @@
       <div id="ecran-titre">
         <div class="titre-bloc">
           <p class="titre-sur">ILS ARRIVENT…</p>
-          <h1 class="titre-geant">ZOMBIE<br>SHOOTER <span>2</span></h1>
+          <h1 class="titre-geant" data-langue-fixe>ZOMBIE<br>SHOOTER <span>2</span></h1>
           <p class="titre-slogan">Survivez. Ouvrez des caisses. Regrettez.</p>
-          <p class="titre-version">version 1.0</p>
+          <p class="titre-version">version 1.1</p>
           <p class="titre-invite">▶ Appuie sur une touche ou touche l'écran ◀</p>
         </div>
       </div>
 
       <div id="main-menu">
-        <h1>Zombie Shooter 2 <small class="version">1.0</small></h1>
+        <h1 data-langue-fixe>Zombie Shooter 2 <small class="version">1.1</small></h1>
         <p id="titre-joueur"></p>
         
         <div class="difficulty-selector">
@@ -39,6 +39,7 @@
           <button id="btn-caisses">CAISSES · <span id="solde-menu">0</span> 💀</button>
           <button id="btn-missions">📋 MISSIONS</button>
           <button id="btn-succes">🏆 SUCCÈS</button>
+          <button id="btn-bestiaire">📖 BESTIAIRE</button>
         </div>
 
         <button id="btn-tuto">?</button>
@@ -94,6 +95,15 @@
         </div>
       </div>
 
+      <div id="bestiaire-overlay" class="hidden">
+        <div class="mission-card loot-card">
+          <h2>BESTIAIRE</h2>
+          <p id="bestiaire-compte"></p>
+          <div id="bestiaire-liste"></div>
+          <button id="btn-close-bestiaire">FERMER</button>
+        </div>
+      </div>
+
       <div id="succes-overlay" class="hidden">
         <div class="mission-card loot-card">
           <h2>SUCCÈS</h2>
@@ -127,8 +137,8 @@
           <span>Score : <span id="score">0</span></span>
           <span>Vies : <span id="vies">3</span></span>
           <span>Temps : <span id="temps">0</span></span>
-          <span>Vie (V) : <span id="prix-vie">100</span></span>
-          <span><span id="pouvoir-hud">★ 0%</span><span class="touche-pc"> (E)</span></span>
+          <span><span>Vie</span> (<span data-touche="vie">V</span>) : <span id="prix-vie">100</span></span>
+          <span><span id="pouvoir-hud">★ 0%</span><span class="touche-pc"> (<span data-touche="pouvoir">E</span>)</span></span>
         </div>
         
         <div id="tactical-controls">
@@ -136,13 +146,13 @@
             <div id="joystick-bouton"></div>
           </div>
           <div class="action-controls">
-            <button class="touch-btn" id="btn-pouvoir" title="Pouvoir (E)">★</button>
+            <button class="touch-btn" id="btn-pouvoir" title="Pouvoir">★</button>
             <button class="touch-btn" id="btn-touch-buy">V</button>
             <button class="touch-btn" id="btn-touch-shoot">TIR</button>
           </div>
         </div>
 
-        <button id="btn-pause" title="Pause (Échap)">⏸</button>
+        <button id="btn-pause" title="Pause">⏸</button>
         <p id="conseil-paysage">📱↻ Tourne ton téléphone pour mieux jouer</p>
         <div id="boss-barre" class="hidden">
           <span id="boss-nom">LE MASTODONTE</span>
@@ -155,7 +165,7 @@
       <div id="pause-overlay" class="hidden">
         <div class="mission-card">
           <h2>PAUSE</h2>
-          <p class="game-over-text">Les zombies attendent poliment.</p>
+          <p class="game-over-text">Les zombies attendent. Poliment.</p>
           <div class="game-over-buttons">
             <button id="btn-reprendre">REPRENDRE</button>
             <button id="btn-pause-menu">ABANDONNER</button>
@@ -181,6 +191,14 @@
             <p class="stat-cranes">
               +<span id="final-cranes">0</span> 💀 pour les caisses
             </p>
+            <p id="bilan-records"></p>
+          </div>
+
+          <div class="bilan">
+            <p id="bilan-tues-titre"></p>
+            <div id="bilan-tues"></div>
+            <p id="bilan-missions"></p>
+            <p id="bilan-succes"></p>
           </div>
 
           <div class="game-over-buttons">
@@ -196,41 +214,37 @@
           
           <div class="controls-grid">
             <div class="control-row">
-              <div class="keys-container">
-                <div class="key">↑</div>
-                <div class="key">↓</div>
-                <div class="key">Z</div>
-                <div class="key">S</div>
-              </div>
+              <div class="keys-container" data-touches="haut,bas"></div>
               <span class="action-text">SE DÉPLACER</span>
             </div>
 
             <div class="control-row">
-              <div class="keys-container">
-                <div class="key key-space">ESPACE</div>
-              </div>
+              <div class="keys-container" data-touches="tir"></div>
               <span class="action-text">TIRER</span>
             </div>
 
             <div class="control-row">
-              <div class="keys-container">
-                <div class="key">V</div>
-              </div>
+              <div class="keys-container" data-touches="vie"></div>
               <span class="action-text">
                 ACHETER VIE <span class="tuto-note">(SI SCORE VERT)</span>
               </span>
             </div>
 
             <div class="control-row">
-              <div class="keys-container">
-                <div class="key">ÉCHAP</div>
-              </div>
+              <div class="keys-container" data-touches="pause"></div>
               <span class="action-text">PAUSE</span>
+            </div>
+
+            <div class="control-row">
+              <div class="keys-container" data-touches="pouvoir"></div>
+              <span class="action-text">
+                POUVOIR SPÉCIAL <span class="tuto-note">(QUAND LA ★ EST PLEINE)</span>
+              </span>
             </div>
           </div>
 
           <p class="tuto-astuce">
-            Toutes les 3 min, le Mastodonte débarque : esquive ses crachats verts.<br>
+            Toutes les 3 min, un boss débarque : esquive ses attaques.<br>
             Tes points rapportent des 💀 pour ouvrir des caisses.
           </p>
 
@@ -240,18 +254,44 @@
 
       <div id="loot-flash"></div>
 
-      <button id="btn-sound">🔊</button>
+      <button id="btn-options" title="Options">⚙️</button>
+      <div id="options-overlay" class="hidden">
+        <div class="mission-card loot-card options-card">
+          <h2>OPTIONS</h2>
+          <h3>Son</h3>
+          <div class="options-son">
+            <button id="btn-son-actif">Son : activé</button>
+            <label>🎵 Musique <input type="range" id="vol-musique" min="0" max="100" step="5"></label>
+            <label>💥 Effets <input type="range" id="vol-effets" min="0" max="100" step="5"></label>
+            <button id="btn-vibrations">Vibrations : activées</button>
+          </div>
+          <h3>Touches</h3>
+          <p class="options-aide">Clique sur une action, puis appuie sur la nouvelle touche.</p>
+          <div id="liste-touches"></div>
+          <button id="btn-touches-defaut">Touches par défaut</button>
+          <h3>Langue</h3>
+          <div id="liste-langues" data-langue-fixe></div>
+          <button id="btn-close-options">FERMER</button>
+        </div>
+      </div>
 
     </div> 
     
     <script src="./config.js"></script>
     <script src="./sauvegarde.js"></script>
+    <script src="./traductions.js"></script>
+    <script src="./i18n.js"></script>
     <script src="./audio.js"></script>
+    <script src="./options.js"></script>
     <!-- Sprites générés en pixel art (avant les scripts qui les utilisent) -->
     <script src="./pixel_art.js"></script>
     <script src="./boss_sprite.js"></script>
     <script src="./joggeur_sprite.js"></script>
     <script src="./emeute_sprite.js"></script>
+    <script src="./pondeuse_sprite.js"></script>
+    <script src="./infirmier_sprite.js"></script>
+    <script src="./boxeur_sprite.js"></script>
+    <script src="./fossoyeur_sprite.js"></script>
     <script src="./deplacement_joueur.js"></script>
     <script src="./tir_joueur.js"></script>
     <script src="./zombie.js"></script>
@@ -259,13 +299,20 @@
     <script src="./joggeur.js"></script>
     <script src="./emeute.js"></script>
     <script src="./morts.js"></script>
+    <script src="./pondeuse.js"></script>
+    <script src="./infirmier.js"></script>
+    <script src="./boxeur.js"></script>
+    <script src="./fossoyeur.js"></script>
     <script src="./pouvoirs.js"></script>
     <script src="./main.js"></script>
     <script src="./lootbox.js"></script>
     <script src="./succes.js"></script>
     <script src="./missions.js"></script>
+    <script src="./bestiaire.js"></script>
     <script src="./menu.js"></script>
     <script src="./ecran_titre.js"></script>
+    <script src="./manette.js"></script>
+    <script>Langue.traduire_page(); Touches.maj_affichages();</script>
 
   </body>
 </html>

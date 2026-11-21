@@ -152,21 +152,16 @@ function draw_joueur(ctx) {
 /* =========================================================================
    CLAVIER
    ========================================================================= */
-const TOUCHES = {
-    ArrowUp: 'haut', KeyW: 'haut', KeyZ: 'haut',
-    ArrowDown: 'bas', KeyS: 'bas',
-    Space: 'tir'
-};
-
+// Les touches sont réglables (options.js) : Touches.action(code) dit à quoi sert une touche
 function gerer_touche(e, appui) {
     if (!partie_en_cours()) return;
 
-    const action = TOUCHES[e.code];
-    if (action) {
+    const action = Touches.action(e.code);
+    if (action === 'haut' || action === 'bas' || action === 'tir') {
         // Empêche le défilement de la page et l'activation du bouton qui a le focus
         e.preventDefault();
         commandes[action] = appui;
-    } else if (appui && e.code === 'KeyV' && !e.repeat) {
+    } else if (appui && action === 'vie' && !e.repeat) {
         acheter_vie();
     }
 }

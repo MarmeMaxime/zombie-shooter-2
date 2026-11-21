@@ -24,10 +24,11 @@
 
     function apparition() {
         const r = Math.random();
-        const type = r < 0.6 ? 'normal' : r < 0.74 ? 'tank' : r < 0.85 ? 'joggeur' : r < 0.94 ? 'emeute' : 'magicalgirl';
+        const type = r < 0.52 ? 'normal' : r < 0.64 ? 'tank' : r < 0.73 ? 'joggeur' : r < 0.81 ? 'emeute'
+            : r < 0.88 ? 'pondeuse' : r < 0.94 ? 'infirmier' : 'magicalgirl';
         zombiesDemo.push({
             type, x: L + 20, y: 50 + Math.random() * 270, taille: 64,
-            vitesse: 25 + Math.random() * 30, etape: 0, tempsImage: 0, pv: type === 'tank' || type === 'emeute' ? 3 : 1
+            vitesse: 25 + Math.random() * 30, etape: 0, tempsImage: 0, pv: type === 'tank' || type === 'emeute' ? 3 : type === 'infirmier' ? 2 : 1
         });
     }
 

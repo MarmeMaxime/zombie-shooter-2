@@ -42,6 +42,14 @@ const CONFIG = {
             description: 'La foudre frappe chaque zombie à l\'écran une fois.' }
     },
 
+    /* Déblocage des personnages, dans cet ordre : chacun se débloque en
+       terminant « missions » missions avec le précédent (missions.js).
+       Un perso absent de la liste est disponible d'emblée. */
+    deblocage: {
+        ordre: ['soldat', 'brute', 'grenadier', 'lassie'],
+        missions: 3
+    },
+
     personnages: {
         soldat: {
             nom: 'Soldat',
@@ -83,6 +91,14 @@ const CONFIG = {
         grenade: { nom: 'Lance-grenades', delai: 0.7, vitesse: 750, degats: 2, rayon: 95, portee: 650 },
         // L'éclair touche un zombie, puis saute vers le plus proche dans le rayon (2 sauts = 3 zombies)
         foudre: { nom: 'Fusil électrique', delai: 0.6, vitesse: 1600, degats: 1, sauts: 2, rayonSaut: 110 }
+    },
+
+    // Densité : un ennemi spécial (tout sauf le zombie normal) prend la place
+    // d'une partie d'un zombie normal (« remplacement » : 1 = un zombie entier),
+    // et leur nombre à l'écran est plafonné (les suivants attendent).
+    apparitions: {
+        remplacement: 0.25,        // réglé par simulation pour retrouver la difficulté de la 1.0
+        maxSpeciaux: { normal: 3, hardcore: 4 }
     },
 
     zombie: {
@@ -160,6 +176,100 @@ const CONFIG = {
         dureeImage: 0.1,           // 12 images par pas (emeute_sprite.js)
         intervalle: { normal: 18, hardcore: 40 },   // en hardcore il bouche une ligne : plus rare
         premiereApparition: { normal: 40, hardcore: 180 }
+    },
+
+    // La Pondeuse (normal et hardcore) : très lente, éclate au premier tir en
+    // larves rapides. Mieux vaut la tuer loin du joueur (pondeuse.js).
+    pondeuse: {
+        taille: 64,
+        points: 30,
+        pv: 1,
+        vitesseMin: { normal: 26, hardcore: 32 },   // très lente : on a le temps de la tuer de loin
+        vitesseAleatoire: 6,
+        dureeImage: 0.14,          // 12 images par pas (pondeuse_sprite.js)
+        intervalle: { normal: 17, hardcore: 25 },
+        premiereApparition: { normal: 60, hardcore: 90 },
+        larves: 3,
+        ecartLarves: 30            // écart vertical entre les larves
+    },
+    // Ses larves : jamais d'apparition seules (« invoque »), petites et rapides
+    larve: {
+        invoque: true,
+        taille: 40,
+        points: 5,
+        pv: 1,
+        vitesseMin: { normal: 55, hardcore: 65 },   // le Soldat (un tir = une larve) doit pouvoir suivre
+        vitesseAleatoire: 15,
+        dureeImage: 0.06           // 8 images
+    },
+
+    // L'Infirmier (normal et hardcore) : à intervalles réguliers, il soigne
+    // les zombies blessés autour de lui. Cible prioritaire (infirmier.js).
+    infirmier: {
+        taille: 64,
+        points: 40,
+        pv: 2,
+        vitesseMin: { normal: 32, hardcore: 38 },
+        vitesseAleatoire: 6,
+        dureeImage: 0.12,          // 12 images par pas (infirmier_sprite.js)
+        intervalle: { normal: 24, hardcore: 30 },
+        premiereApparition: { normal: 90, hardcore: 120 },
+        delaiSoin: 3,              // secondes entre deux soins
+        rayonSoin: 150,            // portée du soin
+        soin: 1,                   // PV rendus à chaque zombie blessé (sans dépasser son max)
+        dureeAnimSoin: 0.6
+    },
+
+    // Le Boxeur (hardcore seulement) : quand un tir arrive sur lui, il fait un
+    // pas de côté. Il ne peut esquiver qu'une fois, puis il reprend son souffle (boxeur.js).
+    boxeur: {
+        modes: ['hardcore'],
+        taille: 64,
+        points: 45,
+        pv: 1,
+        vitesseMin: 70,
+        vitesseAleatoire: 15,
+        dureeImage: 0.07,          // 12 images par pas (boxeur_sprite.js)
+        intervalle: 28,
+        premiereApparition: 150,
+        alerte: 190,               // distance à laquelle il voit arriver un tir
+        ecartEsquive: 56,          // longueur du pas de côté
+        dureeEsquive: 0.22,
+        rechargeEsquive: 4         // après une esquive, il est essoufflé : 4 s pour le toucher
+    },
+
+    // Boss « Le Fossoyeur » : alterne avec le Mastodonte (fossoyeur.js). Il reste
+    // à distance, jette des pelletées là où est le joueur et creuse des tombes.
+    fossoyeur: {
+        invoque: true,
+        nom: 'LE FOSSOYEUR',
+        taille: 128,
+        points: 500,
+        pvBase: 22,
+        pvParBoss: 4,
+        pvMax: 34,
+        vitesseMin: 26,
+        vitesseAleatoire: 0,
+        dureeImage: 0.16,          // 8 images par pas (fossoyeur_sprite.js)
+        xArret: 0.55,              // il s'arrête ici (fraction de la largeur) : à portée du fusil à pompe
+        suivi: 30,                 // vitesse à laquelle il suit la ligne du joueur
+        delaiPelletee: 3.2,
+        annoncePelletee: 1.1,      // temps entre le lancer et l'impact (cercle au sol)
+        rayonPelletee: 34,
+        delaiTombes: 8,
+        tombes: 2,
+        dureeTombe: 3.2,           // temps avant qu'un zombie sorte de la tombe
+        colere: 45,                // au bout de 45 s, il avance sur le joueur
+        vitesseColere: 28
+    },
+    tombe: {
+        invoque: true,
+        taille: 32,
+        points: 5,
+        pv: 2,
+        vitesseMin: 0,
+        vitesseAleatoire: 0,
+        dureeImage: 1
     },
 
     // Boss « Le Mastodonte » : arrive toutes les 3 minutes, plus résistant à chaque fois.

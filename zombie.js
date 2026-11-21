@@ -1,8 +1,11 @@
 /* =========================================================================
    ZOMBIES : types, apparitions, collisions, dégâts, mise à jour et dessin.
-   Tous les monstres (normaux, tanks, magical girls, joggeurs, anti-émeutes, boss) sont dans
-   la même liste « zombies ». Mécaniques à part : boss.js, joggeur.js, emeute.js ;
-   animations de mort : morts.js.
+   Tous les monstres sont dans la même liste « zombies ». Mécaniques à part :
+   boss.js, joggeur.js, emeute.js ; animations de mort : morts.js.
+   Les ennemis plus récents (pondeuse.js, infirmier.js, boxeur.js) s'ajoutent
+   eux-mêmes à TYPES_ZOMBIE avec un « comportement » (voir comportement()) :
+   creer(z), maj(z, dt), vitesse(z), images(z), dessiner(ctx, z), mort(z).
+   Leurs effets à l'écran passent par EXTENSIONS : { reset(), maj(dt), dessiner(ctx) }.
    ========================================================================= */
 const imagesNumerotees = (prefixe, nombre) =>
     Array.from({ length: nombre }, (_, i) => chargerImage(`./assets/${prefixe}${i + 1}.png`));
@@ -33,6 +36,12 @@ const TYPES_ZOMBIE = {
     }
 };
 
+// Effets propres à certains ennemis (soins, éclaboussures…), ajoutés par leur fichier
+const EXTENSIONS = [];
+const comportement = z => TYPES_ZOMBIE[z.type].comportement || {};
+// Images de l'animation en cours (certains ennemis en ont plusieurs séries)
+const images_zombie = z => (comportement(z).images ? comportement(z).images(z) : TYPES_ZOMBIE[z.type].images);
+
 let zombies = [];
 let effets = [];        // étincelles de téléportation
 let difficulte = 'normal';
@@ -44,6 +53,7 @@ function reset_zombies(mode) {
     cadavres = [];
     eclats = [];
     reset_boss();
+    for (const e of EXTENSIONS) e.reset();
     difficulte = mode;
     for (const type in TYPES_ZOMBIE) chronos[type] = 0;
 }
@@ -55,7 +65,7 @@ function collision(a, b) {
 }
 
 function hitbox(x, y, taille) {
-    const r = CONFIG.reductionHitbox;
+    const r = CONFIG.reductionHitbox * Math.min(1, taille / 64);   // les petits (larves) gardent une hitbox utile
     return { x: x + r, y: y + r, largeur: taille - 2 * r, hauteur: taille - 2 * r };
 }
 
@@ -95,7 +105,9 @@ function creer_zombie(type, largeurCanvas, hauteurCanvas) {
     if (cfg.delaiTeleport) z.teleport = { chrono: cfg.delaiTeleport, annonce: false, y: z.y };
     if (type === 'joggeur') z.joggeur = { etat: 'marche', chrono: 0, recharge: 0 };
     if (type === 'emeute') z.emeute = nouvel_emeute();
+    if (comportement(z).creer) comportement(z).creer(z);
     zombies.push(z);
+    return z;
 }
 
 function intervalle_apparition(type, tempsJeu) {
@@ -104,17 +116,31 @@ function intervalle_apparition(type, tempsJeu) {
     return Math.max(parMode(cfg.intervalleMin), cfg.intervalleDepart - tempsJeu * cfg.accelerationParSeconde);
 }
 
+/* Un ennemi spécial remplace un zombie normal (le prochain normal est repoussé
+   d'autant) et leur nombre à l'écran est plafonné : quand le plafond est atteint,
+   le suivant attend qu'une place se libère. Les larves ne comptent pas. */
+const est_special = z => z.type !== 'normal' && z.type !== 'larve' && z !== boss;
+
 function gerer_apparitions(dt, largeurCanvas, hauteurCanvas, tempsJeu) {
+    let speciaux = zombies.filter(est_special).length;
     for (const type in TYPES_ZOMBIE) {
         if (type === 'boss') continue;   // le boss a sa propre logique
         const cfg = TYPES_ZOMBIE[type].config;
+        if (cfg.invoque) continue;         // n'apparaît jamais seul (larves de la Pondeuse)
         if (cfg.modes && !cfg.modes.includes(difficulte)) continue;
         if (tempsJeu < (parMode(cfg.premiereApparition) || 0)) continue;
 
         chronos[type] += dt;
         if (chronos[type] >= intervalle_apparition(type, tempsJeu)) {
+            const special = type !== 'normal';
+            if (special && speciaux >= parMode(CONFIG.apparitions.maxSpeciaux)) continue;   // il attend une place
             chronos[type] = 0;
             creer_zombie(type, largeurCanvas, hauteurCanvas);
+            if (special) {
+                speciaux++;
+                // il prend la place d'un zombie normal (ou d'une partie)
+                chronos.normal -= parMode(CONFIG.apparitions.remplacement) * intervalle_apparition('normal', tempsJeu);
+            }
         }
     }
 }
@@ -167,7 +193,9 @@ function toucher_zombie(z, degats = 1, tir) {
         return;
     }
     zombies.splice(index, 1);
+    if (etat.tues) etat.tues[z.type] = (etat.tues[z.type] || 0) + 1;   // bilan de fin de partie
     ajouter_cadavre(z);
+    if (comportement(z).mort) comportement(z).mort(z);
     ajouter_score(TYPES_ZOMBIE[z.type].config.points);
     pouvoir_zombie_tue();
     if (z.joggeur && z.joggeur.etat === 'course' && typeof Succes !== 'undefined') Succes.compter('sprintsStoppes');
@@ -195,8 +223,13 @@ function update_zombies(dt, largeurCanvas, hauteurCanvas, tempsJeu) {
         // Étourdi (onde de choc de Brutus) : immobile, il ne charge ni ne se téléporte
         z.etourdi = Math.max(0, (z.etourdi || 0) - dt);
         const etourdi = z.etourdi > 0;
+        const comp = comportement(z);
+        // Première apparition de ce monstre : il entre au bestiaire
+        if (!z.vu) { z.vu = true; if (typeof Bestiaire !== 'undefined') Bestiaire.rencontre(z.type); }
         if (z.joggeur && !etourdi) gerer_joggeur(z, dt);
-        z.vitesseActuelle = etourdi ? 0 : z.joggeur ? vitesse_joggeur(z) : z.emeute ? vitesse_emeute(z) : z.vitesse;
+        if (comp.maj && !etourdi) comp.maj(z, dt);
+        if (z.retirer) { zombies.splice(i, 1); continue; }   // retiré par son comportement (tombe ouverte)
+        z.vitesseActuelle = etourdi ? 0 : z.joggeur ? vitesse_joggeur(z) : z.emeute ? vitesse_emeute(z) : comp.vitesse ? comp.vitesse(z) : z.vitesse;
         z.x -= z.vitesseActuelle * MONDE.echelleX * dt;   // même temps de traversée sur tout écran
         if (z.teleport && !etourdi) gerer_teleport(z, dt, hauteurCanvas);
 
@@ -204,7 +237,7 @@ function update_zombies(dt, largeurCanvas, hauteurCanvas, tempsJeu) {
         if (!etourdi) z.tempsImage += dt * (z.joggeur && z.joggeur.etat === 'course' ? 2.5 : 1);
         if (z.tempsImage >= type.config.dureeImage) {
             z.tempsImage -= type.config.dureeImage;
-            z.etape = (z.etape + 1) % type.images.length;
+            z.etape = (z.etape + 1) % images_zombie(z).length;
         }
 
         // Un zombie qui atteint le joueur ou qui sort de l'écran coûte une vie
@@ -224,6 +257,7 @@ function update_zombies(dt, largeurCanvas, hauteurCanvas, tempsJeu) {
     for (const e of effets) e.age += dt;
     effets = effets.filter(e => e.age < 0.35);
     update_eclats(dt);
+    for (const e of EXTENSIONS) e.maj(dt);
     update_cadavres(dt);
 }
 
@@ -298,7 +332,7 @@ function draw_zombies(ctx) {
     for (const z of zombies) {
         if (z.teleport && z.teleport.annonce) dessiner_annonce(ctx, z);
 
-        if (z === boss) {
+        if (z === boss && z.type === 'boss') {
             // Avant de cracher : gueule ouverte, pustules allumées, il gonfle et tremble
             const charge = z.charge;
             const gonfle = charge ? 1 + 0.05 * Math.sin(performance.now() / 40) : 1;
@@ -319,9 +353,11 @@ function draw_zombies(ctx) {
         }
         if (z.joggeur) dessiner_joggeur(ctx, z);
         else if (z.emeute) dessiner_emeute(ctx, z);
-        else ctx.drawImage(TYPES_ZOMBIE[z.type].images[z.etape], z.x, z.y, z.taille, z.taille);
+        else if (comportement(z).dessiner) comportement(z).dessiner(ctx, z);
+        else ctx.drawImage(images_zombie(z)[z.etape % images_zombie(z).length], z.x, z.y, z.taille, z.taille);
 
         if (z.etourdi > 0) dessiner_etourdi(ctx, z);
+        if (z === boss) continue;   // la barre de vie d'un boss est en haut de l'écran
 
         // Barre de vie des zombies blessés
         if (z.pv < z.pvMax) {
@@ -334,4 +370,5 @@ function draw_zombies(ctx) {
     }
     dessiner_effets(ctx);
     draw_eclats(ctx);
+    for (const e of EXTENSIONS) e.dessiner(ctx);
 }

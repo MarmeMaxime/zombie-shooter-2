@@ -1,6 +1,7 @@
 /* =========================================================================
-   BOSS « LE MASTODONTE »
-   Apparition toutes les 3 minutes, crachats d'acide, invocations, barre de vie.
+   BOSS : apparition toutes les 3 minutes, en alternance le Mastodonte et le
+   Fossoyeur (fossoyeur.js), barre de vie en haut de l'écran.
+   LE MASTODONTE : crachats d'acide, invocations.
    Réglages : CONFIG.boss ; sprite : boss_sprite.js ; il fait partie de la liste
    « zombies » (zombie.js) pour les tirs et les collisions.
    ========================================================================= */
@@ -8,14 +9,16 @@
 TYPES_ZOMBIE.boss = {
     config: CONFIG.boss,
     images: SPRITES_BOSS.marche,
-    imagesCharge: SPRITES_BOSS.charge
+    imagesCharge: SPRITES_BOSS.charge,
+    estBoss: true
 };
+const est_boss = type => Boolean(TYPES_ZOMBIE[type] && TYPES_ZOMBIE[type].estBoss);
 
 let boss = null;
 let prochainBoss = CONFIG.boss.intervalle;
 let bossApparus = 0;
 let crachats = [];
-const ui_boss = { barre: document.getElementById('boss-barre'), vie: document.getElementById('boss-vie') };
+const ui_boss = { barre: document.getElementById('boss-barre'), vie: document.getElementById('boss-vie'), nom: document.getElementById('boss-nom') };
 
 function reset_boss() {
     boss = null;
@@ -26,15 +29,19 @@ function reset_boss() {
 }
 
 function faire_apparaitre_boss(largeurCanvas, hauteurCanvas) {
-    const cfg = CONFIG.boss;
-    const pv = Math.min(cfg.pvMax, cfg.pvBase + cfg.pvParBoss * bossApparus);
+    // Un boss sur deux : Mastodonte, Fossoyeur, Mastodonte…
+    const type = bossApparus % 2 === 0 ? 'boss' : 'fossoyeur';
+    const cfg = TYPES_ZOMBIE[type].config;
+    const pv = Math.min(cfg.pvMax, cfg.pvBase + cfg.pvParBoss * bossApparus);   // chaque boss est plus résistant que le précédent
     bossApparus++;
     boss = {
-        type: 'boss', x: largeurCanvas, y: (hauteurCanvas - cfg.taille) / 2, taille: cfg.taille,
-        vitesse: cfg.vitesse, pv, pvMax: pv, tempsImage: 0, etape: 0,
+        type, x: largeurCanvas, y: (hauteurCanvas - cfg.taille) / 2, taille: cfg.taille,
+        vitesse: cfg.vitesse || cfg.vitesseMin, pv, pvMax: pv, tempsImage: 0, etape: 0,
         chronoCrachat: cfg.delaiCrachat, chronoInvocation: cfg.delaiInvocation / 2, charge: false
     };
+    if (comportement(boss).creer) comportement(boss).creer(boss);
     zombies.push(boss);
+    ui_boss.nom.textContent = cfg.nom;   // déjà traduit (i18n.js)
     ui_boss.barre.classList.remove('hidden');
     Son.effet('bossArrive');
     secouer_ecran(2);
@@ -56,6 +63,7 @@ function gerer_boss(dt, largeurCanvas, hauteurCanvas, tempsJeu) {
     }
     const cfg = CONFIG.boss;
     ui_boss.vie.style.width = `${(100 * boss.pv) / boss.pvMax}%`;
+    if (boss.type !== 'boss') return;   // le Fossoyeur a son propre comportement (fossoyeur.js)
 
     // Crachat d'acide sur la ligne où se trouve le joueur (annoncé : il rougit et gonfle)
     boss.chronoCrachat -= dt;

@@ -17,7 +17,13 @@ const PixelArt = (() => {
     // Ellipse aux bords légèrement irréguliers (chair bosselée plutôt que forme parfaite)
     function ellipse(g, cx, cy, rx, ry, c, bosses = 0.07) {
         const n = taille(g);
-        for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+        // On ne parcourt que le rectangle qui contient l'ellipse (bosses comprises) :
+        // même résultat qu'en parcourant toute la grille, des dizaines de fois plus vite
+        // (les membres sont faits de dizaines de petits disques).
+        const marge = 1 + Math.abs(bosses) * 1.5;
+        const x0 = Math.max(0, Math.floor(cx - rx * marge) - 1), x1 = Math.min(n - 1, Math.ceil(cx + rx * marge) + 1);
+        const y0 = Math.max(0, Math.floor(cy - ry * marge) - 1), y1 = Math.min(n - 1, Math.ceil(cy + ry * marge) + 1);
+        for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
             const dx = (x + 0.5 - cx) / rx, dy = (y + 0.5 - cy) / ry;
             const angle = Math.atan2(dy, dx);
             const bord = 1 + bosses * Math.sin(angle * 5 + cx) + bosses * 0.5 * Math.sin(angle * 9 + cy);

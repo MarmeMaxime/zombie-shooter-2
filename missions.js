@@ -10,20 +10,21 @@ const statsPerso = perso => {
     const p = tous[perso] || (tous[perso] = {});
     // Champs complétés au besoin : une ancienne sauvegarde reste compatible
     p.tues ??= {}; p.total ??= 0; p.boss ??= 0; p.parties ??= 0;
-    p.meilleurTemps ??= {}; p.meilleurScore ??= 0; p.sansDegat ??= 0; p.coupMax ??= 0;
+    p.meilleurTemps ??= {}; p.meilleurScore ??= 0; p.sansDegat ??= 0; p.coupMax ??= 0; p.pouvoirs ??= 0;
     return p;
 };
 
 // Fabriques de missions courantes
 const M = {
-    tues: (n, nom, recompense) => ({ nom, desc: `Tuer ${n} zombies`, objectif: n, recompense, valeur: p => p.total }),
-    type: (type, n, nom, desc, recompense) => ({ nom, desc, objectif: n, recompense, valeur: p => p.tues[type] || 0 }),
-    survie: (sec, nom, recompense) => ({ nom, desc: `Survivre ${sec / 60} min en une partie`, objectif: sec, unite: 's', recompense, valeur: p => Math.max(0, ...Object.values(p.meilleurTemps)) }),
-    hardcore: (sec, nom, recompense) => ({ nom, desc: `Survivre ${sec / 60} min en hardcore`, objectif: sec, unite: 's', recompense, valeur: p => p.meilleurTemps.hardcore || 0 }),
-    intouchable: (sec, nom, recompense) => ({ nom, desc: `Tenir ${sec} s sans perdre de vie`, objectif: sec, unite: 's', recompense, valeur: p => p.sansDegat }),
-    score: (n, nom, recompense) => ({ nom, desc: `Gagner ${n} points en une partie`, objectif: n, recompense, valeur: p => p.meilleurScore }),
-    boss: (n, nom, recompense) => ({ nom, desc: `Vaincre ${n} Mastodonte${n > 1 ? 's' : ''}`, objectif: n, recompense, valeur: p => p.boss }),
-    coup: (n, nom, recompense) => ({ nom, desc: `Tuer ${n} zombies d'un seul coup`, objectif: n, recompense, valeur: p => p.coupMax })
+    tues: (n, nom, recompense) => ({ nom: T(nom), desc: T('Tuer {n} zombies', { n }), objectif: n, recompense, valeur: p => p.total }),
+    type: (type, n, nom, desc, recompense) => ({ nom: T(nom), desc: T(desc), objectif: n, recompense, valeur: p => p.tues[type] || 0 }),
+    survie: (sec, nom, recompense) => ({ nom: T(nom), desc: T('Survivre {n} min en une partie', { n: sec / 60 }), objectif: sec, unite: 's', recompense, valeur: p => Math.max(0, ...Object.values(p.meilleurTemps)) }),
+    hardcore: (sec, nom, recompense) => ({ nom: T(nom), desc: T('Survivre {n} min en hardcore', { n: sec / 60 }), objectif: sec, unite: 's', recompense, valeur: p => p.meilleurTemps.hardcore || 0 }),
+    intouchable: (sec, nom, recompense) => ({ nom: T(nom), desc: T('Tenir {n} s sans perdre de vie', { n: sec }), objectif: sec, unite: 's', recompense, valeur: p => p.sansDegat }),
+    score: (n, nom, recompense) => ({ nom: T(nom), desc: T('Gagner {n} points en une partie', { n }), objectif: n, recompense, valeur: p => p.meilleurScore }),
+    boss: (n, nom, recompense) => ({ nom: T(nom), desc: T('Vaincre {n} boss', { n }), objectif: n, recompense, valeur: p => p.boss }),
+    coup: (n, nom, recompense) => ({ nom: T(nom), desc: T('Tuer {n} zombies d\'un seul coup', { n }), objectif: n, recompense, valeur: p => p.coupMax }),
+    pouvoir: (pouvoir, n, nom, recompense) => ({ nom: T(nom), desc: T('Utiliser {n} fois {pouvoir}', { n, pouvoir: CONFIG.pouvoirs[pouvoir].nom }), objectif: n, recompense, valeur: p => p.pouvoirs })
 };
 
 const MISSIONS = {
@@ -37,7 +38,13 @@ const MISSIONS = {
         M.intouchable(90, 'Intouchable', 150),
         M.score(3000, 'Feu nourri', 150),
         M.boss(2, 'Chasseur de géants', 200),
-        M.hardcore(480, 'Dernier rempart', 300)
+        M.hardcore(480, 'Dernier rempart', 300),
+        // 1.1 : pouvoirs, nouveaux ennemis, Fossoyeur
+        M.pouvoir('rafale', 10, 'Pluie de plomb', 120),
+        M.type('infirmier', 10, 'Pas de quartier', 'Tuer 10 Infirmiers', 120),
+        M.type('larve', 40, 'Chasse aux asticots', 'Tuer 40 larves', 120),
+        M.type('fossoyeur', 1, 'Mise en terre', 'Vaincre le Fossoyeur', 250),
+        M.survie(600, 'Sentinelle', 300)
     ],
     brute: [
         M.tues(50, 'Bagarreur', 40),
@@ -49,7 +56,12 @@ const MISSIONS = {
         M.intouchable(90, 'Peau de cuir', 150),
         M.survie(300, 'Vieux de la vieille', 100),
         M.boss(2, 'Poids lourd', 200),
-        M.hardcore(480, 'Increvable', 300)
+        M.hardcore(480, 'Increvable', 300),
+        M.pouvoir('onde', 15, 'Tremblement de terre', 120),
+        M.type('pondeuse', 15, 'Crève-ventre', 'Tuer 15 Pondeuses', 120),
+        M.type('emeute', 15, 'Briseur de lignes', 'Tuer 15 Anti-émeutes', 150),
+        M.type('larve', 40, 'Écrase-larves', 'Tuer 40 larves', 120),
+        M.type('fossoyeur', 1, 'Fossoyé', 'Vaincre le Fossoyeur', 250)
     ],
     grenadier: [
         M.tues(50, 'Apprentie', 40),
@@ -61,7 +73,12 @@ const MISSIONS = {
         M.survie(300, 'Sang-froid', 100),
         M.intouchable(120, 'Insaisissable', 180),
         M.boss(2, 'Démolition', 200),
-        M.hardcore(480, 'Reine du chaos', 300)
+        M.hardcore(480, 'Reine du chaos', 300),
+        M.pouvoir('artillerie', 10, 'Bombardement', 120),
+        M.type('larve', 60, 'Nid d\'asticots', 'Tuer 60 larves', 120),
+        M.type('tombe', 15, 'Pelleteuse', 'Détruire 15 tombes', 150),
+        M.coup(4, 'Bouquet final', 250),
+        M.type('fossoyeur', 1, 'Mise à feu', 'Vaincre le Fossoyeur', 250)
     ],
     lassie: [
         M.tues(50, 'Étincelle', 40),
@@ -73,11 +90,44 @@ const MISSIONS = {
         M.type('joggeur', 15, 'Coupe-circuit', 'Tuer 15 Joggeurs', 120),
         M.intouchable(90, 'Mise à la terre', 150),
         M.boss(2, 'Haute tension', 200),
-        M.hardcore(480, 'Tempête', 300)
+        M.hardcore(480, 'Tempête', 300),
+        M.pouvoir('orage', 10, 'Avis de tempête', 120),
+        M.coup(5, 'Orage parfait', 250),
+        M.type('infirmier', 10, 'Électrochoc', 'Tuer 10 Infirmiers', 120),
+        M.type('boxeur', 10, 'Ne bouge plus', 'Tuer 10 Boxeurs (hardcore)', 200),
+        M.type('fossoyeur', 1, 'Foudroyé', 'Vaincre le Fossoyeur', 250)
     ]
 };
 // Identifiant unique de chaque mission : <perso>_<numéro>
+// (on ajoute toujours à la fin d'une liste : les missions déjà terminées gardent leur identifiant)
 for (const [perso, liste] of Object.entries(MISSIONS)) liste.forEach((m, i) => { m.id = `${perso}_${i + 1}`; m.perso = perso; });
+
+/* Ordre d'affichage : de la première partie aux défis de fin (ennemis dans
+   l'ordre où on les croise, puis difficulté). Les numéros sont ceux des
+   identifiants (<perso>_<numéro>) : ils ne changent pas, la sauvegarde reste valable. */
+const ORDRE_MISSIONS = {
+    soldat:    [1, 4, 6, 2, 11, 13, 7, 12, 8, 14, 9, 15, 5, 3, 10],
+    brute:     [1, 4, 8, 2, 11, 6, 14, 12, 13, 7, 5, 15, 9, 3, 10],
+    grenadier: [1, 4, 7, 2, 5, 11, 12, 8, 15, 13, 9, 14, 6, 3, 10],
+    lassie:    [1, 4, 7, 2, 5, 11, 8, 13, 15, 12, 9, 6, 14, 3, 10]
+};
+for (const [perso, ordre] of Object.entries(ORDRE_MISSIONS)) {
+    const rang = m => { const i = ordre.indexOf(Number(m.id.split('_').pop())); return i < 0 ? ordre.length : i; };
+    MISSIONS[perso].sort((a, b) => rang(a) - rang(b));
+}
+
+// Les succès « Vétéran » et « Légende » suivent le nombre de missions
+{
+    const textes = { soldat: 'Terminer les {n} missions du Soldat', brute: 'Terminer les {n} missions de Brutus', grenadier: 'Terminer les {n} missions de Mira', lassie: 'Terminer les {n} missions de Lassie' };
+    for (const [perso, liste] of Object.entries(MISSIONS)) {
+        const s = SUCCES.find(x => x.id === `veteran_${perso === 'grenadier' ? 'mira' : perso}`);
+        if (s) { s.objectif = liste.length; s.desc = T(textes[perso], { n: liste.length }); }
+    }
+    const total = Object.values(MISSIONS).flat().length;
+    const legende = SUCCES.find(x => x.id === 'legende');
+    legende.objectif = total;
+    legende.desc = T('Terminer les {n} missions', { n: total });
+}
 
 const Missions = (() => {
     const faites = () => Sauvegarde.donnees.missions;
@@ -90,13 +140,15 @@ const Missions = (() => {
             if (faites().includes(m.id) || m.valeur(p) < m.objectif) continue;
             faites().push(m.id);
             Sauvegarde.donnees.loot.cranes += m.recompense;
-            Succes.notifier(`📋 Mission accomplie (${CONFIG.personnages[m.perso].nom}) : ${m.nom} · +${m.recompense} 💀`);
+            Succes.notifier(T('📋 Mission accomplie ({perso}) : {nom} · +{n} 💀', { perso: CONFIG.personnages[m.perso].nom, nom: m.nom, n: m.recompense }));
+            if (etat.missions) etat.missions.push(m.nom);   // bilan de fin de partie
             nouvelle = true;
         }
         if (nouvelle) {
             Sauvegarde.sauver();
             LootUI.maj_soldes();
             Succes.verifier();     // les succès « Vétéran » dépendent des missions
+            Deblocage.verifier();  // 3 missions avec un perso débloquent le suivant
         }
     }
 
@@ -105,7 +157,7 @@ const Missions = (() => {
         const p = statsPerso(etat.perso);
         p.tues[type] = (p.tues[type] || 0) + 1;
         p.total++;
-        if (type === 'boss') p.boss++;
+        if (est_boss(type)) p.boss++;
         killsImage++;
         verifier();
     }
@@ -166,7 +218,7 @@ const Missions = (() => {
             const nom = document.createElement('strong');
             nom.textContent = m.nom;
             const desc = document.createElement('small');
-            desc.textContent = `${m.desc} · ${ok ? 'fait' : `${v}${m.unite || ''} / ${m.objectif}${m.unite || ''}`} · +${m.recompense} 💀`;
+            desc.textContent = `${m.desc} · ${ok ? T('fait') : `${v}${m.unite || ''} / ${m.objectif}${m.unite || ''}`} · +${m.recompense} 💀`;
             const barre = document.createElement('span');
             barre.className = 'mission-barre';
             const plein = document.createElement('span');
@@ -187,4 +239,51 @@ const Missions = (() => {
     $m('btn-close-missions').addEventListener('click', () => $m('missions-overlay').classList.add('hidden'));
 
     return { zombie_tue, fin_image, degat, debut_partie, seconde, fin_partie, terminees };
+})();
+
+/* =========================================================================
+   DÉBLOCAGE DES PERSONNAGES
+   Ordre et nombre de missions : CONFIG.deblocage. Les persos débloqués sont
+   gardés dans la sauvegarde (persosDebloques). Une sauvegarde d'avant ce
+   système garde les persos déjà joués ou qui ont des missions terminées.
+   ========================================================================= */
+const Deblocage = (() => {
+    const ordre = CONFIG.deblocage.ordre;
+    const liste = () => Sauvegarde.donnees.persosDebloques;
+    const est_debloque = id => !ordre.includes(id) || liste().includes(id);
+
+    // Ce qu'il manque pour débloquer ce perso : { precedent, faites, requis } (ou null)
+    function condition(id) {
+        const i = ordre.indexOf(id);
+        if (i <= 0) return null;
+        const precedent = ordre[i - 1];
+        return { precedent, faites: Math.min(Missions.terminees(precedent), CONFIG.deblocage.missions), requis: CONFIG.deblocage.missions };
+    }
+
+    // Débloque tout ce qui peut l'être ; true si au moins un nouveau perso
+    function verifier(annoncer = true) {
+        let nouveau = false;
+        for (const id of ordre) {
+            if (est_debloque(id)) continue;
+            const c = condition(id);
+            if (!c || !est_debloque(c.precedent) || c.faites < c.requis) break;   // dans l'ordre : on s'arrête au premier verrou
+            liste().push(id);
+            nouveau = true;
+            if (annoncer) Succes.notifier(T('🔓 Nouveau personnage débloqué : {nom} !', { nom: CONFIG.personnages[id].nom }));
+        }
+        if (nouveau) {
+            Sauvegarde.sauver();
+            if (typeof rafraichir_cartes_persos === 'function') rafraichir_cartes_persos();
+        }
+        return nouveau;
+    }
+
+    // Sauvegarde d'avant le déblocage : on ne retire rien au joueur
+    const st = Sauvegarde.donnees.stats;
+    for (const id of ordre) {
+        if (!liste().includes(id) && (id === ordre[0] || st.persosJoues.includes(id) || Missions.terminees(id) > 0)) liste().push(id);
+    }
+    verifier(false);
+
+    return { est_debloque, condition, verifier };
 })();

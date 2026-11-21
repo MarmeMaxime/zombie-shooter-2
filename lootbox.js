@@ -61,6 +61,11 @@ const LOOT = {
     }
 };
 
+// Noms des raretés, des skins et des déchets dans la langue du joueur
+Langue.traduire_objets(LOOT.raretes, ['nom']);
+Langue.traduire_objets(Object.values(LOOT.skins), ['nom']);
+Langue.traduire_objets(Object.values(LOOT.dechets), ['nom', 'texte']);
+
 const Loot = (() => {
     // La progression vit dans la sauvegarde (sauvegarde.js). On la relit à chaque
     // accès : après une restauration ou un import, c'est toujours la bonne.
@@ -208,7 +213,7 @@ const SonLoot = (() => {
         couper(0.15);
         bus = c.createGain();
         bus.gain.value = volume;
-        bus.connect(c.destination);
+        bus.connect(Son.sortieMusique());   // suit le réglage du volume de la musique
         return bus;
     }
 
@@ -276,6 +281,7 @@ const EffetsLoot = (() => {
         const c = conteneur();
         c.classList.remove('tremble-1', 'tremble-2', 'tremble-3', 'tremble-4');
         relancer(c, `tremble-${niveau}`);
+        Son.vibrer(Math.min(1, niveau / 4), 60 + niveau * 50);   // le tremblement se sent aussi dans les mains
         setTimeout(() => c.classList.remove(`tremble-${niveau}`), 900);
     }
 
@@ -351,7 +357,7 @@ const LootUI = (() => {
         $l('solde-menu').textContent = s;
         $l('solde-loot').textContent = s;
         const st = Loot.stats();
-        $l('loot-stats').textContent = `Caisses ouvertes : ${st.ouvertes} · Légendaire garanti dans ${st.avantGarantie} caisse${st.avantGarantie > 1 ? 's' : ''} (on vous aime)`;
+        $l('loot-stats').textContent = T('Caisses ouvertes : {n} · Légendaire garanti dans {g} caisse(s) (on vous aime)', { n: st.ouvertes, g: st.avantGarantie });
         $l('btn-ouvrir').disabled = enCours || s < LOOT.prix;
     }
 
@@ -367,8 +373,8 @@ const LootUI = (() => {
         if (o.type === 'skin') {
             const nomPerso = CONFIG.personnages[o.perso].nom;
             detail.textContent = res.doublon
-                ? `Skin pour ${nomPerso}… que vous aviez déjà. Compensation : ${LOOT.compensationDoublon} 💀. Quelle générosité.`
-                : `Nouveau skin pour ${nomPerso} ! Équipez-le dans le vestiaire.`;
+                ? T('Skin pour {perso}… que vous aviez déjà. Compensation : {n} 💀. Quelle générosité.', { perso: nomPerso, n: LOOT.compensationDoublon })
+                : T('Nouveau skin pour {perso} ! Équipez-le dans le vestiaire.', { perso: nomPerso });
         } else {
             detail.textContent = o.texte;
         }
@@ -474,7 +480,7 @@ const LootUI = (() => {
                 const b = document.createElement('button');
                 b.className = 'vestiaire-skin';
                 const def = skin ? LOOT.skins[skin] : null;
-                b.textContent = def ? def.nom : 'Par défaut';
+                b.textContent = def ? def.nom : T('Par défaut');
                 if (def) b.style.borderColor = Loot.rarete(def.rarete).couleur;
                 if (Loot.equipe(perso) === skin) b.classList.add('active');
                 b.addEventListener('click', () => {
@@ -489,7 +495,7 @@ const LootUI = (() => {
 
         const d = Loot.dechets();
         const inutile = Object.keys(d).map(id => `${LOOT.dechets[id].emoji} ×${d[id]}`).join('   ');
-        $l('vestiaire-dechets').textContent = inutile ? `Collection inutile : ${inutile}` : 'Collection inutile : vide (pour l\'instant)';
+        $l('vestiaire-dechets').textContent = inutile ? T('Collection inutile : {liste}', { liste: inutile }) : T('Collection inutile : vide (pour l\'instant)');
     }
 
     /* ---------- Branchements ---------- */
@@ -504,7 +510,7 @@ const LootUI = (() => {
         $l('loot-overlay').classList.add('hidden');
         SonLoot.couper();
         Son.reprendreMusique();
-        Sauvegarde.point_de_restauration('Après les caisses');
+        Sauvegarde.point_de_restauration(T('Après les caisses'));
     });
     $l('btn-ouvrir').addEventListener('click', ouvrir_caisse);
     $l('btn-vestiaire').addEventListener('click', () => { remplir_vestiaire(); $l('vestiaire-overlay').classList.remove('hidden'); });
@@ -512,12 +518,12 @@ const LootUI = (() => {
     $l('btn-payer').addEventListener('click', () => {
         const zone = $l('loot-resultat');
         zone.style.color = '#ff3333';
-        zone.textContent = 'Paiement refusé : ce jeu est gratuit. Retourne tuer des zombies pour gagner des 💀.';
+        zone.textContent = T('Paiement refusé : ce jeu est gratuit. Retourne tuer des zombies pour gagner des 💀.');
     });
 
     // Taux affichés en tout petit, par souci de « transparence »
-    $l('loot-taux').textContent = 'Taux : ' + LOOT.raretes.map(r => `${r.nom} ${String(r.poids).replace('.', ',')} %`).join(' · ')
-        + ' · Les objets Communs ont 50 % de chances d\'être un déchet.';
+    $l('loot-taux').textContent = T('Taux : ') + LOOT.raretes.map(r => `${r.nom} ${String(r.poids).replace('.', ',')} %`).join(' · ')
+        + T(' · Les objets Communs ont 50 % de chances d\'être un déchet.');
 
     maj_soldes();
     return { maj_soldes };
