@@ -23,11 +23,8 @@ function charger_sprites(prefixe) {
     };
 }
 
-// Personnages dessinés par le code (pixel art généré) plutôt que par des fichiers images
-const SPRITES_GENERES = { lassie: SPRITES_LASSIE };
-
 const SPRITES_PERSO = {};
-for (const id in CONFIG.personnages) SPRITES_PERSO[id] = SPRITES_GENERES[id] || charger_sprites(CONFIG.personnages[id].sprites);
+for (const id in CONFIG.personnages) SPRITES_PERSO[id] = charger_sprites(CONFIG.personnages[id].sprites);
 
 const joueur = {
     x: CONFIG.joueur.x,

@@ -11,6 +11,7 @@ pixel par pixel. À lancer dans cet ordre, depuis la racine du projet :
 ```powershell
 .\outils\generer_persos.ps1 -assets "$PWD\assets"   # Mira, Brutus, magical girl
 .\outils\generer_tenues.ps1 -assets "$PWD\assets"   # les 15 tenues des lootbox (skin_*.png)
+.\outils\generer_lassie.ps1 -assets "$PWD\assets"   # Lassie, à partir des sprites de Mira
 ```
 
 Pour une nouvelle tenue : ajouter une ligne `Recolor ...` dans `generer_tenues.ps1`,

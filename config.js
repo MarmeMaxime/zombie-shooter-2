@@ -48,10 +48,11 @@ const CONFIG = {
             sprites: 'grenadier',
             description: 'Explose au contact et blesse tout autour. Idéal contre les groupes.'
         },
-        // Sprite dessiné en pixel art dans lassie_sprite.js (pas de fichiers images)
+        // Sprites dérivés de ceux de Mira (outils/generer_lassie.ps1)
         lassie: {
             nom: 'Lassie',
             arme: 'foudre',
+            sprites: 'lassie',
             vitesse: 1.25,   // équilibrée par simulation avec une cadence de 0,6 s
             description: 'Foxgirl électrique : la foudre saute d\'un zombie à l\'autre, jusqu\'à 3. Agile, mais tire moins vite que le fusil.'
         }
@@ -63,7 +64,7 @@ const CONFIG = {
         pompe: { nom: 'Fusil à pompe', delai: 0.7, vitesse: 900, degats: 1, plombs: 5, ecartDegres: 10, portee: 460 },
         grenade: { nom: 'Lance-grenades', delai: 0.7, vitesse: 750, degats: 2, rayon: 95, portee: 650 },
         // L'éclair touche un zombie, puis saute vers le plus proche dans le rayon (2 sauts = 3 zombies)
-        foudre: { nom: 'Pistolet électrique', delai: 0.6, vitesse: 1600, degats: 1, sauts: 2, rayonSaut: 110 }
+        foudre: { nom: 'Fusil électrique', delai: 0.6, vitesse: 1600, degats: 1, sauts: 2, rayonSaut: 110 }
     },
 
     zombie: {
