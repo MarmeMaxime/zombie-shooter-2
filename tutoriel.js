@@ -85,9 +85,11 @@ function commande(action) {
    Il se débat au poteau ; abattu, son corps tombe et le poteau reste debout. */
 let poteaux = [];
 TYPES_ZOMBIE.attache = {
-    config: { invoque: true, taille: 64, points: 10, pv: 1, vitesseMin: 0, vitesseAleatoire: 0, dureeImage: 0.12 },
-    // Le zombie de base, ficelé : ses images de marche font la lutte (petit tremblement en plus)
-    images: TYPES_ZOMBIE.normal.images.map((img, i) => SPRITES_ATTACHE.lier(img, [0, 1, 0, -1, 0, 1][i % 6])),
+    config: { invoque: true, taille: 64, points: 10, pv: 1, vitesseMin: 0, vitesseAleatoire: 0, dureeImage: 0.16 },
+    // Le zombie de base dans une seule pose (debout, bras le long du corps) : il ne peut
+    // que tirer un peu sur ses liens [décalage du torse, de la tête], et tendre la tête pour mordre
+    images: [[0, 0], [-1, -1], [-1, -2], [-1, -1], [0, 0], [1, 1], [0, 0], [0, -2]]
+        .map(([torse, tete]) => SPRITES_ATTACHE.lier(TYPES_ZOMBIE.normal.images[2], torse, tete)),
     imagesMort: TYPES_ZOMBIE.normal.images,   // il tombe comme un zombie normal
     comportement: { mort(z) { poteaux.push({ x: z.x, y: z.y }); } }
 };

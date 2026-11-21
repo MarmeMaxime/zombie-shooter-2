@@ -2,10 +2,12 @@
    ZOMBIE ATTACHÉ (cible de l'entraînement, voir tutoriel.js)
    C'est le zombie de base (ses images de marche, assets/zombie_marche*.png),
    ficelé à un poteau de bois : le poteau est dessiné derrière lui, les cordes
-   par-dessus son corps seulement. Ses bras tendus et ses jambes qui
-   gesticulent font la lutte. Abattu, il tombe et le poteau reste debout.
-   - lier(image, decalage) : une image « attachée » faite à partir d'une image
-     du zombie de base (dessinée dès que l'image est chargée)
+   par-dessus son corps seulement. Il est bien attaché : ses jambes ne bougent
+   pas, seuls le haut du corps et la tête tirent un peu sur les liens.
+   Abattu, il tombe et le poteau reste debout.
+   - lier(image, torse, tete) : une image « attachée » faite à partir d'une
+     image du zombie de base, le torse et la tête décalés de quelques pixels
+     (dessinée dès que l'image est chargée)
    - poteau : le poteau resté seul, cordes coupées qui pendent
    ========================================================================= */
 const SPRITES_ATTACHE = (() => {
@@ -36,14 +38,20 @@ const SPRITES_ATTACHE = (() => {
     const poteauDebout = PixelArt.en_image(grille_poteau(false), COULEURS);
     const poteauCoupe = PixelArt.en_image(grille_poteau(true), COULEURS);
 
-    function lier(image, decalage) {
+    const HANCHE = 40, COU = 17;   // lignes où l'on coupe l'image : jambes fixes, torse, tête
+
+    function lier(image, torse, tete) {
         const c = document.createElement('canvas');
         c.width = c.height = 64;
         function dessiner() {
             const g = c.getContext('2d');
             g.imageSmoothingEnabled = false;
             g.clearRect(0, 0, 64, 64);
-            g.drawImage(image, decalage, 0, 64, 64);
+            // Trois bandes : jambes immobiles, torse et tête décalés (il tire sur ses liens)
+            const k = (image.naturalHeight || 64) / 64;
+            for (const [y0, y1, dx] of [[HANCHE, 64, 0], [COU, HANCHE, torse], [0, COU, tete]]) {
+                g.drawImage(image, 0, y0 * k, (image.naturalWidth || 64), (y1 - y0) * k, dx, y0, 64, y1 - y0);
+            }
             // Cordes sur le corps seulement (« source-atop » : là où le zombie est dessiné)
             g.globalCompositeOperation = 'source-atop';
             for (const y of CORDES) {
