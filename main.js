@@ -129,8 +129,9 @@ function maj_hud() {
     ui.vies.textContent = etat.vies;
     ui.temps.textContent = Math.floor(etat.temps);
     ui.prixVie.textContent = etat.prixVie;
-    ui.score.classList.toggle('score-ready', etat.score >= etat.prixVie);
-    if (etat.score >= etat.prixVie && typeof Conseils !== 'undefined') Conseils.score_vert();
+    const achatPossible = etat.variante !== 'vagues' && etat.score >= etat.prixVie;
+    ui.score.classList.toggle('score-ready', achatPossible);
+    if (achatPossible && typeof Conseils !== 'undefined') Conseils.score_vert();
 }
 
 function ajouter_score(points) {
@@ -140,7 +141,8 @@ function ajouter_score(points) {
 }
 
 function acheter_vie() {
-    if (!etat.enCours || etat.score < etat.prixVie) return;
+    // Mode Vagues : les vies s'achètent uniquement à la boutique
+    if (!etat.enCours || etat.variante === 'vagues' || etat.score < etat.prixVie) return;
     etat.score -= etat.prixVie;
     etat.vies++;
     etat.prixVie = Math.min(CONFIG.prixVieMax, Math.floor(etat.prixVie * CONFIG.multiplicateurPrixVie));

@@ -40,6 +40,9 @@ const Vagues = (() => {
         niveaux = { cadence: 0, vitesse: 0, pouvoir: 0 };
         boutique = false;
         $v('hud-vague').classList.remove('hidden');
+        // Pas d'achat de vie par V : on cache le prix et le bouton tactile
+        $v('hud-prix-vie').classList.add('hidden');
+        $v('btn-touch-buy').classList.add('hidden');
         suivante();
     }
 
@@ -169,6 +172,8 @@ const Vagues = (() => {
         file = [];
         $v('boutique-overlay').classList.add('hidden');
         $v('hud-vague').classList.add('hidden');
+        $v('hud-prix-vie').classList.remove('hidden');
+        $v('btn-touch-buy').classList.remove('hidden');
         $v('bandeau-vague').classList.add('hidden');
     }
 
