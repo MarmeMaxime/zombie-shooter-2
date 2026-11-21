@@ -55,6 +55,13 @@ const Son = (() => {
 
     function jouerAmbiance(nom) {
         ambiance = nom;
+        arreter_marche();
+        // L'entraînement a sa propre musique, générée (marche militaire, plus bas)
+        if (nom === 'entrainement') {
+            musique.pause();
+            if (actif) demarrer_marche();
+            return;
+        }
         if (nom === 'hardcore') {
             indexHardcore = Math.floor(Math.random() * PISTES.hardcore.length);
             chargerPiste(PISTES.hardcore[indexHardcore], VOLUME_HARDCORE, false);
@@ -67,21 +74,26 @@ const Son = (() => {
     function arreterMusique() {
         ambiance = null;
         musique.pause();
+        arreter_marche();
     }
+
+    // Musique de l'ambiance en cours : le lecteur MP3, ou la marche de l'entraînement
+    function jouer() { if (ambiance === 'entrainement') demarrer_marche(); else lire(musique); }
+    function couper() { musique.pause(); arreter_marche(); }
 
     function setActif(valeur) {
         actif = valeur;
         reglages.actif = valeur;
         Sauvegarde.sauver();
         if (!ambiance) return;
-        if (actif && !suspendue) lire(musique);
-        else musique.pause();
+        if (actif && !suspendue) jouer();
+        else couper();
     }
 
     // Silence temporaire (écran des caisses) : la musique reprend là où elle s'était arrêtée
     let suspendue = false;
-    function suspendreMusique() { suspendue = true; musique.pause(); }
-    function reprendreMusique() { suspendue = false; if (actif && ambiance) lire(musique); }
+    function suspendreMusique() { suspendue = true; couper(); }
+    function reprendreMusique() { suspendue = false; if (actif && ambiance) jouer(); }
 
     // vitesse < 1 : son plus grave (chaque arme a ainsi sa propre détonation)
     function jouerEffet(audio, vitesse = 1) {
@@ -118,9 +130,9 @@ const Son = (() => {
     }
 
     // Souffle filtré : coup de feu, explosion, pas lourd…
-    function bruit(debut, duree, { vol = 0.3, filtre = 1200, filtreFin = null, type = 'lowpass' } = {}) {
+    function bruit(debut, duree, { vol = 0.3, filtre = 1200, filtreFin = null, type = 'lowpass', sortie = null, absolu = false } = {}) {
         const c = contexte(); if (!c || !actif) return;
-        const t = c.currentTime + debut;
+        const t = absolu ? debut : c.currentTime + debut;
         const src = c.createBufferSource(); src.buffer = bruitBlanc;
         const f = c.createBiquadFilter(); f.type = type;
         f.frequency.setValueAtTime(filtre, t);
@@ -128,7 +140,7 @@ const Son = (() => {
         const g = c.createGain();
         g.gain.setValueAtTime(vol, t);
         g.gain.exponentialRampToValueAtTime(0.0001, t + duree);
-        src.connect(f).connect(g).connect(sortieEffets);
+        src.connect(f).connect(g).connect(sortie || sortieEffets);
         src.start(t, Math.random() * 0.5); src.stop(t + duree + 0.05);
     }
 
@@ -251,6 +263,62 @@ const Son = (() => {
         Sauvegarde.sauver();
     }
 
+    /* ---------- Marche militaire de l'entraînement (générée, en boucle) ----------
+       4 mesures à 112 battements par minute : grosse caisse sur 1 et 3, caisse
+       claire sur 2 et 4 (roulement en fin de boucle), basse fondamentale/quinte,
+       mélodie de clairon (que des notes de l'accord, comme un vrai clairon).
+       Les notes sont programmées un peu à l'avance : la marche ne dépend pas de
+       la boucle du jeu et continue quand la partie est figée (le Sergent parle). */
+    const NOTES = { G4: 392, B4: 493.9, C5: 523.3, D5: 587.3, E5: 659.3, G5: 784 };
+    const CLAIRON = [
+        'G4', 'G4', 'C5', '-', 'E5', '-', 'C5', '-',
+        'B4', 'B4', 'D5', '-', 'G5', '-', 'D5', '-',
+        'G4', 'G4', 'C5', '-', 'E5', '-', 'G5', '-',
+        'D5', 'B4', 'G4', '-', 'C5', '-', '-', '-'
+    ];
+    const BASSES = [[130.8, 196], [98, 146.8], [130.8, 196], [98, 146.8]];   // do, sol, do, sol : fondamentale, quinte
+    let marche = null;
+
+    function demarrer_marche() {
+        if (marche || !actif) return;
+        const c = contexte(); if (!c) return;
+        marche = { prochain: c.currentTime + 0.1, pas: 0, minuterie: setInterval(programmer_marche, 50) };
+        programmer_marche();
+    }
+    function arreter_marche() {
+        if (!marche) return;
+        clearInterval(marche.minuterie);
+        marche = null;
+    }
+    function programmer_marche() {
+        const c = contexte(); if (!c || !marche) return;
+        const croche = 60 / 112 / 2;
+        while (marche.prochain < c.currentTime + 0.3) {
+            jouer_croche(marche.pas, marche.prochain, croche);
+            marche.prochain += croche;
+            marche.pas = (marche.pas + 1) % CLAIRON.length;
+        }
+    }
+    function jouer_croche(i, t, d) {
+        const o = { sortie: sortieMusique, absolu: true };
+        const temps = Math.floor(i / 2) % 4, mesure = Math.floor(i / 8);
+        if (i % 2 === 0) {
+            if (temps === 0 || temps === 2) ton(70, t, 0.2, { vol: 0.4, f2: 40, ...o });                                    // grosse caisse
+            else bruit(t, 0.12, { vol: 0.22, filtre: 1800, type: 'highpass', ...o });                                        // caisse claire
+            ton(BASSES[mesure][temps % 2], t, d * 1.7, { type: 'triangle', vol: 0.2, ...o });                                 // basse
+        } else {
+            bruit(t, 0.05, { vol: 0.05, filtre: 3000, type: 'highpass', ...o });                                              // « ra-ta » léger
+        }
+        if (i >= 28) bruit(t + d / 2, 0.06, { vol: 0.14, filtre: 2200, type: 'highpass', ...o });                            // roulement final
+        const n = CLAIRON[i];
+        if (n !== '-') {
+            let tenue = 1;
+            while (CLAIRON[(i + tenue) % CLAIRON.length] === '-' && tenue < 4) tenue++;
+            ton(NOTES[n], t, d * tenue * 0.92, { type: 'square', vol: 0.045, attaque: 0.015, ...o });
+            ton(NOTES[n], t, d * tenue * 0.92, { type: 'triangle', vol: 0.07, attaque: 0.015, ...o });
+        }
+    }
+
     /* Vibrations : téléphone (navigator.vibrate, Android) et manette (vibreurs).
        force de 0 à 1, duree en millisecondes. Désactivables dans le panneau du son. */
     function vibrer(force, duree) {
@@ -269,13 +337,15 @@ const Son = (() => {
 
     // Première interaction avec la page : le navigateur autorise enfin le son
     function debloquer() {
-        if (actif && ambiance && !suspendue) lire(musique);
+        if (actif && ambiance && !suspendue) jouer();
         if (actif) contexte();
     }
     for (const evt of ['pointerdown', 'keydown']) document.addEventListener(evt, debloquer, { once: true, capture: true });
 
     return {
         jouerAmbiance,
+        ambiance: () => ambiance,              // ambiance en cours (tests, débogage)
+        marcheActive: () => Boolean(marche),   // la marche de l'entraînement joue-t-elle ?
         setVolume,
         vibrer,
         setVibrations,

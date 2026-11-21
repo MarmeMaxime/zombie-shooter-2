@@ -97,7 +97,7 @@ function mettre_en_pause(valeur, ecran = true) {
     if (valeur) {
         if (idAnimation !== null) cancelAnimationFrame(idAnimation);
         idAnimation = null;
-        Son.suspendreMusique();
+        if (ecran) Son.suspendreMusique();   // quand le Sergent parle, la musique continue
     } else {
         Son.reprendreMusique();
         dernierInstant = performance.now();   // pas de « saut » de temps à la reprise

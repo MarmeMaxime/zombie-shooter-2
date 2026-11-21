@@ -165,6 +165,7 @@ const Tutoriel = (() => {
         afficher(ecrans.jeu, true);
         init_game('normal', 'soldat');
         etat.tuto = true;
+        Son.jouerAmbiance('entrainement');   // marche militaire (audio.js)
         etape = -1;
         document.getElementById('btn-passer-tuto').classList.remove('hidden');
         suivant();
