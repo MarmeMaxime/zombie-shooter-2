@@ -10,7 +10,19 @@
   
   <body>
 
-    <div id="game-container">
+    <div id="game-container" class="titre-actif">
+
+      <!-- Fond animé du titre et des menus (ecran_titre.js) -->
+      <canvas id="fond-anime"></canvas>
+
+      <div id="ecran-titre">
+        <div class="titre-bloc">
+          <p class="titre-sur">ILS ARRIVENT…</p>
+          <h1 class="titre-geant">ZOMBIE<br>SHOOTER <span>2</span></h1>
+          <p class="titre-slogan">Survivez. Ouvrez des caisses. Regrettez.</p>
+          <p class="titre-invite">▶ Appuie sur une touche ou touche l'écran ◀</p>
+        </div>
+      </div>
 
       <div id="main-menu">
         <h1>Zombie Shooter 2</h1>
@@ -108,9 +120,8 @@
         </div>
         
         <div id="tactical-controls">
-          <div class="move-controls">
-            <button class="touch-btn" id="btn-touch-up">↑</button>
-            <button class="touch-btn" id="btn-touch-down">↓</button>
+          <div id="joystick" aria-label="Joystick : glisser vers le haut ou le bas">
+            <div id="joystick-bouton"></div>
           </div>
           <div class="action-controls">
             <button class="touch-btn" id="btn-touch-buy">V</button>
@@ -119,6 +130,7 @@
         </div>
 
         <button id="btn-pause" title="Pause (Échap)">⏸</button>
+        <p id="conseil-paysage">📱↻ Tourne ton téléphone pour mieux jouer</p>
         <div id="boss-barre" class="hidden">
           <span id="boss-nom">LE MASTODONTE</span>
           <div class="boss-jauge"><div id="boss-vie"></div></div>
@@ -229,6 +241,7 @@
     <script src="./lootbox.js"></script>
     <script src="./succes.js"></script>
     <script src="./menu.js"></script>
+    <script src="./ecran_titre.js"></script>
 
   </body>
 </html>

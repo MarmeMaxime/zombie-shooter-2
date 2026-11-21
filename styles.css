@@ -56,7 +56,7 @@ canvas {
 /* =========================================================================
    3. MENU PRINCIPAL
    ========================================================================= */
-#main-menu { background: rgba(0, 0, 0, 0.85); }
+#main-menu { background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0.8) 100%); }
 
 h1 {
   font-size: 3rem; text-transform: uppercase; color: #ff3333; 
@@ -187,14 +187,31 @@ span#score.score-ready {
   pointer-events: none; 
 }
 
-.move-controls, .action-controls {
+.action-controls {
   display: flex;
   gap: 15px;
 }
 
-.move-controls {
-  flex-direction: column;
+/* Joystick : une piste verticale et un bouton qui suit le doigt */
+#joystick {
+  position: relative; width: 70px; height: 140px; pointer-events: auto; touch-action: none;
+  border-radius: 35px; border: 2px solid rgba(255, 255, 255, 0.45);
+  background: linear-gradient(rgba(255, 51, 51, 0.25), rgba(0, 0, 0, 0.25) 50%, rgba(255, 51, 51, 0.25));
 }
+#joystick::before, #joystick::after {   /* flèches indicatives */
+  position: absolute; left: 50%; transform: translateX(-50%); color: rgba(255, 255, 255, 0.5); font-size: 0.8rem;
+}
+#joystick::before { content: '▲'; top: 4px; }
+#joystick::after { content: '▼'; bottom: 4px; }
+#joystick-bouton {
+  position: absolute; left: 50%; top: 50%; width: 52px; height: 52px; border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle at 35% 35%, #ff7a7a, #b01818);
+  border: 2px solid rgba(255, 255, 255, 0.8); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+}
+#joystick.actif { border-color: #fff; }
+#joystick.actif #joystick-bouton { box-shadow: 0 0 14px rgba(255, 80, 80, 0.9); }
 
 .touch-btn {
   background: rgba(255, 51, 51, 0.3);
@@ -446,3 +463,62 @@ span#score.score-ready {
 .succes-texte small { color: #999; }
 .succes-ligne.ok .succes-texte small { color: #c9b26a; }
 .tuto-astuce { color: #bbb; font-size: 0.75rem; line-height: 1.4; margin-bottom: 14px; }
+
+/* =========================================================================
+   13. ÉCRAN TITRE ET FOND ANIMÉ
+   ========================================================================= */
+#fond-anime { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; }
+#game-view { z-index: 2; }   /* la partie passe devant le fond animé */
+
+#ecran-titre {
+  position: absolute; inset: 0; z-index: 400; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(ellipse at center, rgba(40, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0.88) 75%);
+  transition: opacity 0.6s, transform 0.6s;
+}
+#ecran-titre.sortie { opacity: 0; transform: scale(1.15); pointer-events: none; }
+.titre-bloc { text-align: center; zoom: var(--ui); }
+
+.titre-sur { color: #b0b0b0; letter-spacing: 8px; font-size: 0.9rem; margin-bottom: 6px; animation: apparition 1.2s ease-out both; }
+.titre-geant {
+  font-size: 4.2rem; line-height: 0.95; color: #ff2a2a; letter-spacing: 4px; margin: 0;
+  text-shadow: 0 0 12px rgba(255, 0, 0, 0.8), 4px 4px 0 #3a0000, -2px -2px 0 #000;
+  animation: apparition 1s ease-out 0.3s both, gresillement 4s infinite 1.5s;
+}
+.titre-geant span { color: #fff; text-shadow: 0 0 16px #ff2a2a, 4px 4px 0 #8a0000; }
+.titre-slogan { color: #ddd; font-style: italic; margin-top: 14px; font-size: 1rem; animation: apparition 1s ease-out 0.9s both; }
+.titre-invite { color: #ffe14d; margin-top: 34px; font-weight: bold; letter-spacing: 2px; animation: apparition 0.6s ease-out 1.4s both, clignote 1.2s steps(2) infinite 2s; }
+
+@keyframes apparition { from { opacity: 0; transform: translateY(-20px) scale(1.1); } to { opacity: 1; transform: none; } }
+@keyframes clignote { 50% { opacity: 0.15; } }
+/* Néon qui grésille et image qui saute, de temps en temps */
+@keyframes gresillement {
+  0%, 18%, 22%, 62%, 64%, 100% { opacity: 1; transform: none; }
+  20% { opacity: 0.4; transform: translateX(-3px) skewX(-4deg); }
+  63% { opacity: 0.7; transform: translateX(4px); }
+}
+
+/* Titre du menu, dans le même style */
+#main-menu h1 {
+  color: #ff2a2a; text-shadow: 0 0 12px rgba(255, 0, 0, 0.8), 3px 3px 0 #3a0000, -1px -1px 0 #000;
+  animation: gresillement 5s infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .titre-geant, .titre-invite, #main-menu h1 { animation: none; }
+}
+/* Tant que l'écran titre est affiché, le menu reste caché derrière */
+#game-container.titre-actif #main-menu { visibility: hidden; }
+#main-menu { transition: opacity 0.5s; }
+#game-container.titre-actif #main-menu { opacity: 0; }
+
+/* Conseil « paysage » : seulement sur mobile tenu en portrait */
+#conseil-paysage { display: none; }
+@media (orientation: portrait) and (pointer: coarse), (orientation: portrait) and (max-width: 600px) {
+  #conseil-paysage {
+    display: block; position: absolute; top: 18%; left: 50%; transform: translateX(-50%); z-index: 6;
+    background: rgba(0, 0, 0, 0.7); color: #ffe14d; padding: 8px 14px; border-radius: 20px;
+    font-size: 0.9rem; white-space: nowrap; pointer-events: none; zoom: var(--ui);
+  }
+  #info { top: 50px; }   /* sous le bouton pause */
+}

@@ -62,23 +62,26 @@ function reset_joueur(mode, perso) {
 }
 
 function relacher_commandes() {
-    commandes.haut = commandes.bas = commandes.tir = false;
+    commandes.haut = commandes.bas = commandes.tir = commandes.tirAuto = false;
+    commandes.axe = 0;
+    if (typeof Joystick !== 'undefined') Joystick.recentrer();
 }
 
 function update_joueur(dt, hauteurCanvas) {
-    // Déplacement (haut + bas en même temps = immobile)
-    const direction = (commandes.bas ? 1 : 0) - (commandes.haut ? 1 : 0);
+    // Déplacement : joystick analogique (-1 à 1) s'il est utilisé, sinon le clavier
+    // (haut + bas en même temps = immobile)
+    const direction = commandes.axe || ((commandes.bas ? 1 : 0) - (commandes.haut ? 1 : 0));
     joueur.bouge = direction !== 0;
     joueur.y += direction * joueur.vitesse * dt;
     joueur.y = Math.max(CONFIG.margeHaut, Math.min(hauteurCanvas - CONFIG.margeBas, joueur.y));
 
-    // Tir : un tir par appui, limité par la cadence
+    // Tir : un tir par appui au clavier, limité par la cadence.
+    // Le bouton TIR tactile maintenu (tirAuto) tire en continu à la cadence de l'arme.
     joueur.rechargeTir = Math.max(0, joueur.rechargeTir - dt);
     joueur.animTir = Math.max(0, joueur.animTir - dt);
 
-    if (!commandes.tir) {
-        joueur.gachetteRelachee = true;
-    } else if (joueur.gachetteRelachee && joueur.rechargeTir === 0) {
+    if (!commandes.tir || commandes.tirAuto) joueur.gachetteRelachee = true;
+    if (commandes.tir && joueur.gachetteRelachee && joueur.rechargeTir === 0) {
         joueur.gachetteRelachee = false;
         joueur.rechargeTir = joueur.arme.delai;
         joueur.animTir = CONFIG.joueur.dureeAnimTir;
@@ -151,7 +154,7 @@ function lier_bouton_maintenu(id, action) {
 
     bouton.addEventListener('pointerdown', e => {
         e.preventDefault();
-        bouton.setPointerCapture(e.pointerId);
+        try { bouton.setPointerCapture(e.pointerId); } catch { /* pointeur déjà relâché */ }
         commandes[action] = true;
     });
     bouton.addEventListener('pointerup', relacher);
@@ -159,9 +162,59 @@ function lier_bouton_maintenu(id, action) {
     bouton.addEventListener('lostpointercapture', relacher);
 }
 
-lier_bouton_maintenu('btn-touch-up', 'haut');
-lier_bouton_maintenu('btn-touch-down', 'bas');
 lier_bouton_maintenu('btn-touch-shoot', 'tir');
+{
+    const btnTir = document.getElementById('btn-touch-shoot');
+    btnTir.addEventListener('pointerdown', () => { commandes.tirAuto = true; });
+    // Au relâchement, le clavier retrouve son mode « un tir par appui »
+    for (const evt of ['pointerup', 'pointercancel', 'lostpointercapture']) {
+        btnTir.addEventListener(evt, () => { commandes.tirAuto = false; });
+    }
+}
+
+/* ---------- Joystick virtuel ----------
+   On pose le doigt n'importe où dans sa zone, puis on glisse vers le haut ou
+   le bas : la vitesse dépend de la distance au centre (analogique). */
+const Joystick = (() => {
+    const zone = document.getElementById('joystick');
+    const bouton = document.getElementById('joystick-bouton');
+    const ZONE_MORTE = 0.15;
+    // Mesures en pixels d'écran ; « facteur » convertit vers les pixels CSS de la zone
+    // (l'interface est agrandie avec zoom, voir --ui dans styles.css)
+    let doigt = null, centreY = 0, rayon = 1, facteur = 1;
+
+    function deplacer(e) {
+        const dy = Math.max(-rayon, Math.min(rayon, e.clientY - centreY));
+        bouton.style.transform = `translate(-50%, calc(-50% + ${dy / facteur}px))`;
+        const axe = dy / rayon;
+        commandes.axe = Math.abs(axe) < ZONE_MORTE ? 0 : axe;
+    }
+
+    function recentrer() {
+        doigt = null;
+        commandes.axe = 0;
+        bouton.style.transform = 'translate(-50%, -50%)';
+        zone.classList.remove('actif');
+    }
+
+    zone.addEventListener('pointerdown', e => {
+        e.preventDefault();
+        doigt = e.pointerId;
+        try { zone.setPointerCapture(e.pointerId); } catch { /* pointeur déjà relâché */ }
+        const r = zone.getBoundingClientRect();
+        centreY = r.top + r.height / 2;
+        rayon = r.height / 2;
+        facteur = r.height / (zone.offsetHeight || r.height);
+        zone.classList.add('actif');
+        deplacer(e);
+    });
+    zone.addEventListener('pointermove', e => { if (e.pointerId === doigt) deplacer(e); });
+    zone.addEventListener('pointerup', recentrer);
+    zone.addEventListener('pointercancel', recentrer);
+    zone.addEventListener('lostpointercapture', recentrer);
+
+    return { recentrer };
+})();
 
 document.getElementById('btn-touch-buy').addEventListener('pointerdown', e => {
     e.preventDefault();
