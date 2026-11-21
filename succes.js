@@ -18,7 +18,7 @@ const SUCCES = [
     { id: 'survivant', nom: 'Survivant', desc: 'Survivre 5 minutes', titre: 'Survivant', recompense: 100, objectif: 300, unite: 's', valeur: () => meilleur(SV().stats.meilleurTemps) },
     { id: 'increvable', nom: 'Increvable', desc: 'Survivre 10 minutes en hardcore', titre: 'Increvable', recompense: 300, objectif: 600, unite: 's', valeur: () => SV().stats.meilleurTemps.hardcore || 0 },
     { id: 'machine', nom: 'Machine de guerre', desc: 'Gagner 5 000 points en une partie', titre: 'Machine de guerre', recompense: 200, objectif: 5000, valeur: () => meilleur(SV().stats.meilleurScore) },
-    { id: 'polyvalent', nom: 'Polyvalent', desc: 'Jouer une partie avec chaque personnage', titre: 'Couteau suisse', recompense: 60, objectif: 3, valeur: () => SV().stats.persosJoues.length },
+    { id: 'polyvalent', nom: 'Polyvalent', desc: 'Jouer une partie avec chaque personnage', titre: 'Couteau suisse', recompense: 60, objectif: 4, valeur: () => SV().stats.persosJoues.length },
     { id: 'pigeon', nom: 'Pigeon', desc: 'Ouvrir 100 caisses', titre: 'Pigeon', recompense: 100, objectif: 100, valeur: () => SV().loot.ouvertes },
     { id: 'baleine', nom: 'Baleine', desc: 'Ouvrir 500 caisses', titre: 'Baleine', recompense: 500, objectif: 500, valeur: () => SV().loot.ouvertes },
     { id: 'geologue', nom: 'Géologue amateur', desc: 'Obtenir 10 cailloux', titre: 'Collectionneur de cailloux', recompense: 30, objectif: 10, valeur: () => SV().loot.dechets.caillou || 0 },
@@ -49,6 +49,17 @@ const SUCCES = [
     // Le Fossoyeur
     { id: 'fossoyeur', nom: 'Enterrement de première classe', desc: 'Vaincre le Fossoyeur', titre: 'Croque-mort', recompense: 200, objectif: 1, valeur: () => SV().stats.tues.fossoyeur || 0 },
     { id: 'profanateur', nom: 'Profanateur', desc: 'Détruire 30 tombes avant qu\'elles s\'ouvrent', titre: 'Pilleur de tombes', recompense: 150, objectif: 30, valeur: () => SV().stats.tues.tombe || 0 },
+    // 1.1
+    { id: 'recruteur', nom: 'Recruteur', desc: 'Débloquer tous les personnages', titre: 'Chef d\'escouade', recompense: 300, objectif: 4, valeur: () => SV().persosDebloques.length },
+    { id: 'naturaliste', nom: 'Naturaliste', desc: 'Découvrir les 11 monstres du bestiaire', titre: 'Naturaliste', recompense: 200, objectif: 11, valeur: () => SV().bestiaire.length },
+    { id: 'coeur_brise', nom: 'Cœur brisé', desc: 'Vaincre Alana (le Mastodonte) 3 fois', titre: 'Briseur de cœurs', recompense: 250, objectif: 3, valeur: () => SV().stats.tues.boss || 0 },
+    { id: 'perpetuite', nom: 'Concession à perpétuité', desc: 'Vaincre 5 Fossoyeurs', titre: 'Gardien du cimetière', recompense: 400, objectif: 5, valeur: () => SV().stats.tues.fossoyeur || 0 },
+    { id: 'naissances', nom: 'Contrôle des naissances', desc: 'Tuer 25 Pondeuses', titre: 'Planning familial', recompense: 120, objectif: 25, valeur: () => SV().stats.tues.pondeuse || 0 },
+    { id: 'securite_sociale', nom: 'Sécurité sociale', desc: 'Laisser les Infirmiers soigner 50 zombies (bravo…)', titre: 'Bien assuré', recompense: 50, objectif: 50, valeur: () => SV().stats.soins || 0 },
+    { id: 'sparring', nom: 'Sparring-partner', desc: 'Faire esquiver un Boxeur 25 fois', titre: 'Punching-ball', recompense: 100, objectif: 25, valeur: () => SV().stats.esquivesBoxeur || 0 },
+    { id: 'inarretable', nom: 'Inarrêtable', desc: 'Survivre 15 minutes', titre: 'Inarrêtable', recompense: 300, objectif: 900, unite: 's', valeur: () => meilleur(SV().stats.meilleurTemps) },
+    { id: 'rentier', nom: 'Rentier', desc: 'Avoir 5 000 crânes en poche', titre: 'Rentier', recompense: 0, objectif: 5000, valeur: () => SV().loot.cranes },
+    { id: 'pouvoir_100', nom: 'Au-delà de 9000', desc: 'Utiliser 100 pouvoirs spéciaux', titre: 'Surhumain', recompense: 300, objectif: 100, valeur: () => SV().stats.pouvoirs || 0 },
     { id: 'bestiaire', nom: 'Bestiaire complet', desc: 'Tuer au moins un monstre de chaque espèce', titre: 'Zoologiste', recompense: 250, objectif: 11,
         valeur: () => ['normal', 'tank', 'magicalgirl', 'joggeur', 'emeute', 'pondeuse', 'larve', 'infirmier', 'boxeur', 'boss', 'fossoyeur'].filter(t => (SV().stats.tues[t] || 0) > 0).length }
 ];

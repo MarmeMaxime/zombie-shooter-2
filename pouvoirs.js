@@ -38,6 +38,7 @@ function activer_pouvoir() {
     maj_hud_pouvoir();
     POUVOIRS[pouvoir.id](cfg_pouvoir());
     if (typeof Succes !== 'undefined') Succes.compter('pouvoirs');
+    if (typeof statsPerso !== 'undefined') statsPerso(etat.perso).pouvoirs++;   // missions « utiliser N fois »
 }
 
 const centre_zombie = z => ({ x: z.x + z.taille / 2, y: z.y + z.taille / 2 });

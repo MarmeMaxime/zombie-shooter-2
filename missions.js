@@ -10,7 +10,7 @@ const statsPerso = perso => {
     const p = tous[perso] || (tous[perso] = {});
     // Champs complétés au besoin : une ancienne sauvegarde reste compatible
     p.tues ??= {}; p.total ??= 0; p.boss ??= 0; p.parties ??= 0;
-    p.meilleurTemps ??= {}; p.meilleurScore ??= 0; p.sansDegat ??= 0; p.coupMax ??= 0;
+    p.meilleurTemps ??= {}; p.meilleurScore ??= 0; p.sansDegat ??= 0; p.coupMax ??= 0; p.pouvoirs ??= 0;
     return p;
 };
 
@@ -23,7 +23,8 @@ const M = {
     intouchable: (sec, nom, recompense) => ({ nom, desc: `Tenir ${sec} s sans perdre de vie`, objectif: sec, unite: 's', recompense, valeur: p => p.sansDegat }),
     score: (n, nom, recompense) => ({ nom, desc: `Gagner ${n} points en une partie`, objectif: n, recompense, valeur: p => p.meilleurScore }),
     boss: (n, nom, recompense) => ({ nom, desc: `Vaincre ${n} boss`, objectif: n, recompense, valeur: p => p.boss }),
-    coup: (n, nom, recompense) => ({ nom, desc: `Tuer ${n} zombies d'un seul coup`, objectif: n, recompense, valeur: p => p.coupMax })
+    coup: (n, nom, recompense) => ({ nom, desc: `Tuer ${n} zombies d'un seul coup`, objectif: n, recompense, valeur: p => p.coupMax }),
+    pouvoir: (pouvoir, n, nom, recompense) => ({ nom, desc: `Utiliser ${n} fois ${CONFIG.pouvoirs[pouvoir].nom}`, objectif: n, recompense, valeur: p => p.pouvoirs })
 };
 
 const MISSIONS = {
@@ -37,7 +38,13 @@ const MISSIONS = {
         M.intouchable(90, 'Intouchable', 150),
         M.score(3000, 'Feu nourri', 150),
         M.boss(2, 'Chasseur de géants', 200),
-        M.hardcore(480, 'Dernier rempart', 300)
+        M.hardcore(480, 'Dernier rempart', 300),
+        // 1.1 : pouvoirs, nouveaux ennemis, Fossoyeur
+        M.pouvoir('rafale', 10, 'Pluie de plomb', 120),
+        M.type('infirmier', 10, 'Pas de quartier', 'Tuer 10 Infirmiers', 120),
+        M.type('larve', 40, 'Chasse aux asticots', 'Tuer 40 larves', 120),
+        M.type('fossoyeur', 1, 'Mise en terre', 'Vaincre le Fossoyeur', 250),
+        M.survie(600, 'Sentinelle', 300)
     ],
     brute: [
         M.tues(50, 'Bagarreur', 40),
@@ -49,7 +56,12 @@ const MISSIONS = {
         M.intouchable(90, 'Peau de cuir', 150),
         M.survie(300, 'Vieux de la vieille', 100),
         M.boss(2, 'Poids lourd', 200),
-        M.hardcore(480, 'Increvable', 300)
+        M.hardcore(480, 'Increvable', 300),
+        M.pouvoir('onde', 15, 'Tremblement de terre', 120),
+        M.type('pondeuse', 15, 'Crève-ventre', 'Tuer 15 Pondeuses', 120),
+        M.type('emeute', 15, 'Briseur de lignes', 'Tuer 15 Anti-émeutes', 150),
+        M.type('larve', 40, 'Écrase-larves', 'Tuer 40 larves', 120),
+        M.type('fossoyeur', 1, 'Fossoyé', 'Vaincre le Fossoyeur', 250)
     ],
     grenadier: [
         M.tues(50, 'Apprentie', 40),
@@ -61,7 +73,12 @@ const MISSIONS = {
         M.survie(300, 'Sang-froid', 100),
         M.intouchable(120, 'Insaisissable', 180),
         M.boss(2, 'Démolition', 200),
-        M.hardcore(480, 'Reine du chaos', 300)
+        M.hardcore(480, 'Reine du chaos', 300),
+        M.pouvoir('artillerie', 10, 'Bombardement', 120),
+        M.type('larve', 60, 'Nid d\'asticots', 'Tuer 60 larves', 120),
+        M.type('tombe', 15, 'Pelleteuse', 'Détruire 15 tombes', 150),
+        M.coup(4, 'Bouquet final', 250),
+        M.type('fossoyeur', 1, 'Mise à feu', 'Vaincre le Fossoyeur', 250)
     ],
     lassie: [
         M.tues(50, 'Étincelle', 40),
@@ -73,11 +90,30 @@ const MISSIONS = {
         M.type('joggeur', 15, 'Coupe-circuit', 'Tuer 15 Joggeurs', 120),
         M.intouchable(90, 'Mise à la terre', 150),
         M.boss(2, 'Haute tension', 200),
-        M.hardcore(480, 'Tempête', 300)
+        M.hardcore(480, 'Tempête', 300),
+        M.pouvoir('orage', 10, 'Avis de tempête', 120),
+        M.coup(5, 'Orage parfait', 250),
+        M.type('infirmier', 10, 'Électrochoc', 'Tuer 10 Infirmiers', 120),
+        M.type('boxeur', 10, 'Ne bouge plus', 'Tuer 10 Boxeurs (hardcore)', 200),
+        M.type('fossoyeur', 1, 'Foudroyé', 'Vaincre le Fossoyeur', 250)
     ]
 };
 // Identifiant unique de chaque mission : <perso>_<numéro>
+// (on ajoute toujours à la fin d'une liste : les missions déjà terminées gardent leur identifiant)
 for (const [perso, liste] of Object.entries(MISSIONS)) liste.forEach((m, i) => { m.id = `${perso}_${i + 1}`; m.perso = perso; });
+
+// Les succès « Vétéran » et « Légende » suivent le nombre de missions
+{
+    const noms = { soldat: 'du Soldat', brute: 'de Brutus', grenadier: 'de Mira', lassie: 'de Lassie' };
+    for (const [perso, liste] of Object.entries(MISSIONS)) {
+        const s = SUCCES.find(x => x.id === `veteran_${perso === 'grenadier' ? 'mira' : perso}`);
+        if (s) { s.objectif = liste.length; s.desc = `Terminer les ${liste.length} missions ${noms[perso]}`; }
+    }
+    const total = Object.values(MISSIONS).flat().length;
+    const legende = SUCCES.find(x => x.id === 'legende');
+    legende.objectif = total;
+    legende.desc = `Terminer les ${total} missions`;
+}
 
 const Missions = (() => {
     const faites = () => Sauvegarde.donnees.missions;
