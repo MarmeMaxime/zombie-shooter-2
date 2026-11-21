@@ -36,6 +36,7 @@
         <div class="menu-row">
           <button id="btn-perso">PERSONNAGE : <span id="nom-perso">Soldat</span></button>
           <button id="btn-caisses">CAISSES · <span id="solde-menu">0</span> 💀</button>
+          <button id="btn-missions">📋 MISSIONS</button>
           <button id="btn-succes">🏆 SUCCÈS</button>
         </div>
 
@@ -80,6 +81,15 @@
           <div id="vestiaire-liste"></div>
           <p id="vestiaire-dechets"></p>
           <button id="btn-close-vestiaire">FERMER</button>
+        </div>
+      </div>
+
+      <div id="missions-overlay" class="hidden">
+        <div class="mission-card loot-card">
+          <h2>MISSIONS</h2>
+          <div id="missions-onglets"></div>
+          <div id="missions-liste"></div>
+          <button id="btn-close-missions">FERMER</button>
         </div>
       </div>
 
@@ -241,6 +251,7 @@
     <script src="./main.js"></script>
     <script src="./lootbox.js"></script>
     <script src="./succes.js"></script>
+    <script src="./missions.js"></script>
     <script src="./menu.js"></script>
     <script src="./ecran_titre.js"></script>
 

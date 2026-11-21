@@ -30,7 +30,7 @@ const ctx = vm.createContext({
     performance: { now: () => 0 }, requestAnimationFrame: () => 1, cancelAnimationFrame() {},
     Math: Object.assign(Object.create(Math), { random: rand }), console, localStorage: { getItem() {}, setItem() {} }
 });
-for (const f of ['config.js', 'sauvegarde.js', 'audio.js', 'deplacement_joueur.js', 'tir_joueur.js', 'boss_sprite.js', 'zombie.js', 'main.js', 'lootbox.js', 'succes.js', 'menu.js']) {
+for (const f of ['config.js', 'sauvegarde.js', 'audio.js', 'deplacement_joueur.js', 'tir_joueur.js', 'boss_sprite.js', 'zombie.js', 'main.js', 'lootbox.js', 'succes.js', 'missions.js', 'menu.js']) {
     vm.runInContext(fs.readFileSync(path.join(dir, f), 'utf8'), ctx, { filename: f });
 }
 
@@ -140,7 +140,7 @@ const resultat = vm.runInContext(`
             pertesMinute = pertes;
         }
     }
-    return { crachatsRecus, bossPasses, dureesBoss: dureesBoss.join(','), boss: Sauvegarde.donnees.stats.bossTues, bossApparus, causes, survie: Math.round(etat.temps), vivant: etat.enCours, vies: etat.vies, pertes, achats, pertesParMinute: pertesParMinute.join('') };
+    return { missionsRatees: MISSIONS[perso].filter(m => !Sauvegarde.donnees.missions.includes(m.id)).map(m => m.nom + ' ' + m.valeur(statsPerso(perso)) + '/' + m.objectif).join(' | '), coupMax: statsPerso(perso).coupMax, crachatsRecus, bossPasses, dureesBoss: dureesBoss.join(','), boss: Sauvegarde.donnees.stats.bossTues, bossApparus, causes, survie: Math.round(etat.temps), vivant: etat.enCours, vies: etat.vies, pertes, achats, pertesParMinute: pertesParMinute.join('') };
 })`, ctx)(mode, Number(minutes) * 60, Number(reaction), process.env.PERSO || 'soldat');
 
 console.log(JSON.stringify({ perso: process.env.PERSO || 'soldat', mode, reaction: Number(reaction), ...resultat }));

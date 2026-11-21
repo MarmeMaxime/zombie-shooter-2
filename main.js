@@ -129,6 +129,7 @@ function maj_hud() {
 
 function ajouter_score(points) {
     etat.score += points;
+    etat.gagnes += points;   // total gagné dans la partie (les vies achetées ne le diminuent pas)
     maj_hud();
 }
 
@@ -145,6 +146,7 @@ function perdre_vie() {
     etat.vies--;
     maj_hud();
     Son.effet('degat');
+    Missions.degat();
     if (etat.vies <= 0) game_over();
 }
 
@@ -167,6 +169,7 @@ function boucle(instant) {
     update_joueur(dt, MONDE.hauteur);
     update_balles(dt, MONDE.largeur, MONDE.hauteur);
     update_zombies(dt, MONDE.largeur, MONDE.hauteur, etat.temps);
+    Missions.fin_image();   // zombies tués « d'un seul coup » pendant cette image
 
     dessiner();
 
@@ -189,6 +192,7 @@ function init_game(mode, perso) {
         mode,
         perso,
         score: 0,
+        gagnes: 0,
         vies: CONFIG.viesDepart,
         temps: 0,
         prixVie: CONFIG.prixVieDepart
@@ -196,6 +200,7 @@ function init_game(mode, perso) {
     maj_hud();
 
     reset_joueur(mode, perso);
+    Missions.debut_partie();
     reset_zombies(mode);
     reset_balles();
 

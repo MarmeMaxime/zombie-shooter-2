@@ -17,13 +17,18 @@ const SUCCES = [
     { id: 'fleau', nom: 'Fléau des Mastodontes', desc: 'Vaincre 5 Mastodontes', titre: 'Fléau des Mastodontes', recompense: 400, objectif: 5, valeur: () => SV().stats.bossTues },
     { id: 'survivant', nom: 'Survivant', desc: 'Survivre 5 minutes', titre: 'Survivant', recompense: 100, objectif: 300, unite: 's', valeur: () => meilleur(SV().stats.meilleurTemps) },
     { id: 'increvable', nom: 'Increvable', desc: 'Survivre 10 minutes en hardcore', titre: 'Increvable', recompense: 300, objectif: 600, unite: 's', valeur: () => SV().stats.meilleurTemps.hardcore || 0 },
-    { id: 'machine', nom: 'Machine de guerre', desc: 'Atteindre 5 000 points en une partie', titre: 'Machine de guerre', recompense: 200, objectif: 5000, valeur: () => meilleur(SV().stats.meilleurScore) },
+    { id: 'machine', nom: 'Machine de guerre', desc: 'Gagner 5 000 points en une partie', titre: 'Machine de guerre', recompense: 200, objectif: 5000, valeur: () => meilleur(SV().stats.meilleurScore) },
     { id: 'polyvalent', nom: 'Polyvalent', desc: 'Jouer une partie avec chaque personnage', titre: 'Couteau suisse', recompense: 60, objectif: 3, valeur: () => SV().stats.persosJoues.length },
     { id: 'pigeon', nom: 'Pigeon', desc: 'Ouvrir 100 caisses', titre: 'Pigeon', recompense: 100, objectif: 100, valeur: () => SV().loot.ouvertes },
     { id: 'baleine', nom: 'Baleine', desc: 'Ouvrir 500 caisses', titre: 'Baleine', recompense: 500, objectif: 500, valeur: () => SV().loot.ouvertes },
     { id: 'geologue', nom: 'Géologue amateur', desc: 'Obtenir 10 cailloux', titre: 'Collectionneur de cailloux', recompense: 30, objectif: 10, valeur: () => SV().loot.dechets.caillou || 0 },
     { id: 'fashion', nom: 'Fashion victim', desc: 'Posséder 10 skins', titre: 'Fashion victim', recompense: 150, objectif: 10, valeur: () => SV().loot.possedes.length },
-    { id: 'elu', nom: 'L\'Élu du RNG', desc: 'Obtenir un objet mythique', titre: 'Élu du RNG', recompense: 250, objectif: 1, valeur: () => SV().stats.mythiques }
+    { id: 'elu', nom: 'L\'Élu du RNG', desc: 'Obtenir un objet mythique', titre: 'Élu du RNG', recompense: 250, objectif: 1, valeur: () => SV().stats.mythiques },
+    // Liés aux missions par personnage (missions.js)
+    { id: 'veteran_soldat', nom: 'Vétéran : Soldat', desc: 'Terminer les 10 missions du Soldat', titre: 'Sergent', recompense: 500, objectif: 10, valeur: () => (typeof Missions === 'undefined' ? 0 : Missions.terminees('soldat')) },
+    { id: 'veteran_brute', nom: 'Vétéran : Brutus', desc: 'Terminer les 10 missions de Brutus', titre: 'Boucher', recompense: 500, objectif: 10, valeur: () => (typeof Missions === 'undefined' ? 0 : Missions.terminees('brute')) },
+    { id: 'veteran_mira', nom: 'Vétéran : Mira', desc: 'Terminer les 10 missions de Mira', titre: 'Artificière', recompense: 500, objectif: 10, valeur: () => (typeof Missions === 'undefined' ? 0 : Missions.terminees('grenadier')) },
+    { id: 'legende', nom: 'Légende vivante', desc: 'Terminer les 30 missions', titre: 'Légende vivante', recompense: 1500, objectif: 30, valeur: () => (typeof Missions === 'undefined' ? 0 : Missions.terminees()) }
 ];
 
 const Succes = (() => {
@@ -37,11 +42,16 @@ const Succes = (() => {
     document.getElementById('game-container').appendChild(toast);
     let fileToasts = [], toastActif = false;
 
+    // Bandeau partagé par les succès et les missions (missions.js)
+    function notifier(texte) {
+        fileToasts.push(texte);
+        afficher_toast();
+    }
+
     function afficher_toast() {
         if (toastActif || !fileToasts.length) return;
         toastActif = true;
-        const s = fileToasts.shift();
-        toast.textContent = `🏆 Succès débloqué : ${s.nom} · +${s.recompense} 💀 · titre « ${s.titre} »`;
+        toast.textContent = fileToasts.shift();
         toast.classList.remove('hidden');
         Son.effet('succes');
         setTimeout(() => { toast.classList.add('hidden'); toastActif = false; setTimeout(afficher_toast, 300); }, 3200);
@@ -53,7 +63,7 @@ const Succes = (() => {
             if (SV().succes.includes(s.id) || s.valeur() < s.objectif) continue;
             SV().succes.push(s.id);
             SV().loot.cranes += s.recompense;
-            fileToasts.push(s);
+            fileToasts.push(`🏆 Succès débloqué : ${s.nom} · +${s.recompense} 💀 · titre « ${s.titre} »`);
             nouveau = true;
         }
         if (nouveau) {
@@ -67,6 +77,7 @@ const Succes = (() => {
         const t = SV().stats.tues;
         t[type] = (Number(t[type]) || 0) + 1;
         if (type === 'boss') SV().stats.bossTues++;
+        if (typeof Missions !== 'undefined') Missions.zombie_tue(type);
         verifier();
     }
 
@@ -74,7 +85,8 @@ const Succes = (() => {
     function seconde() {
         const st = SV().stats;
         st.meilleurTemps[etat.mode] = Math.max(Number(st.meilleurTemps[etat.mode]) || 0, Math.floor(etat.temps));
-        st.meilleurScore[etat.mode] = Math.max(Number(st.meilleurScore[etat.mode]) || 0, etat.score);
+        st.meilleurScore[etat.mode] = Math.max(Number(st.meilleurScore[etat.mode]) || 0, etat.gagnes);
+        if (typeof Missions !== 'undefined') Missions.seconde();
         verifier();
         if (++secondes % 10 === 0) Sauvegarde.sauver();   // les compteurs ne sont pas perdus en cas de fermeture
     }
@@ -83,6 +95,7 @@ const Succes = (() => {
         const st = SV().stats;
         st.parties++;
         if (!st.persosJoues.includes(etat.perso)) st.persosJoues.push(etat.perso);
+        if (typeof Missions !== 'undefined') Missions.fin_partie();
         seconde();
         Sauvegarde.sauver();
     }
@@ -143,5 +156,5 @@ const Succes = (() => {
     maj_titre();
     verifier();   // succès déjà mérités avec une ancienne sauvegarde (caisses, skins…)
 
-    return { zombie_tue, seconde, fin_partie, apres_caisse, titre_actuel };
+    return { zombie_tue, seconde, fin_partie, apres_caisse, titre_actuel, notifier, verifier };
 })();
