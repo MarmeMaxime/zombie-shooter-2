@@ -81,13 +81,14 @@ function commande(action) {
     return `[${Touches.libelle(action)}]`;
 }
 
-/* ---------- Le zombie attaché (cible de l'étape 2, sprites : attache_sprite.js) ----------
+/* ---------- Le zombie attaché (cible de l'étape 2, voir attache_sprite.js) ----------
    Il se débat au poteau ; abattu, son corps tombe et le poteau reste debout. */
 let poteaux = [];
 TYPES_ZOMBIE.attache = {
-    config: { invoque: true, taille: 64, points: 10, pv: 1, vitesseMin: 0, vitesseAleatoire: 0, dureeImage: 0.11 },
-    images: SPRITES_ATTACHE.lutte,
-    imagesMort: SPRITES_ATTACHE.libre,
+    config: { invoque: true, taille: 64, points: 10, pv: 1, vitesseMin: 0, vitesseAleatoire: 0, dureeImage: 0.12 },
+    // Le zombie de base, ficelé : ses images de marche font la lutte (petit tremblement en plus)
+    images: TYPES_ZOMBIE.normal.images.map((img, i) => SPRITES_ATTACHE.lier(img, [0, 1, 0, -1, 0, 1][i % 6])),
+    imagesMort: TYPES_ZOMBIE.normal.images,   // il tombe comme un zombie normal
     comportement: { mort(z) { poteaux.push({ x: z.x, y: z.y }); } }
 };
 EXTENSIONS.push({
