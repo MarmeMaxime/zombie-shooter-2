@@ -31,16 +31,16 @@ body {
    de l'écran) l'agrandit d'autant, sans flou. */
 :root { --ui: 1; }
 #main-menu > *, .mission-card, #info, #btn-pause, #boss-barre, #tactical-controls,
-#btn-sound, #toast-succes {
+#btn-options, #toast-succes {
   zoom: var(--ui);
 }
 #main-menu { gap: calc(20px * var(--ui)); }
 
 /* Gestion des couches (Z-Index) */
-#main-menu, #game-view, #tutorial-overlay, #perso-overlay, #loot-overlay, #vestiaire-overlay, #save-overlay, #succes-overlay, #missions-overlay, #bestiaire-overlay, #pause-overlay, #game-over-overlay {
+#main-menu, #game-view, #tutorial-overlay, #perso-overlay, #loot-overlay, #vestiaire-overlay, #save-overlay, #succes-overlay, #missions-overlay, #bestiaire-overlay, #options-overlay, #pause-overlay, #game-over-overlay {
   position: absolute; top: 0; left: 0; width: 100%; height: 100%;
 }
-#main-menu, #tutorial-overlay, #perso-overlay, #loot-overlay, #vestiaire-overlay, #save-overlay, #succes-overlay, #missions-overlay, #bestiaire-overlay, #pause-overlay, #game-over-overlay {
+#main-menu, #tutorial-overlay, #perso-overlay, #loot-overlay, #vestiaire-overlay, #save-overlay, #succes-overlay, #missions-overlay, #bestiaire-overlay, #options-overlay, #pause-overlay, #game-over-overlay {
   display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10; 
 }
 #game-view { display: block; z-index: 1; }
@@ -81,26 +81,36 @@ button.active { background: #ff3333; border-color: #ff3333; }
 /* =========================================================================
    4. UI FLOTTANTE (Tuto & Son)
    ========================================================================= */
-#btn-tuto, #btn-sound, #btn-sauvegarde {
+#btn-tuto, #btn-options, #btn-sauvegarde {
   position: absolute; top: 20px; width: 40px; height: 40px; border-radius: 50%; 
   padding: 0; display: flex; justify-content: center; align-items: center; font-weight: bold; z-index: 20; 
 }
 #btn-tuto { left: 20px; }
-#btn-sound {
+#btn-options {
   right: 20px; font-size: 1.5rem; background: rgba(255, 255, 255, 0.1); 
   border: 2px solid rgba(255, 255, 255, 0.5);
 }
-#btn-sound:hover { background: white; border-color: white; transform: scale(1.1); }
-/* Panneau du son, sous le bouton 🔊 */
-#panneau-son {
-  position: absolute; top: 68px; right: 20px; z-index: 30; zoom: var(--ui);
-  display: flex; flex-direction: column; gap: 8px; padding: 10px 12px;
-  background: rgba(20, 20, 20, 0.95); border: 2px solid #555; border-radius: 6px; color: #ddd; font-size: 0.8rem;
-}
-#panneau-son.hidden { display: none; }
-#panneau-son label { display: flex; align-items: center; justify-content: space-between; gap: 10px; white-space: nowrap; }
-#panneau-son input[type=range] { width: 110px; accent-color: #ff3333; }
-#btn-son-actif, #btn-vibrations { font-size: 0.8rem; padding: 4px 8px; }
+#btn-options:hover { background: white; border-color: white; transform: scale(1.1); }
+#btn-options.muet { opacity: 0.6; }
+/* Écran des options (bouton ⚙️) : son, touches, langue. Au-dessus de la pause. */
+#options-overlay { background: rgba(0, 0, 0, 0.85); z-index: 250; }
+.options-card { max-height: 92vh; overflow-y: auto; text-align: left; min-width: 300px; }
+.options-card h2 { text-align: center; }
+.options-card h3 { color: #ff6a6a; font-size: 0.85rem; letter-spacing: 2px; text-transform: uppercase; margin: 12px 0 6px; }
+.options-son { display: flex; flex-direction: column; gap: 6px; color: #ddd; font-size: 0.8rem; }
+.options-son label { display: flex; align-items: center; justify-content: space-between; gap: 10px; white-space: nowrap; }
+.options-son input[type=range] { width: 140px; accent-color: #ff3333; }
+#btn-son-actif, #btn-vibrations, #btn-touches-defaut { font-size: 0.8rem; padding: 4px 8px; }
+.options-aide { color: #999; font-size: 0.7rem; margin: 0 0 6px; }
+#liste-touches { display: flex; flex-direction: column; gap: 4px; margin-bottom: 6px; }
+.ligne-touche { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 4px 8px; font-size: 0.78rem; text-align: left; }
+.ligne-touche .key { font-size: 0.75rem; padding: 2px 8px; border-bottom-width: 2px; }
+.ligne-touche.attente { border-color: #ffd23c; }
+.ligne-touche.attente .key { background: #ffd23c; }
+#liste-langues { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 12px; }
+.bouton-langue { font-size: 0.8rem; padding: 6px; }
+.bouton-langue.active { background: #ff3333; border-color: #ff3333; color: #fff; }
+#btn-close-options { width: 100%; }
 
 /* =========================================================================
    5. HUD (IN-GAME)
@@ -127,7 +137,7 @@ span#score.score-ready {
 /* =========================================================================
    6. MODALES (TUTO & GAME OVER)
    ========================================================================= */
-#tutorial-overlay, #perso-overlay, #loot-overlay, #vestiaire-overlay, #save-overlay, #succes-overlay, #missions-overlay, #bestiaire-overlay, #pause-overlay, #game-over-overlay { 
+#tutorial-overlay, #perso-overlay, #loot-overlay, #vestiaire-overlay, #save-overlay, #succes-overlay, #missions-overlay, #bestiaire-overlay, #options-overlay, #pause-overlay, #game-over-overlay { 
   background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(5px); z-index: 100; 
 }
 #game-over-overlay { background: rgba(50, 0, 0, 0.9); z-index: 200; }

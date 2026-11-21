@@ -16,15 +16,15 @@ const statsPerso = perso => {
 
 // Fabriques de missions courantes
 const M = {
-    tues: (n, nom, recompense) => ({ nom, desc: `Tuer ${n} zombies`, objectif: n, recompense, valeur: p => p.total }),
-    type: (type, n, nom, desc, recompense) => ({ nom, desc, objectif: n, recompense, valeur: p => p.tues[type] || 0 }),
-    survie: (sec, nom, recompense) => ({ nom, desc: `Survivre ${sec / 60} min en une partie`, objectif: sec, unite: 's', recompense, valeur: p => Math.max(0, ...Object.values(p.meilleurTemps)) }),
-    hardcore: (sec, nom, recompense) => ({ nom, desc: `Survivre ${sec / 60} min en hardcore`, objectif: sec, unite: 's', recompense, valeur: p => p.meilleurTemps.hardcore || 0 }),
-    intouchable: (sec, nom, recompense) => ({ nom, desc: `Tenir ${sec} s sans perdre de vie`, objectif: sec, unite: 's', recompense, valeur: p => p.sansDegat }),
-    score: (n, nom, recompense) => ({ nom, desc: `Gagner ${n} points en une partie`, objectif: n, recompense, valeur: p => p.meilleurScore }),
-    boss: (n, nom, recompense) => ({ nom, desc: `Vaincre ${n} boss`, objectif: n, recompense, valeur: p => p.boss }),
-    coup: (n, nom, recompense) => ({ nom, desc: `Tuer ${n} zombies d'un seul coup`, objectif: n, recompense, valeur: p => p.coupMax }),
-    pouvoir: (pouvoir, n, nom, recompense) => ({ nom, desc: `Utiliser ${n} fois ${CONFIG.pouvoirs[pouvoir].nom}`, objectif: n, recompense, valeur: p => p.pouvoirs })
+    tues: (n, nom, recompense) => ({ nom: T(nom), desc: T('Tuer {n} zombies', { n }), objectif: n, recompense, valeur: p => p.total }),
+    type: (type, n, nom, desc, recompense) => ({ nom: T(nom), desc: T(desc), objectif: n, recompense, valeur: p => p.tues[type] || 0 }),
+    survie: (sec, nom, recompense) => ({ nom: T(nom), desc: T('Survivre {n} min en une partie', { n: sec / 60 }), objectif: sec, unite: 's', recompense, valeur: p => Math.max(0, ...Object.values(p.meilleurTemps)) }),
+    hardcore: (sec, nom, recompense) => ({ nom: T(nom), desc: T('Survivre {n} min en hardcore', { n: sec / 60 }), objectif: sec, unite: 's', recompense, valeur: p => p.meilleurTemps.hardcore || 0 }),
+    intouchable: (sec, nom, recompense) => ({ nom: T(nom), desc: T('Tenir {n} s sans perdre de vie', { n: sec }), objectif: sec, unite: 's', recompense, valeur: p => p.sansDegat }),
+    score: (n, nom, recompense) => ({ nom: T(nom), desc: T('Gagner {n} points en une partie', { n }), objectif: n, recompense, valeur: p => p.meilleurScore }),
+    boss: (n, nom, recompense) => ({ nom: T(nom), desc: T('Vaincre {n} boss', { n }), objectif: n, recompense, valeur: p => p.boss }),
+    coup: (n, nom, recompense) => ({ nom: T(nom), desc: T('Tuer {n} zombies d\'un seul coup', { n }), objectif: n, recompense, valeur: p => p.coupMax }),
+    pouvoir: (pouvoir, n, nom, recompense) => ({ nom: T(nom), desc: T('Utiliser {n} fois {pouvoir}', { n, pouvoir: CONFIG.pouvoirs[pouvoir].nom }), objectif: n, recompense, valeur: p => p.pouvoirs })
 };
 
 const MISSIONS = {
@@ -118,15 +118,15 @@ for (const [perso, ordre] of Object.entries(ORDRE_MISSIONS)) {
 
 // Les succès « Vétéran » et « Légende » suivent le nombre de missions
 {
-    const noms = { soldat: 'du Soldat', brute: 'de Brutus', grenadier: 'de Mira', lassie: 'de Lassie' };
+    const textes = { soldat: 'Terminer les {n} missions du Soldat', brute: 'Terminer les {n} missions de Brutus', grenadier: 'Terminer les {n} missions de Mira', lassie: 'Terminer les {n} missions de Lassie' };
     for (const [perso, liste] of Object.entries(MISSIONS)) {
         const s = SUCCES.find(x => x.id === `veteran_${perso === 'grenadier' ? 'mira' : perso}`);
-        if (s) { s.objectif = liste.length; s.desc = `Terminer les ${liste.length} missions ${noms[perso]}`; }
+        if (s) { s.objectif = liste.length; s.desc = T(textes[perso], { n: liste.length }); }
     }
     const total = Object.values(MISSIONS).flat().length;
     const legende = SUCCES.find(x => x.id === 'legende');
     legende.objectif = total;
-    legende.desc = `Terminer les ${total} missions`;
+    legende.desc = T('Terminer les {n} missions', { n: total });
 }
 
 const Missions = (() => {
@@ -140,7 +140,7 @@ const Missions = (() => {
             if (faites().includes(m.id) || m.valeur(p) < m.objectif) continue;
             faites().push(m.id);
             Sauvegarde.donnees.loot.cranes += m.recompense;
-            Succes.notifier(`📋 Mission accomplie (${CONFIG.personnages[m.perso].nom}) : ${m.nom} · +${m.recompense} 💀`);
+            Succes.notifier(T('📋 Mission accomplie ({perso}) : {nom} · +{n} 💀', { perso: CONFIG.personnages[m.perso].nom, nom: m.nom, n: m.recompense }));
             if (etat.missions) etat.missions.push(m.nom);   // bilan de fin de partie
             nouvelle = true;
         }
@@ -218,7 +218,7 @@ const Missions = (() => {
             const nom = document.createElement('strong');
             nom.textContent = m.nom;
             const desc = document.createElement('small');
-            desc.textContent = `${m.desc} · ${ok ? 'fait' : `${v}${m.unite || ''} / ${m.objectif}${m.unite || ''}`} · +${m.recompense} 💀`;
+            desc.textContent = `${m.desc} · ${ok ? T('fait') : `${v}${m.unite || ''} / ${m.objectif}${m.unite || ''}`} · +${m.recompense} 💀`;
             const barre = document.createElement('span');
             barre.className = 'mission-barre';
             const plein = document.createElement('span');
@@ -269,7 +269,7 @@ const Deblocage = (() => {
             if (!c || !est_debloque(c.precedent) || c.faites < c.requis) break;   // dans l'ordre : on s'arrête au premier verrou
             liste().push(id);
             nouveau = true;
-            if (annoncer) Succes.notifier(`🔓 Nouveau personnage débloqué : ${CONFIG.personnages[id].nom} !`);
+            if (annoncer) Succes.notifier(T('🔓 Nouveau personnage débloqué : {nom} !', { nom: CONFIG.personnages[id].nom }));
         }
         if (nouveau) {
             Sauvegarde.sauver();

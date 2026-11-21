@@ -255,7 +255,9 @@ const Son = (() => {
        force de 0 à 1, duree en millisecondes. Désactivables dans le panneau du son. */
     function vibrer(force, duree) {
         if (!reglages.vibrations || typeof navigator === 'undefined') return;
-        try { if (navigator.vibrate) navigator.vibrate(Math.round(duree)); } catch { /* refusé par le navigateur */ }
+        // Le téléphone ne vibre qu'après un premier contact avec la page (sinon le navigateur proteste)
+        const actifPage = !navigator.userActivation || navigator.userActivation.hasBeenActive;
+        try { if (navigator.vibrate && actifPage) navigator.vibrate(Math.round(duree)); } catch { /* refusé par le navigateur */ }
         const manettes = navigator.getGamepads ? [...navigator.getGamepads()] : [];
         for (const gp of manettes) {
             if (gp && gp.vibrationActuator && gp.vibrationActuator.playEffect) {

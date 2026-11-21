@@ -63,6 +63,8 @@ const FICHES = [
     }
 ];
 
+Langue.traduire_objets(FICHES, ['nom', 'description', 'conseil']);
+
 const Bestiaire = (() => {
     const decouverts = () => Sauvegarde.donnees.bestiaire;
     const fiche = type => FICHES.find(f => f.type === type);
@@ -77,7 +79,7 @@ const Bestiaire = (() => {
         if (decouverts().includes(type) || !fiche(type)) return;
         decouverts().push(type);
         Sauvegarde.sauver();
-        Succes.notifier(`📖 Nouveau monstre dans le bestiaire : ${fiche(type).nom}`);
+        Succes.notifier(T('📖 Nouveau monstre dans le bestiaire : {nom}', { nom: fiche(type).nom }));
     }
 
     /* ---------- Écran ---------- */
@@ -100,7 +102,7 @@ const Bestiaire = (() => {
 
     function remplir() {
         const connus = FICHES.filter(f => decouverts().includes(f.type)).length;
-        $b('bestiaire-compte').textContent = `${connus} / ${FICHES.length} monstres découverts`;
+        $b('bestiaire-compte').textContent = T('{a} / {b} monstres découverts', { a: connus, b: FICHES.length });
         $b('bestiaire-liste').replaceChildren(...FICHES.map(f => {
             const connu = decouverts().includes(f.type);
             const ligne = document.createElement('div');
@@ -113,15 +115,15 @@ const Bestiaire = (() => {
             if (f.hardcore || f.boss) {
                 const tag = document.createElement('span');
                 tag.className = 'bestiaire-tag';
-                tag.textContent = f.boss ? 'BOSS' : 'HARDCORE';
+                tag.textContent = f.boss ? T('BOSS') : T('Hardcore').toUpperCase();
                 nom.append(' ', tag);
             }
             const desc = document.createElement('p');
-            desc.textContent = connu ? f.description : (f.hardcore ? 'Pas encore rencontré. Il rôde en hardcore…' : 'Pas encore rencontré.');
+            desc.textContent = connu ? f.description : T(f.hardcore ? 'Pas encore rencontré. Il rôde en hardcore…' : 'Pas encore rencontré.');
             texte.append(nom, desc);
             if (connu) {
                 const conseil = document.createElement('small');
-                conseil.textContent = `💡 ${f.conseil} · Tués : ${Sauvegarde.donnees.stats.tues[f.type] || 0}`;
+                conseil.textContent = T('💡 {conseil} · Tués : {n}', { conseil: f.conseil, n: Sauvegarde.donnees.stats.tues[f.type] || 0 });
                 texte.append(conseil);
             }
             ligne.append(vignette(f.type, connu), texte);

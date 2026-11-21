@@ -105,7 +105,7 @@ function mettre_en_pause(valeur) {
 }
 
 document.addEventListener('keydown', e => {
-    if ((e.code === 'Escape' || e.code === 'KeyP') && etat.enCours && !e.repeat) {
+    if (Touches.action(e.code) === 'pause' && etat.enCours && !e.repeat) {
         e.preventDefault();
         mettre_en_pause(!etat.pause);
     }
@@ -243,7 +243,7 @@ function game_over() {
     ui.cranesGagnes.textContent = Loot.gagner(etat.score);
     Succes.fin_partie();
     LootUI.maj_soldes();
-    Sauvegarde.point_de_restauration(`Fin de partie (${CONFIG.personnages[etat.perso].nom}, score ${etat.score})`);
+    Sauvegarde.point_de_restauration(T('Fin de partie ({perso}, score {s})', { perso: CONFIG.personnages[etat.perso].nom, s: etat.score }));
 
     remplir_bilan();
     ui.gameOver.classList.remove('hidden');
@@ -256,9 +256,9 @@ function remplir_bilan() {
 
     // Records battus (seulement s'il y avait déjà un record à battre)
     const records = [];
-    if (etat.recordAvant.temps > 0 && Math.floor(etat.temps) > etat.recordAvant.temps) records.push(`temps (avant : ${etat.recordAvant.temps} s)`);
-    if (etat.recordAvant.score > 0 && etat.gagnes > etat.recordAvant.score) records.push(`score (avant : ${etat.recordAvant.score})`);
-    $b('bilan-records').textContent = records.length ? `🏅 Nouveau record de ${records.join(' et de ')} !` : '';
+    if (etat.recordAvant.temps > 0 && Math.floor(etat.temps) > etat.recordAvant.temps) records.push(T('temps (avant : {n} s)', { n: etat.recordAvant.temps }));
+    if (etat.recordAvant.score > 0 && etat.gagnes > etat.recordAvant.score) records.push(T('score (avant : {n})', { n: etat.recordAvant.score }));
+    $b('bilan-records').textContent = records.length ? T('🏅 Nouveau record : {liste} !', { liste: records.join(T(' et ')) }) : '';
 
     // Victimes par espèce, avec la vignette du monstre (boss en premier, puis les plus nombreux)
     const especes = Object.entries(etat.tues).filter(([type]) => TYPES_ZOMBIE[type])
@@ -275,12 +275,12 @@ function remplir_bilan() {
         case_.append(c, el('span', '', `×${n}`));
         return case_;
     }));
-    $b('bilan-tues-titre').textContent = especes.length ? `Victimes : ${especes.reduce((s, [, n]) => s + n, 0)}` : 'Aucune victime… les zombies te remercient.';
+    $b('bilan-tues-titre').textContent = especes.length ? T('Victimes : {n}', { n: especes.reduce((s, [, n]) => s + n, 0) }) : T('Aucune victime… les zombies te remercient.');
 
     // Missions et succès obtenus pendant la partie
     const liste = (titre, noms) => (noms.length ? `${titre} (${noms.length}) : ${noms.join(', ')}` : '');
-    $b('bilan-missions').textContent = liste('📋 Missions accomplies', etat.missions);
-    $b('bilan-succes').textContent = liste('🏆 Succès débloqués', etat.succes);
+    $b('bilan-missions').textContent = liste(T('📋 Missions accomplies'), etat.missions);
+    $b('bilan-succes').textContent = liste(T('🏆 Succès débloqués'), etat.succes);
 }
 
 document.getElementById('btn-retry').addEventListener('click', () => init_game(etat.mode, etat.perso));

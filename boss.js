@@ -41,7 +41,7 @@ function faire_apparaitre_boss(largeurCanvas, hauteurCanvas) {
     };
     if (comportement(boss).creer) comportement(boss).creer(boss);
     zombies.push(boss);
-    ui_boss.nom.textContent = cfg.nom;
+    ui_boss.nom.textContent = cfg.nom;   // déjà traduit (i18n.js)
     ui_boss.barre.classList.remove('hidden');
     Son.effet('bossArrive');
     secouer_ecran(2);

@@ -7,6 +7,7 @@ const SV = () => Sauvegarde.donnees;
 const totalTues = () => Object.values(SV().stats.tues).reduce((s, n) => s + (Number(n) || 0), 0);
 const meilleur = table => Math.max(0, ...Object.values(table).map(Number).filter(Number.isFinite));
 
+// (les descriptions des Vétérans et de Légende reçoivent leur nombre de missions dans missions.js)
 const SUCCES = [
     { id: 'premier_sang', nom: 'Premier sang', desc: 'Tuer un zombie', titre: 'Bleu', recompense: 20, objectif: 1, valeur: totalTues },
     { id: 'centurion', nom: 'Centurion', desc: 'Tuer 100 zombies', titre: 'Centurion', recompense: 50, objectif: 100, valeur: totalTues },
@@ -25,11 +26,11 @@ const SUCCES = [
     { id: 'fashion', nom: 'Fashion victim', desc: 'Posséder 10 skins', titre: 'Fashion victim', recompense: 150, objectif: 10, valeur: () => SV().loot.possedes.length },
     { id: 'elu', nom: 'L\'Élu du RNG', desc: 'Obtenir un objet mythique', titre: 'Élu du RNG', recompense: 250, objectif: 1, valeur: () => SV().stats.mythiques },
     // Liés aux missions par personnage (missions.js)
-    { id: 'veteran_soldat', nom: 'Vétéran : Soldat', desc: 'Terminer les 10 missions du Soldat', titre: 'Sergent', recompense: 500, objectif: 10, valeur: () => (typeof Missions === 'undefined' ? 0 : Missions.terminees('soldat')) },
-    { id: 'veteran_brute', nom: 'Vétéran : Brutus', desc: 'Terminer les 10 missions de Brutus', titre: 'Boucher', recompense: 500, objectif: 10, valeur: () => (typeof Missions === 'undefined' ? 0 : Missions.terminees('brute')) },
-    { id: 'veteran_mira', nom: 'Vétéran : Mira', desc: 'Terminer les 10 missions de Mira', titre: 'Artificière', recompense: 500, objectif: 10, valeur: () => (typeof Missions === 'undefined' ? 0 : Missions.terminees('grenadier')) },
-    { id: 'veteran_lassie', nom: 'Vétéran : Lassie', desc: 'Terminer les 10 missions de Lassie', titre: 'Reine de la foudre', recompense: 500, objectif: 10, valeur: () => (typeof Missions === 'undefined' ? 0 : Missions.terminees('lassie')) },
-    { id: 'legende', nom: 'Légende vivante', desc: 'Terminer les 40 missions', titre: 'Légende vivante', recompense: 1500, objectif: 40, valeur: () => (typeof Missions === 'undefined' ? 0 : Missions.terminees()) },
+    { id: 'veteran_soldat', nom: 'Vétéran : Soldat', desc: 'Terminer les {n} missions du Soldat', titre: 'Sergent', recompense: 500, objectif: 10, valeur: () => (typeof Missions === 'undefined' ? 0 : Missions.terminees('soldat')) },
+    { id: 'veteran_brute', nom: 'Vétéran : Brutus', desc: 'Terminer les {n} missions de Brutus', titre: 'Boucher', recompense: 500, objectif: 10, valeur: () => (typeof Missions === 'undefined' ? 0 : Missions.terminees('brute')) },
+    { id: 'veteran_mira', nom: 'Vétéran : Mira', desc: 'Terminer les {n} missions de Mira', titre: 'Artificière', recompense: 500, objectif: 10, valeur: () => (typeof Missions === 'undefined' ? 0 : Missions.terminees('grenadier')) },
+    { id: 'veteran_lassie', nom: 'Vétéran : Lassie', desc: 'Terminer les {n} missions de Lassie', titre: 'Reine de la foudre', recompense: 500, objectif: 10, valeur: () => (typeof Missions === 'undefined' ? 0 : Missions.terminees('lassie')) },
+    { id: 'legende', nom: 'Légende vivante', desc: 'Terminer les {n} missions', titre: 'Légende vivante', recompense: 1500, objectif: 40, valeur: () => (typeof Missions === 'undefined' ? 0 : Missions.terminees()) },
     // Le Joggeur
     { id: 'premier_footing', nom: 'Fin du footing', desc: 'Tuer un Joggeur', titre: 'Coach sportif', recompense: 30, objectif: 1, valeur: () => SV().stats.tues.joggeur || 0 },
     { id: 'marathon', nom: 'Marathonien', desc: 'Tuer 50 Joggeurs', titre: 'Marathonien', recompense: 150, objectif: 50, valeur: () => SV().stats.tues.joggeur || 0 },
@@ -63,6 +64,9 @@ const SUCCES = [
     { id: 'bestiaire', nom: 'Bestiaire complet', desc: 'Tuer au moins un monstre de chaque espèce', titre: 'Zoologiste', recompense: 250, objectif: 11,
         valeur: () => ['normal', 'tank', 'magicalgirl', 'joggeur', 'emeute', 'pondeuse', 'larve', 'infirmier', 'boxeur', 'boss', 'fossoyeur'].filter(t => (SV().stats.tues[t] || 0) > 0).length }
 ];
+
+// Noms, descriptions et titres dans la langue du joueur (l'original reste dans _fr)
+Langue.traduire_objets(SUCCES, ['nom', 'desc', 'titre']);
 
 /* Ordre d'affichage : progression d'un joueur, du premier zombie aux défis
    de fin (le code au-dessus reste rangé par thème). Un succès absent de la
@@ -112,7 +116,7 @@ const Succes = (() => {
             if (SV().succes.includes(s.id) || s.valeur() < s.objectif) continue;
             SV().succes.push(s.id);
             SV().loot.cranes += s.recompense;
-            fileToasts.push(`🏆 Succès débloqué : ${s.nom} · +${s.recompense} 💀 · titre « ${s.titre} »`);
+            fileToasts.push(T('🏆 Succès débloqué : {nom} · +{n} 💀 · titre « {titre} »', { nom: s.nom, n: s.recompense, titre: s.titre }));
             if (typeof etat !== 'undefined' && etat.succes) etat.succes.push(s.nom);   // bilan de fin de partie
             nouveau = true;
         }
@@ -162,8 +166,14 @@ const Succes = (() => {
     }
 
     /* ---------- Titre ---------- */
+    // Le titre porté est gardé par identifiant de succès (il ne dépend pas de la langue).
+    // Ancienne sauvegarde : le titre était gardé en texte français, on retrouve son succès.
+    {
+        const ancien = SUCCES.find(x => x.id !== SV().titre && x._fr && x._fr.titre === SV().titre);
+        if (SV().titre && !SUCCES.some(x => x.id === SV().titre)) SV().titre = ancien ? ancien.id : '';
+    }
     function titre_actuel() {
-        const s = SUCCES.find(x => x.titre === SV().titre && SV().succes.includes(x.id));
+        const s = SUCCES.find(x => x.id === SV().titre && SV().succes.includes(x.id));
         return s ? s.titre : '';
     }
 
@@ -175,11 +185,11 @@ const Succes = (() => {
     /* ---------- Écran des succès ---------- */
     function remplir() {
         const debloques = SV().succes;
-        $s('succes-compte').textContent = `${debloques.filter(id => SUCCES.some(s => s.id === id)).length} / ${SUCCES.length} succès · clique sur un succès débloqué pour porter son titre`;
+        $s('succes-compte').textContent = T('{a} / {b} succès · clique sur un succès débloqué pour porter son titre', { a: debloques.filter(id => SUCCES.some(s => s.id === id)).length, b: SUCCES.length });
         $s('succes-liste').replaceChildren(...SUCCES.map(s => {
             const ok = debloques.includes(s.id);
             const ligne = document.createElement('button');
-            ligne.className = 'succes-ligne' + (ok ? ' ok' : '') + (ok && SV().titre === s.titre ? ' porte' : '');
+            ligne.className = 'succes-ligne' + (ok ? ' ok' : '') + (ok && SV().titre === s.id ? ' porte' : '');
             ligne.disabled = !ok;
 
             const icone = document.createElement('span');
@@ -192,12 +202,12 @@ const Succes = (() => {
             nom.textContent = s.nom;
             const desc = document.createElement('small');
             const v = Math.min(s.valeur(), s.objectif);
-            desc.textContent = `${s.desc} · ${ok ? 'fait' : `${v}${s.unite || ''} / ${s.objectif}${s.unite || ''}`} · +${s.recompense} 💀 · titre « ${s.titre} »`;
+            desc.textContent = `${s.desc} · ${ok ? T('fait') : `${v}${s.unite || ''} / ${s.objectif}${s.unite || ''}`} · +${s.recompense} 💀 · ${T('titre « {titre} »', { titre: s.titre })}`;
             texte.append(nom, desc);
 
             ligne.append(icone, texte);
             ligne.addEventListener('click', () => {
-                SV().titre = SV().titre === s.titre ? '' : s.titre;   // re-cliquer retire le titre
+                SV().titre = SV().titre === s.id ? '' : s.id;   // re-cliquer retire le titre
                 Sauvegarde.sauver();
                 maj_titre();
                 remplir();

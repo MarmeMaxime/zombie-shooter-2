@@ -11,7 +11,6 @@ const ecrans = {
     gameOver: $('game-over-overlay')
 };
 
-const btn_sound = $('btn-sound');
 const btn_normal = $('btn-normal');
 const btn_hardcore = $('btn-hardcore');
 
@@ -70,7 +69,7 @@ function rafraichir_cartes_persos() {
         carte.disabled = verrouille;
         const c = Deblocage.condition(id);
         carte.querySelector('.verrou').textContent = verrouille && c
-            ? `🔒 Terminer ${c.requis} missions avec ${CONFIG.personnages[c.precedent].nom} (${c.faites}/${c.requis})` : '';
+            ? T('🔒 Terminer {n} missions avec {perso} ({f}/{n})', { n: c.requis, perso: CONFIG.personnages[c.precedent].nom, f: c.faites }) : '';
     }
 }
 rafraichir_cartes_persos();
@@ -81,47 +80,10 @@ choisir_perso(CONFIG.personnages[Sauvegarde.donnees.perso] && Deblocage.est_debl
 /* ---------- Boutons (son de clic + perte du focus) ---------- */
 document.querySelectorAll('button').forEach(bouton => {
     bouton.addEventListener('click', () => {
-        if (bouton !== btn_sound) Son.bouton();
+        Son.bouton();
         // Sans ça, la barre ESPACE "recliquerait" le dernier bouton pendant la partie
         bouton.blur();
     });
-});
-
-/* ---------- Son ---------- */
-/* Le bouton 🔊 ouvre un petit panneau : son activé ou coupé, volume de la
-   musique et des effets (gardés dans la sauvegarde, voir audio.js). */
-const panneau_son = $('panneau-son');
-const curseurs = { musique: $('vol-musique'), effets: $('vol-effets') };
-
-function maj_bouton_son() {
-    const muet = !Son.estActif() || (Son.volume('musique') === 0 && Son.volume('effets') === 0);
-    btn_sound.textContent = muet ? '🔇' : '🔊';
-    $('btn-son-actif').textContent = Son.estActif() ? 'Son : activé' : 'Son : coupé';
-    $('btn-vibrations').textContent = Son.vibrations() ? 'Vibrations : activées' : 'Vibrations : coupées';
-    for (const quoi in curseurs) curseurs[quoi].value = Math.round(Son.volume(quoi) * 100);
-}
-
-btn_sound.addEventListener('click', () => {
-    maj_bouton_son();
-    panneau_son.classList.toggle('hidden');
-});
-$('btn-son-actif').addEventListener('click', () => {
-    Son.setActif(!Son.estActif());
-    maj_bouton_son();
-});
-$('btn-vibrations').addEventListener('click', () => {
-    Son.setVibrations(!Son.vibrations());
-    maj_bouton_son();
-    Son.vibrer(0.5, 120);   // pour sentir que c'est activé
-});
-for (const [quoi, curseur] of Object.entries(curseurs)) {
-    curseur.addEventListener('input', () => { Son.setVolume(quoi, curseur.value / 100); maj_bouton_son(); });
-    // Un petit son pour entendre le nouveau volume des effets ; puis on rend les flèches au jeu
-    curseur.addEventListener('change', () => { if (quoi === 'effets') Son.bouton(); curseur.blur(); });
-}
-// Un clic ailleurs referme le panneau
-document.addEventListener('pointerdown', e => {
-    if (!panneau_son.classList.contains('hidden') && !panneau_son.contains(e.target) && e.target !== btn_sound) panneau_son.classList.add('hidden');
 });
 
 /* ---------- Difficulté ---------- */
@@ -160,15 +122,15 @@ const message_save = $('save-message');
 function resume(donnees) {
     const l = donnees.loot || {};
     const skins = Array.isArray(l.possedes) ? l.possedes.length : 0;
-    return `${l.cranes || 0} 💀 · ${skins} skin${skins > 1 ? 's' : ''} · ${l.ouvertes || 0} caisse${(l.ouvertes || 0) > 1 ? 's' : ''} ouverte${(l.ouvertes || 0) > 1 ? 's' : ''}`;
+    return T('{c} 💀 · {s} skin(s) · {o} caisse(s) ouverte(s)', { c: l.cranes || 0, s: skins, o: l.ouvertes || 0 });
 }
 
 function remplir_ecran_save() {
-    $('save-resume').textContent = `Actuellement : ${resume(Sauvegarde.donnees)}`;
+    $('save-resume').textContent = T('Actuellement : {r}', { r: resume(Sauvegarde.donnees) });
     const liste = $('save-historique');
     const h = Sauvegarde.historique();
     if (!h.length) {
-        liste.textContent = 'Aucun point de restauration pour l\'instant. Il s\'en crée un après chaque partie.';
+        liste.textContent = T('Aucun point de restauration pour l\'instant. Il s\'en crée un après chaque partie.');
         return;
     }
     liste.replaceChildren(...h.map((entree, i) => {
@@ -176,11 +138,11 @@ function remplir_ecran_save() {
         ligne.className = 'save-ligne';
         const texte = document.createElement('span');
         const date = new Date(entree.date);
-        texte.textContent = `${date.toLocaleDateString('fr-FR')} ${date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} — ${entree.raison} — ${resume(entree.donnees || {})}`;
+        texte.textContent = `${date.toLocaleDateString(Langue.locale)} ${date.toLocaleTimeString(Langue.locale, { hour: '2-digit', minute: '2-digit' })} — ${entree.raison} — ${resume(entree.donnees || {})}`;
         const bouton = document.createElement('button');
-        bouton.textContent = 'Restaurer';
+        bouton.textContent = T('Restaurer');
         bouton.addEventListener('click', () => {
-            if (!confirm('Revenir à ce point ? L\'état actuel sera lui-même gardé dans l\'historique.')) return;
+            if (!confirm(T('Revenir à ce point ? L\'état actuel sera lui-même gardé dans l\'historique.'))) return;
             if (Sauvegarde.restaurer(i)) location.reload();
         });
         ligne.append(texte, bouton);
@@ -198,7 +160,7 @@ $('btn-close-save').addEventListener('click', () => afficher(ecran_save, false))
 $('btn-telecharger').addEventListener('click', () => {
     Sauvegarde.telecharger();
     message_save.style.color = '#3cff7a';
-    message_save.textContent = 'Fichier téléchargé. Garde-le précieusement (ou envoie-le à tes amis pour les narguer).';
+    message_save.textContent = T('Fichier téléchargé. Garde-le précieusement (ou envoie-le à tes amis pour les narguer).');
 });
 
 $('btn-importer').addEventListener('click', () => $('input-import').click());
@@ -214,14 +176,13 @@ $('input-import').addEventListener('change', async e => {
         return;
     }
     const question = analyse.retouche
-        ? 'Ce fichier a été modifié à la main ou est abîmé (empreinte invalide). L\'importer quand même ?'
-        : `Importer cette sauvegarde (${resume(analyse.obj.donnees)}) ? L'état actuel sera gardé dans l'historique.`;
+        ? T('Ce fichier a été modifié à la main ou est abîmé (empreinte invalide). L\'importer quand même ?')
+        : T('Importer cette sauvegarde ({r}) ? L\'état actuel sera gardé dans l\'historique.', { r: resume(analyse.obj.donnees) });
     if (!confirm(question)) return;
     Sauvegarde.importer(analyse.obj);
     location.reload();
 });
 
 /* ---------- Démarrage ---------- */
-Sauvegarde.point_de_restauration('Lancement du jeu');
-maj_bouton_son();
+Sauvegarde.point_de_restauration(T('Lancement du jeu'));
 Son.jouerAmbiance('menu'); // ne joue réellement qu'une fois le son activé

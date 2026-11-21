@@ -15,7 +15,7 @@ const Manette = (() => {
     const ECRANS = [
         ['vestiaire-overlay', 'btn-close-vestiaire'], ['loot-overlay', 'btn-close-loot'], ['perso-overlay', 'btn-close-perso'],
         ['missions-overlay', 'btn-close-missions'], ['bestiaire-overlay', 'btn-close-bestiaire'], ['succes-overlay', 'btn-close-succes'],
-        ['save-overlay', 'btn-close-save'], ['tutorial-overlay', 'btn-close-tuto']
+        ['save-overlay', 'btn-close-save'], ['tutorial-overlay', 'btn-close-tuto'], ['options-overlay', 'btn-close-options']
     ];
     const visible = id => { const e = document.getElementById(id); return e && !e.classList.contains('hidden'); };
     const cliquer = id => document.getElementById(id).click();
@@ -76,7 +76,7 @@ const Manette = (() => {
     }
 
     window.addEventListener('gamepadconnected', e => {
-        Succes.notifier(`🎮 Manette connectée : A tirer · X pouvoir · Y acheter une vie · Start pause`);
+        Succes.notifier(T('🎮 Manette connectée : A tirer · X pouvoir · Y acheter une vie · Start pause'));
         Son.vibrer(0.4, 150);
         avant = {};
         if (!boucleLancee) { boucleLancee = true; requestAnimationFrame(boucle); }

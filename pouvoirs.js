@@ -178,14 +178,14 @@ function maj_hud_pouvoir() {
     const p = Math.min(1, pouvoir.charge / cfg_pouvoir().kills);
     bouton_pouvoir.style.setProperty('--charge', (p * 100).toFixed(0) + '%');
     bouton_pouvoir.classList.toggle('pret', p >= 1);
-    texte_pouvoir.textContent = p >= 1 ? '★ PRÊT' : `★ ${Math.floor(p * 100)}%`;   // court : la barre doit tenir entre les boutons
+    texte_pouvoir.textContent = p >= 1 ? T('★ PRÊT') : `★ ${Math.floor(p * 100)}%`;   // court : la barre doit tenir entre les boutons
     texte_pouvoir.classList.toggle('pret', p >= 1);
-    bouton_pouvoir.title = `${cfg_pouvoir().nom} (E) : ${pouvoir.charge}/${cfg_pouvoir().kills}`;
+    bouton_pouvoir.title = `${cfg_pouvoir().nom} (${Touches.libelle('pouvoir')}) : ${pouvoir.charge}/${cfg_pouvoir().kills}`;
 }
 
 bouton_pouvoir.addEventListener('pointerdown', e => { e.preventDefault(); activer_pouvoir(); });
 document.addEventListener('keydown', e => {
-    if ((e.code === 'KeyE' || e.code === 'ShiftLeft' || e.code === 'ShiftRight') && !e.repeat && partie_en_cours()) {
+    if (Touches.action(e.code) === 'pouvoir' && !e.repeat && partie_en_cours()) {
         e.preventDefault();
         activer_pouvoir();
     }
