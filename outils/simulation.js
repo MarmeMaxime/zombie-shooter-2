@@ -21,7 +21,7 @@ const ctx2d = new Proxy({}, { get: (t, k) => (k in t ? t[k] : () => {}), set: (t
 const document = {
     getElementById: id => elements[id] || (elements[id] = Object.assign(el(), id === 'jeu' ? { width: 800, height: 400, getContext: () => ctx2d } : {})),
     querySelectorAll: () => [], documentElement: { style: { setProperty() {} } },
-    addEventListener() {}, createElement: el
+    addEventListener() {}, createElement: () => Object.assign(el(), { getContext: () => ctx2d })
 };
 class Media { constructor() { this.volume = 1; } play() { return Promise.resolve(); } pause() {} cloneNode() { return new Media(); } addEventListener() {} }
 const ctx = vm.createContext({
@@ -30,7 +30,7 @@ const ctx = vm.createContext({
     performance: { now: () => 0 }, requestAnimationFrame: () => 1, cancelAnimationFrame() {},
     Math: Object.assign(Object.create(Math), { random: rand }), console, localStorage: { getItem() {}, setItem() {} }
 });
-for (const f of ['config.js', 'sauvegarde.js', 'audio.js', 'deplacement_joueur.js', 'tir_joueur.js', 'zombie.js', 'main.js', 'lootbox.js', 'succes.js', 'menu.js']) {
+for (const f of ['config.js', 'sauvegarde.js', 'audio.js', 'deplacement_joueur.js', 'tir_joueur.js', 'boss_sprite.js', 'zombie.js', 'main.js', 'lootbox.js', 'succes.js', 'menu.js']) {
     vm.runInContext(fs.readFileSync(path.join(dir, f), 'utf8'), ctx, { filename: f });
 }
 

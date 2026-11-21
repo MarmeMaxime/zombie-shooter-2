@@ -83,7 +83,6 @@ const FondAnime = (() => {
             c.globalAlpha = 1 - t;
             c.translate(m.x + 32, m.y + 64);
             c.rotate(Math.min(1, m.age / 0.3) * Math.PI / 2);
-            if (TYPES_ZOMBIE[m.type].filtre) c.filter = TYPES_ZOMBIE[m.type].filtre;
             c.drawImage(TYPES_ZOMBIE[m.type].images[m.etape], -32, -64, 64, 64);
             c.restore();
         }

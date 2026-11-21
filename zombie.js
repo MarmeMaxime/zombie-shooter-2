@@ -104,10 +104,11 @@ function gerer_apparitions(dt, largeurCanvas, hauteurCanvas, tempsJeu) {
 }
 
 /* ---------- Boss : Le Mastodonte ---------- */
+// Sprite dessiné en pixel art dans boss_sprite.js (marche sur 4 images + gueule ouverte)
 TYPES_ZOMBIE.boss = {
     config: CONFIG.boss,
-    images: TYPES_ZOMBIE.tank.images,
-    filtre: 'sepia(0.8) hue-rotate(55deg) saturate(2.5) brightness(0.75) contrast(1.2)'   // géant vert pourri
+    images: SPRITES_BOSS.marche,
+    imagesCharge: SPRITES_BOSS.charge
 };
 
 let boss = null;
@@ -269,7 +270,7 @@ function ajouter_cadavre(z) {
         taille: 2 + Math.random() * 3,
         couleur: couleurs[Math.floor(Math.random() * couleurs.length)]
     }));
-    cadavres.push({ image: TYPES_ZOMBIE[z.type].images[z.etape], filtre: TYPES_ZOMBIE[z.type].filtre, x: z.x, y: z.y, taille: z.taille, age: 0, particules, etoiles: z.type === 'magicalgirl' });
+    cadavres.push({ image: TYPES_ZOMBIE[z.type].images[z.etape], x: z.x, y: z.y, taille: z.taille, age: 0, particules, etoiles: z.type === 'magicalgirl' });
 }
 
 function update_cadavres(dt) {
@@ -291,7 +292,6 @@ function draw_cadavres(ctx) {
         ctx.translate(c.x + c.taille / 2, c.y + c.taille);
         ctx.rotate(chute * chute * Math.PI / 2);
         if (c.age < 0.08) ctx.filter = 'brightness(3)';     // flash blanc à l'impact
-        else if (c.filtre) ctx.filter = c.filtre;
         ctx.drawImage(c.image, -c.taille / 2, -c.taille, c.taille, c.taille);
         ctx.restore();
 
@@ -405,15 +405,23 @@ function draw_zombies(ctx) {
     for (const z of zombies) {
         if (z.teleport && z.teleport.annonce) dessiner_annonce(ctx, z);
 
-        const filtre = TYPES_ZOMBIE[z.type].filtre;
-        if (filtre) {
-            // Boss : teinte rouge, et il « gonfle » en virant au rouge vif avant de cracher
-            ctx.save();
-            ctx.filter = z.charge ? `${filtre} brightness(1.6)` : filtre;
-            const gonfle = z.charge ? 1 + 0.06 * Math.sin(performance.now() / 40) : 1;
+        if (z === boss) {
+            // Avant de cracher : gueule ouverte, pustules allumées, il gonfle et tremble
+            const charge = z.charge;
+            const gonfle = charge ? 1 + 0.05 * Math.sin(performance.now() / 40) : 1;
             const t = z.taille * gonfle;
-            ctx.drawImage(TYPES_ZOMBIE[z.type].images[z.etape], z.x - (t - z.taille) / 2, z.y - (t - z.taille), t, t);
-            ctx.restore();
+            const img = (charge ? TYPES_ZOMBIE.boss.imagesCharge : TYPES_ZOMBIE.boss.images)[z.etape];
+            if (charge) {
+                // halo d'acide autour de la gueule
+                ctx.save();
+                ctx.globalAlpha = 0.35 + 0.2 * Math.sin(performance.now() / 60);
+                ctx.fillStyle = '#b8ff4a';
+                ctx.beginPath();
+                ctx.ellipse(z.x + z.taille * 0.14, z.y + z.taille * 0.45, 22, 16, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+            ctx.drawImage(img, z.x - (t - z.taille) / 2, z.y - (t - z.taille), t, t);
             continue;   // sa barre de vie est en haut de l'écran
         }
         ctx.drawImage(TYPES_ZOMBIE[z.type].images[z.etape], z.x, z.y, z.taille, z.taille);
