@@ -1,158 +1,192 @@
 /* =========================================================================
-   ÉLÉMENTS DU MENU
+   MENU, TUTORIEL ET SON
    ========================================================================= */
-const ecran_tuto = document.getElementById('tutorial-overlay'); 
-const btn_start = document.getElementById('btn-start');
-const btn_ouvrir_tuto = document.getElementById('btn-tuto');  
-const btn_fermer_tuto = document.getElementById('btn-close-tuto'); 
-const btn_sound = document.getElementById('btn-sound');
-const btn_normal = document.getElementById('btn-normal');
-const btn_hardcore = document.getElementById('btn-hardcore');
+const $ = id => document.getElementById(id);
 
-// Éléments du Tableau d'Honneur
-const ecran_leaderboard = document.getElementById('leaderboard-overlay');
-const btn_leaderboard = document.getElementById('btn-leaderboard');
-const btn_fermer_leaderboard = document.getElementById('btn-close-leaderboard');
-const leaderboard_body = document.getElementById('leaderboard-body');
+const ecrans = {
+    menu: $('main-menu'),
+    jeu: $('game-view'),
+    tuto: $('tutorial-overlay'),
+    perso: $('perso-overlay'),
+    gameOver: $('game-over-overlay')
+};
 
-const div_menu = document.getElementById('main-menu');
-const div_game = document.getElementById('game-view');
-const div_game_over = document.getElementById('game-over-overlay');
+const btn_sound = $('btn-sound');
+const btn_normal = $('btn-normal');
+const btn_hardcore = $('btn-hardcore');
 
-/* =========================================================================
-   AUDIO DU MENU
-   ========================================================================= */
-const musique_menu = new Audio('./assets/son/menu_theme.mp3');
-musique_menu.loop = true;   
-musique_menu.volume = 0.1;
+let difficulte_choisie = 'normal';
+let perso_choisi = 'soldat';
 
-const son_bouton = new Audio('./assets/son/button_sound.mp3');
-son_bouton.volume = 0.5;
+const afficher = (ecran, visible) => ecran.classList.toggle('hidden', !visible);
 
-// Variables globales partagées
-window.sound_on = false;      
-let difficulte_choisie = 'normal'; 
-let isGameRunning = false;     
+/* ---------- Choix du personnage ----------
+   Les cartes sont générées depuis CONFIG.personnages : ajouter un perso
+   dans la config suffit pour qu'il apparaisse ici. */
+const liste_persos = $('liste-persos');
 
-/* =========================================================================
-   INTERACTIONS
-   ========================================================================= */
-
-// Nouvelle fonction de vérification de l'état du son
-function verifier_etat_son() {
-    if (window.sound_on) {
-        btn_sound.textContent = "🔊";
-        son_bouton.muted = false;
-        if (!isGameRunning) musique_menu.play().catch(() => {});
-    } else {
-        btn_sound.textContent = "🔇";
-        son_bouton.muted = true;
-        if (!isGameRunning) musique_menu.pause();
-    }
-
-    // Informe le jeu si une partie est en cours
-    if (isGameRunning) {
-        set_game_music_mute(window.sound_on);
-    }
+function choisir_perso(id) {
+    perso_choisi = id;
+    $('nom-perso').textContent = CONFIG.personnages[id].nom;
+    for (const carte of liste_persos.children) carte.classList.toggle('active', carte.dataset.perso === id);
+    Sauvegarde.donnees.perso = id;
+    Sauvegarde.sauver();
 }
 
-// 1. Choix Difficulté
-btn_normal.addEventListener('click', () => {
-    difficulte_choisie = 'normal';
-    btn_normal.classList.add('active');
-    btn_hardcore.classList.remove('active');
-});
+for (const [id, perso] of Object.entries(CONFIG.personnages)) {
+    const carte = document.createElement('button');
+    carte.className = 'carte-perso';
+    carte.dataset.perso = id;
 
-btn_hardcore.addEventListener('click', () => {
-    difficulte_choisie = 'hardcore';
-    btn_hardcore.classList.add('active');
-    btn_normal.classList.remove('active');
-});
+    const img = document.createElement('img');
+    img.src = SPRITES_PERSO[id].arret.src;
+    img.alt = '';
 
-// 2. Gestion Son (Global)
-verifier_etat_son();
+    const ligne = (classe, texte) => {
+        const el = document.createElement('span');
+        el.className = classe;
+        el.textContent = texte;
+        return el;
+    };
 
-btn_sound.addEventListener('click', () => {
-    window.sound_on = !window.sound_on;
-    verifier_etat_son();
-});
+    carte.append(img, ligne('nom', perso.nom), ligne('arme', CONFIG.armes[perso.arme].nom), ligne('description', perso.description),
+        ligne('pouvoir', '★ ' + CONFIG.pouvoirs[perso.pouvoir].nom + ' : ' + CONFIG.pouvoirs[perso.pouvoir].description));
+    carte.addEventListener('click', () => choisir_perso(id));
+    liste_persos.appendChild(carte);
+}
 
-// Bruitage Boutons
+// Les cartes montrent le skin équipé (l'arc-en-ciel animé passe par une classe CSS)
+function rafraichir_cartes_persos() {
+    for (const carte of liste_persos.children) {
+        const img = carte.querySelector('img');
+        const skin = LOOT.skins[Loot.equipe(carte.dataset.perso)];
+        img.src = Loot.sprites(carte.dataset.perso).arret.src;
+        img.classList.toggle('arcenciel', Boolean(skin && skin.anime));
+        img.style.filter = skin && skin.filtre ? skin.filtre : '';
+    }
+}
+rafraichir_cartes_persos();
+
+// Un perso retiré par une mise à jour ? On retombe sur le soldat.
+choisir_perso(CONFIG.personnages[Sauvegarde.donnees.perso] ? Sauvegarde.donnees.perso : 'soldat');
+
+/* ---------- Boutons (son de clic + perte du focus) ---------- */
 document.querySelectorAll('button').forEach(bouton => {
     bouton.addEventListener('click', () => {
-        if (bouton.id !== 'btn-sound' && window.sound_on) {
-            son_bouton.currentTime = 0; 
-            son_bouton.play();          
-        }
+        if (bouton !== btn_sound) Son.bouton();
+        // Sans ça, la barre ESPACE "recliquerait" le dernier bouton pendant la partie
+        bouton.blur();
     });
 });
 
-// Tutoriel
-btn_ouvrir_tuto.addEventListener('click', () => ecran_tuto.classList.remove('hidden'));
-btn_fermer_tuto.addEventListener('click', () => ecran_tuto.classList.add('hidden'));
-
-// Lancer le jeu
-btn_start.addEventListener('click', () => {
-    musique_menu.pause();
-    musique_menu.currentTime = 0;
-
-    div_menu.classList.add('hidden');
-    div_game.classList.remove('hidden');
-
-    isGameRunning = true; 
-    init_game(difficulte_choisie, window.sound_on);
-});
-
-// Fonction de retour 
-window.retour_menu_principal = () => {
-    isGameRunning = false;
-    div_game.classList.add('hidden');
-    div_game_over.classList.add('hidden');
-    div_menu.classList.remove('hidden');
-
-    musique_menu.currentTime = 0;
-    verifier_etat_son();
-};
-
-/* =========================================================================
-   ARCHIVES (CLASSEMENT)
-   ========================================================================= */
-btn_leaderboard.addEventListener('click', () => {
-    ecran_leaderboard.classList.remove('hidden');
-    charger_classement();
-});
-
-btn_fermer_leaderboard.addEventListener('click', () => {
-    ecran_leaderboard.classList.add('hidden');
-});
-
-function charger_classement() {
-    leaderboard_body.innerHTML = '<tr><td colspan="5">Réception des transmissions...</td></tr>';
-    
-    fetch('serveur_classement.php?action=top10')
-        .then(response => response.json())
-        .then(data => {
-            leaderboard_body.innerHTML = '';
-            
-            if (data.length === 0) {
-                leaderboard_body.innerHTML = '<tr><td colspan="5">Aucune archive disponible.</td></tr>';
-                return;
-            }
-            
-            data.forEach((joueur, index) => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>#${index + 1}</td>
-                    <td>${joueur.pseudo}</td>
-                    <td>${joueur.score}</td>
-                    <td>${joueur.temps}s</td>
-                    <td>${joueur.difficulte.toUpperCase()}</td>
-                `;
-                leaderboard_body.appendChild(tr);
-            });
-        })
-        .catch(erreur => {
-            leaderboard_body.innerHTML = '<tr><td colspan="5" style="color:#ff3333;">Erreur de transmission radio.</td></tr>';
-            console.error("Erreur classement :", erreur);
-        });
+/* ---------- Son ---------- */
+function maj_bouton_son() {
+    btn_sound.textContent = Son.estActif() ? '🔊' : '🔇';
 }
+
+btn_sound.addEventListener('click', () => {
+    Son.setActif(!Son.estActif());
+    maj_bouton_son();
+});
+
+/* ---------- Difficulté ---------- */
+function choisir_difficulte(mode) {
+    difficulte_choisie = mode;
+    btn_normal.classList.toggle('active', mode === 'normal');
+    btn_hardcore.classList.toggle('active', mode === 'hardcore');
+}
+
+btn_normal.addEventListener('click', () => choisir_difficulte('normal'));
+btn_hardcore.addEventListener('click', () => choisir_difficulte('hardcore'));
+
+/* ---------- Navigation ---------- */
+$('btn-tuto').addEventListener('click', () => afficher(ecrans.tuto, true));
+$('btn-close-tuto').addEventListener('click', () => afficher(ecrans.tuto, false));
+$('btn-perso').addEventListener('click', () => afficher(ecrans.perso, true));
+$('btn-close-perso').addEventListener('click', () => afficher(ecrans.perso, false));
+
+$('btn-start').addEventListener('click', () => {
+    afficher(ecrans.menu, false);
+    afficher(ecrans.jeu, true);
+    init_game(difficulte_choisie, perso_choisi);
+});
+
+function retour_menu_principal() {
+    afficher(ecrans.jeu, false);
+    afficher(ecrans.gameOver, false);
+    afficher(ecrans.menu, true);
+    Son.jouerAmbiance('menu');
+}
+
+/* ---------- Sauvegarde : téléchargement, import, historique ---------- */
+const ecran_save = $('save-overlay');
+const message_save = $('save-message');
+
+function resume(donnees) {
+    const l = donnees.loot || {};
+    const skins = Array.isArray(l.possedes) ? l.possedes.length : 0;
+    return `${l.cranes || 0} 💀 · ${skins} skin${skins > 1 ? 's' : ''} · ${l.ouvertes || 0} caisse${(l.ouvertes || 0) > 1 ? 's' : ''} ouverte${(l.ouvertes || 0) > 1 ? 's' : ''}`;
+}
+
+function remplir_ecran_save() {
+    $('save-resume').textContent = `Actuellement : ${resume(Sauvegarde.donnees)}`;
+    const liste = $('save-historique');
+    const h = Sauvegarde.historique();
+    if (!h.length) {
+        liste.textContent = 'Aucun point de restauration pour l\'instant. Il s\'en crée un après chaque partie.';
+        return;
+    }
+    liste.replaceChildren(...h.map((entree, i) => {
+        const ligne = document.createElement('div');
+        ligne.className = 'save-ligne';
+        const texte = document.createElement('span');
+        const date = new Date(entree.date);
+        texte.textContent = `${date.toLocaleDateString('fr-FR')} ${date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} — ${entree.raison} — ${resume(entree.donnees || {})}`;
+        const bouton = document.createElement('button');
+        bouton.textContent = 'Restaurer';
+        bouton.addEventListener('click', () => {
+            if (!confirm('Revenir à ce point ? L\'état actuel sera lui-même gardé dans l\'historique.')) return;
+            if (Sauvegarde.restaurer(i)) location.reload();
+        });
+        ligne.append(texte, bouton);
+        return ligne;
+    }));
+}
+
+$('btn-sauvegarde').addEventListener('click', () => {
+    message_save.textContent = '';
+    remplir_ecran_save();
+    afficher(ecran_save, true);
+});
+$('btn-close-save').addEventListener('click', () => afficher(ecran_save, false));
+
+$('btn-telecharger').addEventListener('click', () => {
+    Sauvegarde.telecharger();
+    message_save.style.color = '#3cff7a';
+    message_save.textContent = 'Fichier téléchargé. Garde-le précieusement (ou envoie-le à tes amis pour les narguer).';
+});
+
+$('btn-importer').addEventListener('click', () => $('input-import').click());
+$('input-import').addEventListener('change', async e => {
+    const fichier = e.target.files[0];
+    e.target.value = '';           // permet de réimporter le même fichier
+    if (!fichier) return;
+
+    const analyse = Sauvegarde.analyser(await fichier.text());
+    if (!analyse.ok) {
+        message_save.style.color = '#ff3333';
+        message_save.textContent = analyse.message;
+        return;
+    }
+    const question = analyse.retouche
+        ? 'Ce fichier a été modifié à la main ou est abîmé (empreinte invalide). L\'importer quand même ?'
+        : `Importer cette sauvegarde (${resume(analyse.obj.donnees)}) ? L'état actuel sera gardé dans l'historique.`;
+    if (!confirm(question)) return;
+    Sauvegarde.importer(analyse.obj);
+    location.reload();
+});
+
+/* ---------- Démarrage ---------- */
+Sauvegarde.point_de_restauration('Lancement du jeu');
+maj_bouton_son();
+Son.jouerAmbiance('menu'); // ne joue réellement qu'une fois le son activé

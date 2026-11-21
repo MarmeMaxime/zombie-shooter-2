@@ -17,33 +17,38 @@ body {
 /* =========================================================================
    2. CONTENEUR PRINCIPAL
    ========================================================================= */
+/* Le jeu occupe toute la page */
 #game-container {
-  position: relative; 
-  width: 100vw; 
+  position: relative;
+  width: 100vw;
   height: 100vh;
-  max-width: 800px;
-  max-height: 400px;
-  aspect-ratio: 2 / 1; 
+  height: 100dvh;   /* barre d'adresse mobile */
   background-color: #000;
-  border: 4px solid #fff;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5); 
-  overflow: hidden; 
+  overflow: hidden;
 }
 
+/* L'interface a été pensée pour 800×400 : --ui (calculé en JS selon la taille
+   de l'écran) l'agrandit d'autant, sans flou. */
+:root { --ui: 1; }
+#main-menu > *, .mission-card, #info, #btn-pause, #boss-barre, #tactical-controls,
+#btn-sound, #toast-succes {
+  zoom: var(--ui);
+}
+#main-menu { gap: calc(20px * var(--ui)); }
+
 /* Gestion des couches (Z-Index) */
-#main-menu, #game-view, #tutorial-overlay, #game-over-overlay, #leaderboard-overlay {
+#main-menu, #game-view, #tutorial-overlay, #perso-overlay, #loot-overlay, #vestiaire-overlay, #save-overlay, #succes-overlay, #missions-overlay, #pause-overlay, #game-over-overlay {
   position: absolute; top: 0; left: 0; width: 100%; height: 100%;
 }
-#main-menu, #tutorial-overlay, #game-over-overlay, #leaderboard-overlay {
+#main-menu, #tutorial-overlay, #perso-overlay, #loot-overlay, #vestiaire-overlay, #save-overlay, #succes-overlay, #missions-overlay, #pause-overlay, #game-over-overlay {
   display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10; 
 }
 #game-view { display: block; z-index: 1; }
 
-canvas { 
-  display: block; 
+canvas {
+  display: block;
   width: 100%;
   height: 100%;
-  object-fit: contain;
 }
 
 .hidden { display: none !important; }
@@ -51,7 +56,7 @@ canvas {
 /* =========================================================================
    3. MENU PRINCIPAL
    ========================================================================= */
-#main-menu { background: rgba(0, 0, 0, 0.85); gap: 20px; }
+#main-menu { background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0.8) 100%); }
 
 h1 {
   font-size: 3rem; text-transform: uppercase; color: #ff3333; 
@@ -76,7 +81,7 @@ button.active { background: #ff3333; border-color: #ff3333; }
 /* =========================================================================
    4. UI FLOTTANTE (Tuto & Son)
    ========================================================================= */
-#btn-tuto, #btn-sound {
+#btn-tuto, #btn-sound, #btn-sauvegarde {
   position: absolute; top: 20px; width: 40px; height: 40px; border-radius: 50%; 
   padding: 0; display: flex; justify-content: center; align-items: center; font-weight: bold; z-index: 20; 
 }
@@ -90,12 +95,17 @@ button.active { background: #ff3333; border-color: #ff3333; }
 /* =========================================================================
    5. HUD (IN-GAME)
    ========================================================================= */
+/* Barre d'infos : toujours entre le bouton pause (à gauche) et le bouton son (à droite) ;
+   si l'écran est trop étroit, elle passe sur deux lignes au lieu de déborder */
 #info {
-  position: absolute; top: 15px; left: 50%; transform: translateX(-50%); 
-  color: white; font-size: 20px; font-weight: bold;
+  position: absolute; top: 15px; left: 56px; right: 68px;   /* pause : 10 + 34 px ; son : 20 + 40 px */
+  display: flex; flex-wrap: wrap; justify-content: center; column-gap: 12px; row-gap: 2px;
+  color: white; font-size: 17px; font-weight: bold;
   text-shadow: 1px 1px 2px black;
-  z-index: 5; pointer-events: none; white-space: nowrap; 
+  z-index: 5; pointer-events: none;
 }
+#info > span { white-space: nowrap; }
+@media (pointer: coarse) { .touche-pc { display: none; } }   /* au doigt : bouton ★, pas de touche E */
 
 /* Score prêt à l'achat */
 span#score.score-ready {
@@ -105,9 +115,9 @@ span#score.score-ready {
 }
 
 /* =========================================================================
-   6. MODALES (TUTO, GAME OVER & CLASSEMENT)
+   6. MODALES (TUTO & GAME OVER)
    ========================================================================= */
-#tutorial-overlay, #game-over-overlay, #leaderboard-overlay { 
+#tutorial-overlay, #perso-overlay, #loot-overlay, #vestiaire-overlay, #save-overlay, #succes-overlay, #missions-overlay, #pause-overlay, #game-over-overlay { 
   background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(5px); z-index: 100; 
 }
 #game-over-overlay { background: rgba(50, 0, 0, 0.9); z-index: 200; }
@@ -157,65 +167,12 @@ span#score.score-ready {
 .stat-value { color: white; }
 
 /* Boutons Communs */
-#btn-close-tuto, #btn-retry, #btn-close-leaderboard {
+#btn-close-tuto, #btn-retry, #btn-close-perso, #btn-ouvrir, #btn-close-vestiaire, #btn-close-save, #btn-close-succes, #btn-close-missions, #btn-reprendre {
   background: #ff3333; color: white; border: none; font-size: 1.1rem; padding: 10px 20px; 
   width: 100%; font-weight: bold; text-transform: uppercase; cursor: pointer; border-radius: 4px; 
   transition: transform 0.1s;
 }
 .game-over-buttons { display: flex; gap: 15px; flex-direction: column; }
-
-/* Bouton Tableau d'Honneur (Menu) */
-#btn-leaderboard {
-  order: 4; 
-  font-size: 1rem; 
-  padding: 8px 15px;
-  border-color: #888; 
-  color: #888;
-  margin-top: 5px;
-}
-#btn-leaderboard:hover {
-  background: #888;
-  color: #fff;
-}
-
-/* Tableau des scores */
-.table-container {
-  width: 100%;
-  max-height: 200px;
-  overflow-y: auto;
-  margin-bottom: 20px;
-  background: #111;
-  border: 1px solid #444;
-  border-radius: 4px;
-}
-
-#leaderboard-table {
-  width: 100%;
-  border-collapse: collapse;
-  text-align: center;
-  color: #ddd;
-  font-size: 0.85rem;
-}
-
-#leaderboard-table th {
-  background: #222;
-  color: #ff3333;
-  padding: 10px 5px;
-  position: sticky;
-  top: 0;
-  border-bottom: 2px solid #555;
-  letter-spacing: 1px;
-}
-
-#leaderboard-table td {
-  padding: 8px 5px;
-  border-bottom: 1px solid #333;
-}
-
-/* Couleurs des médailles pour le Top 3 */
-#leaderboard-table tr:nth-child(1) { color: #ffd700; font-weight: bold; font-size: 1rem; text-shadow: 0 0 5px #ffd700; } 
-#leaderboard-table tr:nth-child(2) { color: #c0c0c0; font-weight: bold; } 
-#leaderboard-table tr:nth-child(3) { color: #cd7f32; font-weight: bold; } 
 
 /* =========================================================================
    7. COMMANDES TACTILES ET RESPONSIVE MOBILE
@@ -235,14 +192,31 @@ span#score.score-ready {
   pointer-events: none; 
 }
 
-.move-controls, .action-controls {
+.action-controls {
   display: flex;
   gap: 15px;
 }
 
-.move-controls {
-  flex-direction: column;
+/* Joystick : une piste verticale et un bouton qui suit le doigt */
+#joystick {
+  position: relative; width: 70px; height: 140px; pointer-events: auto; touch-action: none;
+  border-radius: 35px; border: 2px solid rgba(255, 255, 255, 0.45);
+  background: linear-gradient(rgba(255, 51, 51, 0.25), rgba(0, 0, 0, 0.25) 50%, rgba(255, 51, 51, 0.25));
 }
+#joystick::before, #joystick::after {   /* flèches indicatives */
+  position: absolute; left: 50%; transform: translateX(-50%); color: rgba(255, 255, 255, 0.5); font-size: 0.8rem;
+}
+#joystick::before { content: '▲'; top: 4px; }
+#joystick::after { content: '▼'; bottom: 4px; }
+#joystick-bouton {
+  position: absolute; left: 50%; top: 50%; width: 52px; height: 52px; border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle at 35% 35%, #ff7a7a, #b01818);
+  border: 2px solid rgba(255, 255, 255, 0.8); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+}
+#joystick.actif { border-color: #fff; }
+#joystick.actif #joystick-bouton { box-shadow: 0 0 14px rgba(255, 80, 80, 0.9); }
 
 .touch-btn {
   background: rgba(255, 51, 51, 0.3);
@@ -267,15 +241,26 @@ span#score.score-ready {
   transform: scale(0.95);
 }
 
+/* Bouton du pouvoir spécial : se remplit avec la charge, brille quand il est prêt */
+#btn-pouvoir {
+  --charge: 0%;
+  background: linear-gradient(to top, rgba(255, 210, 60, 0.75) var(--charge), rgba(40, 40, 40, 0.45) var(--charge));
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1.5rem;
+}
+#pouvoir-hud.pret { color: #ffd23c; text-shadow: 0 0 6px rgba(255, 210, 60, 0.9); }
+#btn-pouvoir.pret {
+  color: #fff;
+  border-color: #ffe680;
+  animation: pouvoir-pret 0.8s ease-in-out infinite alternate;
+}
+@keyframes pouvoir-pret {
+  from { box-shadow: 0 0 6px rgba(255, 210, 60, 0.6); }
+  to { box-shadow: 0 0 22px rgba(255, 230, 120, 1); }
+}
+
 /* responsive petits écrans ou interfaces tactiles */
 @media (max-width: 850px), (pointer: coarse) {
-  #game-container {
-    border: none;
-    max-width: 100vw;
-    max-height: 100vh;
-    border-radius: 0;
-  }
-  
   #tactical-controls {
     display: flex; 
   }
@@ -290,3 +275,294 @@ span#score.score-ready {
     text-align: center;
   }
 }
+
+/* =========================================================================
+   8. CHOIX DU PERSONNAGE
+   ========================================================================= */
+#btn-perso {
+  font-size: 0.95rem; padding: 6px 14px;
+  border-color: #888; color: #ccc;
+}
+#btn-perso:hover { background: #888; color: #fff; }
+#nom-perso { color: #ff3333; font-weight: bold; }
+
+.mission-card.perso-card { max-width: 720px; padding: 14px 20px; }
+.perso-card h2 { margin-bottom: 10px; }
+
+#liste-persos { display: flex; gap: 10px; margin-bottom: 12px; }
+
+.carte-perso {
+  flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  background: #222; border: 2px solid #444; border-radius: 6px; padding: 8px 6px;
+  font-size: 0.75rem; text-transform: none;
+}
+.carte-perso:hover { background: #2c2c2c; color: white; transform: scale(1.03); }
+.carte-perso.active { border-color: #ff3333; background: rgba(255, 51, 51, 0.15); }
+.carte-perso img { width: 64px; height: 64px; image-rendering: pixelated; }
+.carte-perso .nom { font-size: 1rem; font-weight: bold; color: #fff; text-transform: uppercase; }
+.carte-perso .arme { color: #ff3333; font-weight: bold; }
+.carte-perso .description { color: #bbb; line-height: 1.3; }
+.carte-perso .pouvoir { color: #ffd23c; line-height: 1.3; }
+
+@media (max-width: 600px) {
+  .carte-perso img { width: 48px; height: 48px; }
+  .carte-perso .description, .carte-perso .pouvoir { display: none; }
+}
+
+/* =========================================================================
+   9. LOOTBOX ET VESTIAIRE
+   ========================================================================= */
+.menu-row { order: 4; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; max-width: 760px; }
+#btn-caisses {
+  font-size: 0.95rem; padding: 6px 14px;
+  border-color: #ff9a1a; color: #ffb04a;
+  animation: caisse-pulse 1.6s ease-in-out infinite;
+}
+#btn-caisses:hover { background: #ff9a1a; color: #000; }
+@keyframes caisse-pulse {
+  0%, 100% { box-shadow: 0 0 0 rgba(255, 154, 26, 0); }
+  50% { box-shadow: 0 0 14px rgba(255, 154, 26, 0.8); }
+}
+
+.stat-cranes { color: #ffb04a; font-size: 0.95rem; margin-top: 4px; }
+
+.mission-card.loot-card { max-width: 640px; padding: 12px 18px; }
+.loot-card h2 { margin-bottom: 6px; font-size: 1.2rem; }
+.loot-solde { color: #ffb04a; font-weight: bold; margin-bottom: 8px; }
+
+#loot-fenetre {
+  position: relative; height: 84px; overflow: hidden; margin-bottom: 8px;
+  background: #0d0d0d; border: 2px solid #444; border-radius: 6px;
+}
+#loot-bande { display: flex; gap: 8px; padding: 8px 0 0 4px; will-change: transform; }
+.loot-case {
+  flex: 0 0 64px; height: 64px; border: 2px solid; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+}
+.loot-case img { width: 56px; height: 56px; image-rendering: pixelated; }
+.loot-emoji { font-size: 2rem; }
+#loot-curseur {
+  position: absolute; top: 0; bottom: 0; left: 50%; width: 3px; margin-left: -1px;
+  background: #ffe14d; box-shadow: 0 0 8px #ffe14d;
+}
+
+#loot-resultat { min-height: 2.6em; font-size: 0.85rem; color: #ccc; display: flex; flex-direction: column; gap: 2px; margin-bottom: 8px; }
+#loot-resultat strong { font-size: 1rem; }
+
+.loot-boutons { display: flex; gap: 8px; margin-bottom: 6px; }
+.loot-boutons button { flex: 1; font-size: 0.9rem; padding: 8px 6px; }
+#btn-ouvrir:disabled { opacity: 0.4; cursor: default; }
+
+#btn-payer {
+  width: 100%; font-size: 0.8rem; padding: 4px; margin-bottom: 4px;
+  border: 1px dashed #3cff7a; color: #3cff7a;
+}
+#btn-payer:hover { background: #3cff7a; color: #000; }
+#loot-stats { font-size: 0.7rem; color: #999; }
+#loot-taux { font-size: 0.55rem; color: #555; margin-top: 2px; }
+
+#vestiaire-liste { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; max-height: 230px; overflow-y: auto; }
+.vestiaire-ligne { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; background: #222; padding: 6px 8px; border-radius: 6px; }
+.vestiaire-nom { width: 70px; color: #fff; font-weight: bold; text-transform: uppercase; font-size: 0.85rem; text-align: left; }
+.vestiaire-skin { font-size: 0.7rem; padding: 3px 8px; border-color: #666; }
+.vestiaire-skin.active { background: #ff3333; border-color: #ff3333 !important; }
+#vestiaire-dechets { font-size: 0.75rem; color: #999; margin-bottom: 10px; }
+
+/* Skin mythique : couleurs qui tournent en boucle */
+.arcenciel { animation: arcenciel 3s linear infinite; }
+@keyframes arcenciel {
+  from { filter: hue-rotate(0deg) saturate(1.8); }
+  to { filter: hue-rotate(360deg) saturate(1.8); }
+}
+
+@media (max-width: 600px) {
+  .menu-row { flex-direction: column; }
+  #loot-taux, #loot-stats { display: none; }
+}
+
+/* =========================================================================
+   10. SAUVEGARDE
+   ========================================================================= */
+#btn-sauvegarde { left: 70px; font-size: 1.1rem; }
+#save-resume { color: #ffb04a; font-weight: bold; margin-bottom: 10px; font-size: 0.9rem; }
+#save-message { min-height: 1.2em; font-size: 0.8rem; margin: 6px 0; }
+.save-titre { color: #aaa; font-size: 0.8rem; text-align: left; margin-bottom: 4px; }
+#save-historique {
+  max-height: 150px; overflow-y: auto; margin-bottom: 10px; text-align: left;
+  font-size: 0.72rem; color: #ccc; background: #111; border: 1px solid #333; border-radius: 4px; padding: 4px;
+}
+.save-ligne { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 4px; border-bottom: 1px solid #262626; }
+.save-ligne:last-child { border-bottom: none; }
+.save-ligne button { flex: 0 0 auto; font-size: 0.7rem; padding: 3px 8px; }
+
+/* =========================================================================
+   11. EFFETS DE LOOTBOX (lumière, tremblements, confettis)
+   ========================================================================= */
+#loot-flash {
+  position: absolute; inset: 0; pointer-events: none; z-index: 150; opacity: 0;
+  background: radial-gradient(circle at 50% 45%, var(--couleur-loot, #fff) 0%, transparent 65%);
+}
+#loot-flash.actif.niveau-0 { animation: flash-loot 0.5s ease-out; --pic: 0.15; }
+#loot-flash.actif.niveau-1 { animation: flash-loot 0.7s ease-out; --pic: 0.35; }
+#loot-flash.actif.niveau-2 { animation: flash-loot 0.9s ease-out; --pic: 0.55; }
+#loot-flash.actif.niveau-3 { animation: flash-loot 1.4s ease-out, rayons 1.4s linear; --pic: 0.8; }
+#loot-flash.actif.niveau-4 { animation: flash-loot 1.8s ease-out, rayons 1.8s linear; --pic: 1; }
+#loot-flash.niveau-3, #loot-flash.niveau-4 {
+  background:
+    radial-gradient(circle at 50% 45%, var(--couleur-loot) 0%, transparent 60%),
+    repeating-conic-gradient(from 0deg at 50% 45%, rgba(255,255,255,0.18) 0deg 10deg, transparent 10deg 30deg);
+}
+@keyframes flash-loot { 0% { opacity: var(--pic); } 100% { opacity: 0; } }
+@keyframes rayons { from { filter: hue-rotate(0deg); } to { filter: hue-rotate(40deg); } }
+
+/* Cadre de la roulette et case gagnante à la couleur de la rareté */
+#loot-fenetre.loot-revele { border-color: var(--couleur-loot); box-shadow: 0 0 18px var(--couleur-loot), inset 0 0 14px var(--couleur-loot); transition: box-shadow 0.3s; }
+.loot-case.loot-gagnante { transform: scale(1.12); box-shadow: 0 0 16px var(--couleur-loot, #fff); animation: gagnante 0.6s ease-in-out 3; }
+@keyframes gagnante { 50% { transform: scale(1.22); } }
+
+/* Tremblements de l'écran, du léger au séisme */
+.tremble-1 { animation: tremble 0.25s linear 2; --amp: 2px; }
+.tremble-2 { animation: tremble 0.2s linear 3; --amp: 4px; }
+.tremble-3 { animation: tremble 0.15s linear 5; --amp: 7px; }
+.tremble-4 { animation: tremble 0.12s linear 7; --amp: 11px; }
+@keyframes tremble {
+  0%, 100% { transform: translate(0, 0) rotate(0); }
+  20% { transform: translate(calc(var(--amp) * -1), var(--amp)) rotate(-0.6deg); }
+  40% { transform: translate(var(--amp), calc(var(--amp) * -0.5)) rotate(0.5deg); }
+  60% { transform: translate(calc(var(--amp) * -0.6), calc(var(--amp) * -1)) rotate(-0.3deg); }
+  80% { transform: translate(var(--amp), calc(var(--amp) * 0.6)) rotate(0.4deg); }
+}
+
+.confetti {
+  position: absolute; top: -12px; width: 7px; height: 11px; z-index: 160; pointer-events: none;
+  animation-name: confetti; animation-timing-function: ease-in; animation-fill-mode: forwards;
+}
+@keyframes confetti {
+  to { transform: translate(var(--derive), 440px) rotate(720deg); opacity: 0.2; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tremble-1, .tremble-2, .tremble-3, .tremble-4, .confetti, .loot-case.loot-gagnante { animation: none; }
+}
+
+/* =========================================================================
+   12. PAUSE, BOSS, SUCCÈS
+   ========================================================================= */
+#btn-pause {
+  position: absolute; top: 10px; left: 10px; z-index: 6; width: 34px; height: 34px; padding: 0;
+  font-size: 1rem; border-radius: 50%; background: rgba(0, 0, 0, 0.4); border-color: rgba(255, 255, 255, 0.6);
+}
+#btn-pause-menu { width: 100%; }
+
+#boss-barre {
+  position: absolute; top: 44px; left: 50%; transform: translateX(-50%); z-index: 5;
+  width: 60%; text-align: center; pointer-events: none;
+}
+#boss-nom { color: #ff3333; font-weight: bold; letter-spacing: 3px; text-shadow: 0 0 6px #000, 1px 1px 0 #000; font-size: 0.9rem; }
+.boss-jauge { height: 10px; margin-top: 3px; background: #300; border: 2px solid #000; box-shadow: 0 0 8px rgba(255, 0, 0, 0.6); }
+#boss-vie { height: 100%; width: 100%; background: linear-gradient(#ff5a3a, #b01010); transition: width 0.15s; }
+
+#toast-succes {
+  position: absolute; top: 12px; left: 50%; transform: translateX(-50%); z-index: 300;
+  background: #1a1a1a; border: 2px solid #ffd700; color: #ffd700; padding: 8px 16px; border-radius: 6px;
+  font-size: 0.8rem; font-weight: bold; white-space: nowrap; box-shadow: 0 0 18px rgba(255, 215, 0, 0.6);
+  animation: toast-entree 0.4s ease-out; pointer-events: none;
+}
+@keyframes toast-entree { from { transform: translate(-50%, -60px); } to { transform: translate(-50%, 0); } }
+
+#titre-joueur { order: 1; margin-top: -18px; color: #ffd700; font-size: 0.85rem; font-style: italic; min-height: 1em; }
+
+#succes-compte { color: #aaa; font-size: 0.72rem; margin-bottom: 6px; }
+#succes-liste { display: flex; flex-direction: column; gap: 4px; max-height: 250px; overflow-y: auto; margin-bottom: 10px; }
+.succes-ligne {
+  display: flex; align-items: center; gap: 10px; text-align: left; padding: 5px 8px;
+  font-size: 0.75rem; border: 1px solid #333; background: #151515; color: #777; text-transform: none;
+}
+.succes-ligne:disabled { cursor: default; transform: none; }
+.succes-ligne.ok { color: #eee; border-color: #6a5a1a; }
+.succes-ligne.ok:hover { background: #2a2410; color: #fff; }
+.succes-ligne.porte { border-color: #ffd700; background: #2a2410; box-shadow: 0 0 8px rgba(255, 215, 0, 0.4); }
+.succes-icone { font-size: 1.2rem; }
+.succes-texte { display: flex; flex-direction: column; }
+.succes-texte small { color: #999; }
+.succes-ligne.ok .succes-texte small { color: #c9b26a; }
+.tuto-astuce { color: #bbb; font-size: 0.75rem; line-height: 1.4; margin-bottom: 14px; }
+
+/* =========================================================================
+   13. ÉCRAN TITRE ET FOND ANIMÉ
+   ========================================================================= */
+#fond-anime { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; }
+#game-view { z-index: 2; }   /* la partie passe devant le fond animé */
+
+#ecran-titre {
+  position: absolute; inset: 0; z-index: 400; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(ellipse at center, rgba(40, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0.88) 75%);
+  transition: opacity 0.6s, transform 0.6s;
+}
+#ecran-titre.sortie { opacity: 0; transform: scale(1.15); pointer-events: none; }
+.titre-bloc { text-align: center; zoom: var(--ui); }
+
+.titre-sur { color: #b0b0b0; letter-spacing: 8px; font-size: 0.9rem; margin-bottom: 6px; animation: apparition 1.2s ease-out both; }
+.titre-geant {
+  font-size: 4.2rem; line-height: 0.95; color: #ff2a2a; letter-spacing: 4px; margin: 0;
+  text-shadow: 0 0 12px rgba(255, 0, 0, 0.8), 4px 4px 0 #3a0000, -2px -2px 0 #000;
+  animation: apparition 1s ease-out 0.3s both, gresillement 4s infinite 1.5s;
+}
+.titre-version { color: #888; font-size: 0.8rem; letter-spacing: 3px; margin: 4px 0 0; animation: apparition 1s ease-out 0.9s both; }
+#main-menu h1 .version { font-size: 0.45em; color: #aaa; vertical-align: super; }
+.titre-geant span { color: #fff; text-shadow: 0 0 16px #ff2a2a, 4px 4px 0 #8a0000; }
+.titre-slogan { color: #ddd; font-style: italic; margin-top: 14px; font-size: 1rem; animation: apparition 1s ease-out 0.9s both; }
+.titre-invite { color: #ffe14d; margin-top: 34px; font-weight: bold; letter-spacing: 2px; animation: apparition 0.6s ease-out 1.4s both, clignote 1.2s steps(2) infinite 2s; }
+
+@keyframes apparition { from { opacity: 0; transform: translateY(-20px) scale(1.1); } to { opacity: 1; transform: none; } }
+@keyframes clignote { 50% { opacity: 0.15; } }
+/* Néon qui grésille et image qui saute, de temps en temps */
+@keyframes gresillement {
+  0%, 18%, 22%, 62%, 64%, 100% { opacity: 1; transform: none; }
+  20% { opacity: 0.4; transform: translateX(-3px) skewX(-4deg); }
+  63% { opacity: 0.7; transform: translateX(4px); }
+}
+
+/* Titre du menu, dans le même style */
+#main-menu h1 {
+  color: #ff2a2a; text-shadow: 0 0 12px rgba(255, 0, 0, 0.8), 3px 3px 0 #3a0000, -1px -1px 0 #000;
+  animation: gresillement 5s infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .titre-geant, .titre-invite, #main-menu h1 { animation: none; }
+}
+/* Tant que l'écran titre est affiché, le menu reste caché derrière */
+#game-container.titre-actif #main-menu { visibility: hidden; }
+#main-menu { transition: opacity 0.5s; }
+#game-container.titre-actif #main-menu { opacity: 0; }
+
+/* Conseil « paysage » : seulement sur mobile tenu en portrait */
+#conseil-paysage { display: none; }
+@media (orientation: portrait) and (pointer: coarse), (orientation: portrait) and (max-width: 600px) {
+  #conseil-paysage {
+    display: block; position: absolute; top: 18%; left: 50%; transform: translateX(-50%); z-index: 6;
+    background: rgba(0, 0, 0, 0.7); color: #ffe14d; padding: 8px 14px; border-radius: 20px;
+    font-size: 0.9rem; white-space: nowrap; pointer-events: none; zoom: var(--ui);
+  }
+  #info { top: 50px; }   /* sous le bouton pause */
+  #boss-barre { top: 100px; }   /* sous la barre d'infos, qui tient sur deux lignes */
+}
+
+/* =========================================================================
+   14. MISSIONS
+   ========================================================================= */
+#btn-missions { font-size: 0.95rem; padding: 6px 14px; border-color: #3a8dff; color: #8fc0ff; }
+#btn-missions:hover { background: #3a8dff; color: #fff; }
+#missions-onglets { display: flex; gap: 6px; margin-bottom: 8px; }
+.missions-onglet { flex: 1; font-size: 0.8rem; padding: 5px 6px; border-color: #555; color: #bbb; }
+.missions-onglet.active { background: #3a8dff; border-color: #3a8dff; color: #fff; }
+#missions-liste { display: flex; flex-direction: column; gap: 4px; max-height: 250px; overflow-y: auto; margin-bottom: 10px; text-align: left; }
+.mission-ligne { display: flex; align-items: center; gap: 10px; padding: 5px 8px; font-size: 0.75rem; border: 1px solid #333; background: #151515; color: #ddd; }
+.mission-ligne.ok { border-color: #2e6a2e; background: #142014; }
+.mission-ligne.ok small { color: #7fd07f; }
+.mission-ligne small { color: #999; }
+.mission-barre { display: block; height: 4px; margin-top: 3px; background: #333; border-radius: 2px; overflow: hidden; }
+.mission-barre span { display: block; height: 100%; background: linear-gradient(90deg, #3a8dff, #6fd0ff); }
+.mission-ligne.ok .mission-barre span { background: #3cc83c; }

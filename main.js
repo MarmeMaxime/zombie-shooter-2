@@ -1,200 +1,245 @@
+/* =========================================================================
+   BOUCLE DE JEU, SCORE, VIES ET FIN DE PARTIE
+   ========================================================================= */
 const canvas = document.getElementById('jeu');
-const ctx = canvas.getContext('2d'); 
+const ctx = canvas.getContext('2d');
 
-const ui_score = document.getElementById('score');
-const ui_vies = document.getElementById('vies');
-const ui_temps = document.getElementById('temps');
+const img_fond = chargerImage('./assets/FOND.jpg');
 
-const ecran_game_over = document.getElementById('game-over-overlay');
-const ui_final_score = document.getElementById('final-score'); 
-const ui_final_time = document.getElementById('final-time');   
-const btn_retry = document.getElementById('btn-retry');
-const btn_menu = document.getElementById('btn-return-menu');
+/* ---------- Monde de jeu et plein écran ----------
+   Le canvas couvre toute la page et est dessiné à la résolution réelle de
+   l'écran (net, pas d'image étirée). Le monde garde une hauteur de référence
+   de 400 unités ; sa largeur suit la forme de l'écran.
+   echelleX = largeur du monde / 800 (largeur de référence) : les vitesses et
+   portées horizontales sont multipliées par ce facteur, donc un zombie met le
+   même temps à traverser l'écran quelle que soit sa taille. L'équilibrage
+   (vérifié par simulation sur 800×400) reste valable. */
+const REFERENCE = { largeur: 800, hauteur: 400, largeurMin: 600 };
+const MONDE = { largeur: 800, hauteur: 400, echelleX: 1, echelle: 1, decalageY: 0 };
 
-const background_img = new Image();
-background_img.src = './assets/FOND.jpg';
+function redimensionner() {
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    if (!w || !h) return;   // canvas caché (menu) : on garde les dernières dimensions
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.round(w * dpr);
+    canvas.height = Math.round(h * dpr);
+    // Écran trop étroit (portrait) : bandes noires en haut et en bas plutôt qu'un monde écrasé
+    MONDE.echelle = Math.min(canvas.height / REFERENCE.hauteur, canvas.width / REFERENCE.largeurMin);
+    MONDE.largeur = canvas.width / MONDE.echelle;
+    MONDE.decalageY = (canvas.height - REFERENCE.hauteur * MONDE.echelle) / 2;
+    MONDE.echelleX = MONDE.largeur / REFERENCE.largeur;
+    if (etat.enCours) dessiner();
+}
+// Échelle de l'interface (menus, HUD, boutons) : 1 pour un écran de 800×400
+function maj_echelle_ui() {
+    const ui = Math.max(0.8, Math.min(window.innerHeight / 400, window.innerWidth / 800, 2.6));
+    document.documentElement.style.setProperty('--ui', ui.toFixed(3));
+}
+maj_echelle_ui();
+window.addEventListener('resize', () => { maj_echelle_ui(); redimensionner(); });
 
-const music_normal = new Audio('./assets/son/background_sound.mp3');
-music_normal.loop = true; 
-music_normal.volume = 0.1;
+function dessiner() {
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    if (MONDE.decalageY > 0) {
+        // Écran plus haut que le monde : le décor remplit aussi les bandes, assombri
+        ctx.imageSmoothingEnabled = true;
+        ctx.drawImage(img_fond, 0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+    ctx.setTransform(MONDE.echelle, 0, 0, MONDE.echelle, 0, MONDE.decalageY);
 
-const playlist_hardcore = [
-    new Audio('./assets/son/hardcore_gamer_music.mp3'),
-    new Audio('./assets/son/hardcore_gamer2.mp3'),
-    new Audio('./assets/son/hardcore_gamer3.mp3'),
-    new Audio('./assets/son/hardcore_gamer4.mp3')
-];
-playlist_hardcore.forEach(t => { t.volume = 0.05; t.loop = false; });
-
-let current_music_track = null;
-let hardcoreIndex = 0;
-
-function jouer_suivante_hardcore() {
-    if (!isSoundEnabled || !jeu_lance) return;
-    hardcoreIndex = (hardcoreIndex + 1) % playlist_hardcore.length;
-    current_music_track = playlist_hardcore[hardcoreIndex];
-    current_music_track.currentTime = 0;
-    current_music_track.play();
-    current_music_track.addEventListener('ended', jouer_suivante_hardcore, { once: true });
+    ctx.imageSmoothingEnabled = true;     // le décor (photo) est lissé
+    ctx.drawImage(img_fond, 0, 0, MONDE.largeur, MONDE.hauteur);
+    ctx.imageSmoothingEnabled = false;    // le pixel art reste net, sans flou
+    draw_zombies(ctx);
+    draw_balles(ctx);
+    draw_pouvoir(ctx);
+    draw_joueur(ctx);
+    draw_flash_pouvoir(ctx);
 }
 
-function set_game_music_mute(isSoundOn) {
-    isSoundEnabled = isSoundOn; 
-    if (current_music_track) {
-        isSoundOn ? (jeu_lance && current_music_track.play()) : current_music_track.pause();
+const ui = {
+    score: document.getElementById('score'),
+    vies: document.getElementById('vies'),
+    temps: document.getElementById('temps'),
+    prixVie: document.getElementById('prix-vie'),
+    gameOver: document.getElementById('game-over-overlay'),
+    scoreFinal: document.getElementById('final-score'),
+    tempsFinal: document.getElementById('final-time'),
+    cranesGagnes: document.getElementById('final-cranes')
+};
+
+const etat = {
+    enCours: false,
+    mode: 'normal',
+    perso: 'soldat',
+    score: 0,
+    vies: CONFIG.viesDepart,
+    temps: 0,            // secondes écoulées (calculé avec le delta time, pas setInterval)
+    prixVie: CONFIG.prixVieDepart
+};
+
+let idAnimation = null;
+let dernierInstant = 0;
+
+const partie_en_cours = () => etat.enCours && !etat.pause;
+
+/* ---------- Pause ---------- */
+const ecran_pause = document.getElementById('pause-overlay');
+
+function mettre_en_pause(valeur) {
+    if (!etat.enCours || etat.pause === valeur) return;
+    etat.pause = valeur;
+    ecran_pause.classList.toggle('hidden', !valeur);
+    relacher_commandes();
+    if (valeur) {
+        if (idAnimation !== null) cancelAnimationFrame(idAnimation);
+        idAnimation = null;
+        Son.suspendreMusique();
+    } else {
+        Son.reprendreMusique();
+        dernierInstant = performance.now();   // pas de « saut » de temps à la reprise
+        idAnimation = requestAnimationFrame(boucle);
     }
 }
 
-let jeu_lance = false;
-var score = 0; 
-var vies = 3;
-var temps = 0;
-let timerInterval = null;
-let gameMode = 'normal';   
-let isSoundEnabled = true;
-var coutVie = 100; 
+document.addEventListener('keydown', e => {
+    if ((e.code === 'Escape' || e.code === 'KeyP') && etat.enCours && !e.repeat) {
+        e.preventDefault();
+        mettre_en_pause(!etat.pause);
+    }
+});
+// Changer d'onglet ou de fenêtre met le jeu en pause automatiquement
+window.addEventListener('blur', () => mettre_en_pause(true));
+document.getElementById('btn-pause').addEventListener('click', () => mettre_en_pause(true));
+document.getElementById('btn-reprendre').addEventListener('click', () => mettre_en_pause(false));
+document.getElementById('btn-pause-menu').addEventListener('click', () => {
+    mettre_en_pause(false);
+    quitter_partie();
+    retour_menu_principal();
+});
 
-function verifier_couleur_score() {
-    if (score >= coutVie) ui_score.classList.add('score-ready');
-    else ui_score.classList.remove('score-ready');
+/* ---------- HUD ---------- */
+function maj_hud() {
+    ui.score.textContent = etat.score;
+    ui.vies.textContent = etat.vies;
+    ui.temps.textContent = Math.floor(etat.temps);
+    ui.prixVie.textContent = etat.prixVie;
+    ui.score.classList.toggle('score-ready', etat.score >= etat.prixVie);
+}
+
+function ajouter_score(points) {
+    etat.score += points;
+    etat.gagnes += points;   // total gagné dans la partie (les vies achetées ne le diminuent pas)
+    maj_hud();
 }
 
 function acheter_vie() {
-    if (!jeu_lance || score < coutVie) return;
-    score -= coutVie;
-    vies++;
-    coutVie = Math.floor(coutVie * 1.5);
-    ui_score.innerText = score;
-    ui_vies.innerText = vies;
-    verifier_couleur_score();
+    if (!etat.enCours || etat.score < etat.prixVie) return;
+    etat.score -= etat.prixVie;
+    etat.vies++;
+    etat.prixVie = Math.min(CONFIG.prixVieMax, Math.floor(etat.prixVie * CONFIG.multiplicateurPrixVie));
+    maj_hud();
 }
 
 function perdre_vie() {
-    if (!jeu_lance) return;
-    vies--;
-    ui_vies.innerText = vies;
-    if (vies <= 0) game_over();
+    if (!etat.enCours) return;
+    etat.vies--;
+    maj_hud();
+    Son.effet('degat');
+    Missions.degat();
+    joueur_touche();
+    if (etat.vies <= 0) game_over();
 }
 
-function envoyer_rapport_classement(pseudo) {
-    const rapport = {
-        pseudo: pseudo,
-        score: score,
-        temps: temps,
-        difficulte: gameMode
-    };
+/* ---------- Boucle principale ---------- */
+function boucle(instant) {
+    if (!etat.enCours || etat.pause) return;
 
-    // Envoi du télégramme au serveur PHP
-    fetch('serveur_classement.php?action=sauvegarder', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(rapport)
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log("Rapport archivé avec succès :", data);
-    })
-    .catch(erreur => console.error("Échec de la transmission :", erreur));
+    // Le 1er horodatage de requestAnimationFrame peut précéder performance.now() : on borne à 0
+    const dt = Math.max(0, Math.min((instant - dernierInstant) / 1000, CONFIG.dtMax));
+    dernierInstant = instant;
+
+    const secondesAvant = Math.floor(etat.temps);
+    etat.temps += dt;
+    if (Math.floor(etat.temps) !== secondesAvant) {
+        ui.temps.textContent = Math.floor(etat.temps);
+        Succes.seconde();
+    }
+
+    // Mise à jour
+    update_joueur(dt, MONDE.hauteur);
+    update_pouvoir(dt);
+    update_balles(dt, MONDE.largeur, MONDE.hauteur);
+    update_zombies(dt, MONDE.largeur, MONDE.hauteur, etat.temps);
+    Missions.fin_image();   // zombies tués « d'un seul coup » pendant cette image
+
+    dessiner();
+
+    if (etat.enCours) idAnimation = requestAnimationFrame(boucle);
+}
+
+function arreter_boucle() {
+    etat.enCours = false;
+    if (idAnimation !== null) cancelAnimationFrame(idAnimation);
+    idAnimation = null;
+}
+
+/* ---------- Début / fin de partie ---------- */
+function init_game(mode, perso) {
+    arreter_boucle(); // garantit qu'une seule boucle tourne à la fois
+
+    Object.assign(etat, {
+        enCours: true,
+        pause: false,
+        mode,
+        perso,
+        score: 0,
+        gagnes: 0,
+        vies: CONFIG.viesDepart,
+        temps: 0,
+        prixVie: CONFIG.prixVieDepart
+    });
+    maj_hud();
+
+    reset_joueur(mode, perso);
+    reset_pouvoir(perso);
+    Missions.debut_partie();
+    reset_zombies(mode);
+    reset_balles();
+
+    ui.gameOver.classList.add('hidden');
+    ecran_pause.classList.add('hidden');
+    Son.reprendreMusique();
+    Son.jouerAmbiance(mode);
+
+    redimensionner();   // le canvas vient de s'afficher : on prend la taille de l'écran
+    dernierInstant = performance.now();
+    idAnimation = requestAnimationFrame(boucle);
+}
+
+function quitter_partie() {
+    arreter_boucle();
+    relacher_commandes();
+    Son.arreterMusique();
 }
 
 function game_over() {
-    jeu_lance = false; 
-    if (timerInterval) clearInterval(timerInterval);
-    if (current_music_track) {
-        current_music_track.pause();
-        current_music_track.currentTime = 0;
-        current_music_track.removeEventListener('ended', jouer_suivante_hardcore);
-    }
-    
-    // Mise à jour de l'interface de défaite
-    ui_final_score.innerText = score;
-    ui_final_time.innerText = temps;
-    ecran_game_over.classList.remove('hidden');
+    quitter_partie();
 
-    // Demande d'identification du soldat tombé au combat
-    setTimeout(() => {
-        let nom_soldat = prompt("Haut Commandement : Identifiez-vous, soldat ! Entrez votre pseudo pour les archives :");
-        if (nom_soldat && nom_soldat.trim() !== "") {
-            envoyer_rapport_classement(nom_soldat.trim());
-        }
-    }, 500);
+    ui.scoreFinal.textContent = etat.score;
+    ui.tempsFinal.textContent = Math.floor(etat.temps);
+    ui.cranesGagnes.textContent = Loot.gagner(etat.score);
+    Succes.fin_partie();
+    LootUI.maj_soldes();
+    Sauvegarde.point_de_restauration(`Fin de partie (${CONFIG.personnages[etat.perso].nom}, score ${etat.score})`);
+
+    ui.gameOver.classList.remove('hidden');
 }
 
-function animate() {
-    if (!jeu_lance) return; 
-    
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(background_img, 0, 0, canvas.width, canvas.height);
-    
-    update_zombies(ctx, canvas.width, canvas.height);
-    update_zombies_tank(ctx, canvas.width, canvas.height);
-    update_joueur(canvas.height);
-    update_balles(ctx, canvas.width);
-    draw_joueur(ctx);
-
-    requestAnimationFrame(animate);
-}
-
-btn_retry.addEventListener('click', () => {
-    ecran_game_over.classList.add('hidden');
-    init_game(gameMode, isSoundEnabled);
+document.getElementById('btn-retry').addEventListener('click', () => init_game(etat.mode, etat.perso));
+document.getElementById('btn-return-menu').addEventListener('click', () => {
+    quitter_partie();
+    retour_menu_principal();
 });
-
-btn_menu.addEventListener('click', () => {
-    jeu_lance = false;
-    if (timerInterval) clearInterval(timerInterval);
-    if (current_music_track) {
-        current_music_track.pause();
-        current_music_track.currentTime = 0;
-        current_music_track.removeEventListener('ended', jouer_suivante_hardcore);
-    }
-    
-    window.retour_menu_principal();
-});
-
-function init_game(mode, isSoundOn) {
-    jeu_lance = true;
-    gameMode = mode;
-    isSoundEnabled = isSoundOn;
-
-    vies = 3; score = 0; temps = 0; coutVie = 100;
-    ui_vies.innerText = vies;
-    ui_score.innerText = score;
-    ui_temps.innerText = temps;
-    verifier_couleur_score(); 
-
-    if (timerInterval) clearInterval(timerInterval);
-    timerInterval = setInterval(() => {
-        if (jeu_lance) { temps++; ui_temps.innerText = temps; }
-    }, 1000);
-
-    joueur.y = 200; 
-    joueur.estEnTrainDeTirer = false;
-    joueur.peutTirer = true;
-    
-    reset_zombies(mode); 
-    reset_balles();
-    set_player_speed(mode);
-
-    if (current_music_track) {
-        current_music_track.pause();
-        current_music_track.removeEventListener('ended', jouer_suivante_hardcore);
-    }
-
-    if (mode === 'hardcore') {
-        hardcoreIndex = Math.floor(Math.random() * playlist_hardcore.length);
-        current_music_track = playlist_hardcore[hardcoreIndex];
-        current_music_track.addEventListener('ended', jouer_suivante_hardcore, { once: true });
-    } else {
-        current_music_track = music_normal;
-    }
-
-    if (isSoundEnabled) {
-        current_music_track.currentTime = 0;
-        current_music_track.play();
-    }
-
-    animate();
-}

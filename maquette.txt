@@ -1,46 +1,23 @@
+MAQUETTE DES ÉCRANS (le jeu occupe toute la page)
+
 +-------------------------------------------------------+
-|  (?) btn-tuto                            🔊 btn-sound  |
-|                                                       |
-|                                                       |
+| (?) (💾)                                       🔊     |
 |                  ZOMBIE SHOOTER 2                     |
-|                                                       |
-|               [ Normal ]  [ Hardcore ]                |
-|                                                       |
+|                    « Titre porté »                    |
 |                   [    PLAY    ]                      |
-|                                                       |
-|               [ TABLEAU D'HONNEUR ]                   |
-|                                                       |
-|                                                       |
+|               [ Normal ]  [ Hardcore ]                |
+|  [PERSONNAGE : Soldat] [CAISSES · 120 💀] [🏆 SUCCÈS] |
 +-------------------------------------------------------+
 
-
-
-
 +-------------------------------------------------------+
-|            Score: 0 | Vies: 3 | Temps: 0              |
-|                                                       |
-|                                                       |
+| (⏸)   Score: 0 | Vies: 3 | Temps: 0 | Vie (V) : 100   |
+|                  LE MASTODONTE ███████                |
 |                                            (Zombies)  |
-|   (Joueur) ====> (Balles)                             |
-|                                                       |
-|                                                       |
-|                                                       |
+|   (Joueur) ====> (Balles)          (Boss)  ~crachat~  |
 |   [ ↑ ]                                       [ V ]   |
 |   [ ↓ ]                                     [ TIR ]   |
 +-------------------------------------------------------+
 
-
-+-------------------------------------------------------+
-|                                                       |
-|        +-------------------------------------+        |
-|        |           VOUS ÊTES MORT            |        |
-|        |   Les zombies ont envahi la zone.   |        |
-|        |                                     |        |
-|        |      TEMPS : 42 secondes            |        |
-|        |      SCORE : 1500                   |        |
-|        |                                     |        |
-|        |      [      RÉESSAYER      ]        |        |
-|        |      [     RETOUR MENU     ]        |        |
-|        +-------------------------------------+        |
-|                                                       |
-+-------------------------------------------------------+
+Écrans superposés : choix du personnage, caisses (roulette),
+vestiaire, succès, sauvegarde (historique / téléchargement),
+tutoriel, pause, game over (temps, score, crânes gagnés).

@@ -10,64 +10,156 @@
   
   <body>
 
-    <div id="game-container">
+    <div id="game-container" class="titre-actif">
+
+      <!-- Fond animé du titre et des menus (ecran_titre.js) -->
+      <canvas id="fond-anime"></canvas>
+
+      <div id="ecran-titre">
+        <div class="titre-bloc">
+          <p class="titre-sur">ILS ARRIVENT…</p>
+          <h1 class="titre-geant">ZOMBIE<br>SHOOTER <span>2</span></h1>
+          <p class="titre-slogan">Survivez. Ouvrez des caisses. Regrettez.</p>
+          <p class="titre-version">version 1.0</p>
+          <p class="titre-invite">▶ Appuie sur une touche ou touche l'écran ◀</p>
+        </div>
+      </div>
 
       <div id="main-menu">
-        <h1>Zombie Shooter 2</h1>
+        <h1>Zombie Shooter 2 <small class="version">1.0</small></h1>
+        <p id="titre-joueur"></p>
         
         <div class="difficulty-selector">
           <button id="btn-normal" class="active">Normal</button>
           <button id="btn-hardcore">Hardcore</button>
         </div>
 
-        <button id="btn-leaderboard">TABLEAU D'HONNEUR</button>
+        <div class="menu-row">
+          <button id="btn-perso">PERSONNAGE : <span id="nom-perso">Soldat</span></button>
+          <button id="btn-caisses">CAISSES · <span id="solde-menu">0</span> 💀</button>
+          <button id="btn-missions">📋 MISSIONS</button>
+          <button id="btn-succes">🏆 SUCCÈS</button>
+        </div>
 
         <button id="btn-tuto">?</button>
+        <button id="btn-sauvegarde" title="Sauvegarde">💾</button>
         <button id="btn-start">PLAY</button>
+      </div>
+
+      <div id="perso-overlay" class="hidden">
+        <div class="mission-card perso-card">
+          <h2>CHOIX DU PERSONNAGE</h2>
+          <div id="liste-persos"></div>
+          <button id="btn-close-perso">VALIDER</button>
+        </div>
+      </div>
+
+      <div id="loot-overlay" class="hidden">
+        <div class="mission-card loot-card">
+          <h2>CAISSE DE RAVITAILLEMENT DOUTEUSE</h2>
+          <p class="loot-solde">Solde : <span id="solde-loot">0</span> 💀</p>
+
+          <div id="loot-fenetre">
+            <div id="loot-bande"></div>
+            <div id="loot-curseur"></div>
+          </div>
+          <p id="loot-resultat" aria-live="polite">Une caisse = 50 💀. Que la chance soit (rarement) avec vous.</p>
+
+          <div class="loot-boutons">
+            <button id="btn-ouvrir">OUVRIR (50 💀)</button>
+            <button id="btn-vestiaire">VESTIAIRE</button>
+            <button id="btn-close-loot">RETOUR</button>
+          </div>
+          <button id="btn-payer">💳 1 000 💀 pour seulement 9,99 € !</button>
+          <p id="loot-stats"></p>
+          <p id="loot-taux"></p>
+        </div>
+      </div>
+
+      <div id="vestiaire-overlay" class="hidden">
+        <div class="mission-card loot-card">
+          <h2>VESTIAIRE</h2>
+          <div id="vestiaire-liste"></div>
+          <p id="vestiaire-dechets"></p>
+          <button id="btn-close-vestiaire">FERMER</button>
+        </div>
+      </div>
+
+      <div id="missions-overlay" class="hidden">
+        <div class="mission-card loot-card">
+          <h2>MISSIONS</h2>
+          <div id="missions-onglets"></div>
+          <div id="missions-liste"></div>
+          <button id="btn-close-missions">FERMER</button>
+        </div>
+      </div>
+
+      <div id="succes-overlay" class="hidden">
+        <div class="mission-card loot-card">
+          <h2>SUCCÈS</h2>
+          <p id="succes-compte"></p>
+          <div id="succes-liste"></div>
+          <button id="btn-close-succes">FERMER</button>
+        </div>
+      </div>
+
+      <div id="save-overlay" class="hidden">
+        <div class="mission-card loot-card">
+          <h2>SAUVEGARDE</h2>
+          <p id="save-resume"></p>
+
+          <div class="loot-boutons">
+            <button id="btn-telecharger">⬇ TÉLÉCHARGER</button>
+            <button id="btn-importer">⬆ IMPORTER</button>
+          </div>
+          <input id="input-import" type="file" accept=".json,application/json" hidden />
+          <p id="save-message" aria-live="polite"></p>
+
+          <h3 class="save-titre">Historique (points de restauration automatiques)</h3>
+          <div id="save-historique"></div>
+
+          <button id="btn-close-save">FERMER</button>
+        </div>
       </div>
 
       <div id="game-view" class="hidden">
         <div id="info">
-          Score: <span id="score">0</span> | 
-          Vies: <span id="vies">3</span> | 
-          Temps: <span id="temps">0</span>
+          <span>Score : <span id="score">0</span></span>
+          <span>Vies : <span id="vies">3</span></span>
+          <span>Temps : <span id="temps">0</span></span>
+          <span>Vie (V) : <span id="prix-vie">100</span></span>
+          <span><span id="pouvoir-hud">★ 0%</span><span class="touche-pc"> (E)</span></span>
         </div>
         
         <div id="tactical-controls">
-          <div class="move-controls">
-            <button class="touch-btn" id="btn-touch-up">↑</button>
-            <button class="touch-btn" id="btn-touch-down">↓</button>
+          <div id="joystick" aria-label="Joystick : glisser vers le haut ou le bas">
+            <div id="joystick-bouton"></div>
           </div>
           <div class="action-controls">
+            <button class="touch-btn" id="btn-pouvoir" title="Pouvoir (E)">★</button>
             <button class="touch-btn" id="btn-touch-buy">V</button>
             <button class="touch-btn" id="btn-touch-shoot">TIR</button>
           </div>
         </div>
 
+        <button id="btn-pause" title="Pause (Échap)">⏸</button>
+        <p id="conseil-paysage">📱↻ Tourne ton téléphone pour mieux jouer</p>
+        <div id="boss-barre" class="hidden">
+          <span id="boss-nom">LE MASTODONTE</span>
+          <div class="boss-jauge"><div id="boss-vie"></div></div>
+        </div>
+
         <canvas id="jeu" width="800" height="400"></canvas>
       </div>
 
-      <div id="leaderboard-overlay" class="hidden">
+      <div id="pause-overlay" class="hidden">
         <div class="mission-card">
-          <h2>ARCHIVES MILITAIRES</h2>
-          
-          <div class="table-container">
-            <table id="leaderboard-table">
-              <thead>
-                <tr>
-                  <th>RANG</th>
-                  <th>SOLDAT</th>
-                  <th>SCORE</th>
-                  <th>TEMPS</th>
-                  <th>ZONE</th>
-                </tr>
-              </thead>
-              <tbody id="leaderboard-body">
-                </tbody>
-            </table>
+          <h2>PAUSE</h2>
+          <p class="game-over-text">Les zombies attendent poliment.</p>
+          <div class="game-over-buttons">
+            <button id="btn-reprendre">REPRENDRE</button>
+            <button id="btn-pause-menu">ABANDONNER</button>
           </div>
-
-          <button id="btn-close-leaderboard">RETOUR BASE</button>
         </div>
       </div>
 
@@ -85,6 +177,9 @@
             </p>
             <p class="stat-score">
               SCORE : <span id="final-score" class="stat-value">0</span>
+            </p>
+            <p class="stat-cranes">
+              +<span id="final-cranes">0</span> 💀 pour les caisses
             </p>
           </div>
 
@@ -104,6 +199,8 @@
               <div class="keys-container">
                 <div class="key">↑</div>
                 <div class="key">↓</div>
+                <div class="key">Z</div>
+                <div class="key">S</div>
               </div>
               <span class="action-text">SE DÉPLACER</span>
             </div>
@@ -123,21 +220,52 @@
                 ACHETER VIE <span class="tuto-note">(SI SCORE VERT)</span>
               </span>
             </div>
+
+            <div class="control-row">
+              <div class="keys-container">
+                <div class="key">ÉCHAP</div>
+              </div>
+              <span class="action-text">PAUSE</span>
+            </div>
           </div>
+
+          <p class="tuto-astuce">
+            Toutes les 3 min, le Mastodonte débarque : esquive ses crachats verts.<br>
+            Tes points rapportent des 💀 pour ouvrir des caisses.
+          </p>
 
           <button id="btn-close-tuto">À L'ATTAQUE !</button>
         </div>
       </div>
 
+      <div id="loot-flash"></div>
+
       <button id="btn-sound">🔊</button>
 
     </div> 
     
-    <script src="./menu.js" type="text/javascript"></script> 
-    <script src="./deplacement_joueur.js" type="text/javascript"></script>
-    <script src="./tir_joueur.js" type="text/javascript"></script>
-    <script src="./zombie.js" type="text/javascript"></script>
-    <script src="./main.js" type="text/javascript"></script>
+    <script src="./config.js"></script>
+    <script src="./sauvegarde.js"></script>
+    <script src="./audio.js"></script>
+    <!-- Sprites générés en pixel art (avant les scripts qui les utilisent) -->
+    <script src="./pixel_art.js"></script>
+    <script src="./boss_sprite.js"></script>
+    <script src="./joggeur_sprite.js"></script>
+    <script src="./emeute_sprite.js"></script>
+    <script src="./deplacement_joueur.js"></script>
+    <script src="./tir_joueur.js"></script>
+    <script src="./zombie.js"></script>
+    <script src="./boss.js"></script>
+    <script src="./joggeur.js"></script>
+    <script src="./emeute.js"></script>
+    <script src="./morts.js"></script>
+    <script src="./pouvoirs.js"></script>
+    <script src="./main.js"></script>
+    <script src="./lootbox.js"></script>
+    <script src="./succes.js"></script>
+    <script src="./missions.js"></script>
+    <script src="./menu.js"></script>
+    <script src="./ecran_titre.js"></script>
 
   </body>
 </html>
