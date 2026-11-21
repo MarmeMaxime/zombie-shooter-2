@@ -56,7 +56,7 @@ const TIRS = {
 
 function tirer(tireur) {
     const arme = tireur.arme;
-    Son.tir(arme.son);
+    Son.effet(CONFIG.personnages[tireur.perso].arme);   // chaque arme a son propre son
     TIRS[CONFIG.personnages[tireur.perso].arme](tireur, arme);
 }
 
@@ -75,6 +75,7 @@ function exploser(p) {
         if (dx * dx + dy * dy <= rayon * rayon) toucher_zombie(z, p.degats);
     }
     explosions.push({ x: cx, y: cy, rayon, age: 0 });
+    Son.effet('explosion');
 }
 
 /* ---------- Mise à jour ---------- */

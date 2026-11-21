@@ -399,6 +399,7 @@ const LootUI = (() => {
 
         SonLoot.revelation(o.rarete.id);
         EffetsLoot.revelation(o.rarete);
+        Succes.apres_caisse(o);
     }
 
     // Cliquetis à chaque case qui passe sous le curseur

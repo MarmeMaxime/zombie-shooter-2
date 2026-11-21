@@ -30,7 +30,42 @@ const etat = {
 let idAnimation = null;
 let dernierInstant = 0;
 
-const partie_en_cours = () => etat.enCours;
+const partie_en_cours = () => etat.enCours && !etat.pause;
+
+/* ---------- Pause ---------- */
+const ecran_pause = document.getElementById('pause-overlay');
+
+function mettre_en_pause(valeur) {
+    if (!etat.enCours || etat.pause === valeur) return;
+    etat.pause = valeur;
+    ecran_pause.classList.toggle('hidden', !valeur);
+    relacher_commandes();
+    if (valeur) {
+        if (idAnimation !== null) cancelAnimationFrame(idAnimation);
+        idAnimation = null;
+        Son.suspendreMusique();
+    } else {
+        Son.reprendreMusique();
+        dernierInstant = performance.now();   // pas de « saut » de temps à la reprise
+        idAnimation = requestAnimationFrame(boucle);
+    }
+}
+
+document.addEventListener('keydown', e => {
+    if ((e.code === 'Escape' || e.code === 'KeyP') && etat.enCours && !e.repeat) {
+        e.preventDefault();
+        mettre_en_pause(!etat.pause);
+    }
+});
+// Changer d'onglet ou de fenêtre met le jeu en pause automatiquement
+window.addEventListener('blur', () => mettre_en_pause(true));
+document.getElementById('btn-pause').addEventListener('click', () => mettre_en_pause(true));
+document.getElementById('btn-reprendre').addEventListener('click', () => mettre_en_pause(false));
+document.getElementById('btn-pause-menu').addEventListener('click', () => {
+    mettre_en_pause(false);
+    quitter_partie();
+    retour_menu_principal();
+});
 
 /* ---------- HUD ---------- */
 function maj_hud() {
@@ -58,12 +93,13 @@ function perdre_vie() {
     if (!etat.enCours) return;
     etat.vies--;
     maj_hud();
+    Son.effet('degat');
     if (etat.vies <= 0) game_over();
 }
 
 /* ---------- Boucle principale ---------- */
 function boucle(instant) {
-    if (!etat.enCours) return;
+    if (!etat.enCours || etat.pause) return;
 
     // Le 1er horodatage de requestAnimationFrame peut précéder performance.now() : on borne à 0
     const dt = Math.max(0, Math.min((instant - dernierInstant) / 1000, CONFIG.dtMax));
@@ -71,7 +107,10 @@ function boucle(instant) {
 
     const secondesAvant = Math.floor(etat.temps);
     etat.temps += dt;
-    if (Math.floor(etat.temps) !== secondesAvant) ui.temps.textContent = Math.floor(etat.temps);
+    if (Math.floor(etat.temps) !== secondesAvant) {
+        ui.temps.textContent = Math.floor(etat.temps);
+        Succes.seconde();
+    }
 
     // Mise à jour
     update_joueur(dt, canvas.height);
@@ -99,6 +138,7 @@ function init_game(mode, perso) {
 
     Object.assign(etat, {
         enCours: true,
+        pause: false,
         mode,
         perso,
         score: 0,
@@ -113,6 +153,8 @@ function init_game(mode, perso) {
     reset_balles();
 
     ui.gameOver.classList.add('hidden');
+    ecran_pause.classList.add('hidden');
+    Son.reprendreMusique();
     Son.jouerAmbiance(mode);
 
     dernierInstant = performance.now();
@@ -131,6 +173,7 @@ function game_over() {
     ui.scoreFinal.textContent = etat.score;
     ui.tempsFinal.textContent = Math.floor(etat.temps);
     ui.cranesGagnes.textContent = Loot.gagner(etat.score);
+    Succes.fin_partie();
     LootUI.maj_soldes();
     Sauvegarde.point_de_restauration(`Fin de partie (${CONFIG.personnages[etat.perso].nom}, score ${etat.score})`);
 

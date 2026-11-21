@@ -98,6 +98,27 @@ const CONFIG = {
         xMinTeleport: 300         // ne se téléporte plus quand elle est trop proche du joueur
     },
 
+    // Boss « Le Mastodonte » : arrive toutes les 3 minutes, plus résistant à chaque fois.
+    // Pendant le combat, les apparitions normales sont suspendues (il invoque ses propres zombies).
+    boss: {
+        nom: 'LE MASTODONTE',
+        intervalle: 180,
+        taille: 128,
+        // Plafonné : même le Soldat (2 dégâts/s) doit pouvoir le tuer pendant sa traversée
+        pvBase: 24,
+        pvParBoss: 4,
+        pvMax: 36,
+        vitesse: 20,
+        dureeImage: 0.3,
+        points: 500,
+        // Équilibré par simulation : les 3 persos battent tous les boss sur 45 min
+        delaiCrachat: 3.5,        // crache de l'acide sur la ligne du joueur
+        annonceCrachat: 0.6,      // il gonfle et rougit avant de cracher
+        vitesseCrachat: 240,
+        delaiInvocation: 8,
+        degatsSiPasse: 3          // vies perdues s'il traverse l'écran
+    },
+
     // Les sprites ont des bords transparents : on réduit la hitbox pour
     // que les collisions correspondent à ce que le joueur voit.
     reductionHitbox: 12,

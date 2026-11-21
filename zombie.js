@@ -29,6 +29,7 @@ function reset_zombies(mode) {
     zombies = [];
     effets = [];
     cadavres = [];
+    reset_boss();
     difficulte = mode;
     for (const type in TYPES_ZOMBIE) chronos[type] = 0;
 }
@@ -89,6 +90,7 @@ function intervalle_apparition(type, tempsJeu) {
 
 function gerer_apparitions(dt, largeurCanvas, hauteurCanvas, tempsJeu) {
     for (const type in TYPES_ZOMBIE) {
+        if (type === 'boss') continue;   // le boss a sa propre logique
         const cfg = TYPES_ZOMBIE[type].config;
         if (cfg.modes && !cfg.modes.includes(difficulte)) continue;
         if (tempsJeu < (cfg.premiereApparition || 0)) continue;
@@ -98,6 +100,107 @@ function gerer_apparitions(dt, largeurCanvas, hauteurCanvas, tempsJeu) {
             chronos[type] = 0;
             creer_zombie(type, largeurCanvas, hauteurCanvas);
         }
+    }
+}
+
+/* ---------- Boss : Le Mastodonte ---------- */
+TYPES_ZOMBIE.boss = {
+    config: CONFIG.boss,
+    images: TYPES_ZOMBIE.tank.images,
+    filtre: 'sepia(0.8) hue-rotate(55deg) saturate(2.5) brightness(0.75) contrast(1.2)'   // géant vert pourri
+};
+
+let boss = null;
+let prochainBoss = CONFIG.boss.intervalle;
+let bossApparus = 0;
+let crachats = [];
+const ui_boss = { barre: document.getElementById('boss-barre'), vie: document.getElementById('boss-vie') };
+
+function reset_boss() {
+    boss = null;
+    prochainBoss = CONFIG.boss.intervalle;
+    bossApparus = 0;
+    crachats = [];
+    ui_boss.barre.classList.add('hidden');
+}
+
+function faire_apparaitre_boss(largeurCanvas, hauteurCanvas) {
+    const cfg = CONFIG.boss;
+    const pv = Math.min(cfg.pvMax, cfg.pvBase + cfg.pvParBoss * bossApparus);
+    bossApparus++;
+    boss = {
+        type: 'boss', x: largeurCanvas, y: (hauteurCanvas - cfg.taille) / 2, taille: cfg.taille,
+        vitesse: cfg.vitesse, pv, pvMax: pv, tempsImage: 0, etape: 0,
+        chronoCrachat: cfg.delaiCrachat, chronoInvocation: cfg.delaiInvocation / 2, charge: false
+    };
+    zombies.push(boss);
+    ui_boss.barre.classList.remove('hidden');
+    Son.effet('bossArrive');
+    secouer_ecran(2);
+}
+
+function fin_boss() {
+    boss = null;
+    prochainBoss = etat.temps + CONFIG.boss.intervalle;
+    ui_boss.barre.classList.add('hidden');
+}
+
+// Même tremblement que celui des lootbox (lootbox.js)
+const secouer_ecran = niveau => EffetsLoot.trembler(niveau);
+
+function gerer_boss(dt, largeurCanvas, hauteurCanvas, tempsJeu) {
+    if (!boss) {
+        if (tempsJeu >= prochainBoss) faire_apparaitre_boss(largeurCanvas, hauteurCanvas);
+        return;
+    }
+    const cfg = CONFIG.boss;
+    ui_boss.vie.style.width = `${(100 * boss.pv) / boss.pvMax}%`;
+
+    // Crachat d'acide sur la ligne où se trouve le joueur (annoncé : il rougit et gonfle)
+    boss.chronoCrachat -= dt;
+    boss.charge = boss.chronoCrachat <= cfg.annonceCrachat;
+    if (boss.chronoCrachat <= 0) {
+        boss.chronoCrachat = cfg.delaiCrachat;
+        crachats.push({ x: boss.x + 10, y: joueur.y + joueur.taille / 2 - 8, taille: 16 });
+        Son.effet('crachat');
+    }
+
+    // Invocation de deux zombies à ses côtés
+    boss.chronoInvocation -= dt;
+    if (boss.chronoInvocation <= 0) {
+        boss.chronoInvocation = cfg.delaiInvocation;
+        for (const decalage of [-40, boss.taille - 24]) {
+            creer_zombie('normal', largeurCanvas, hauteurCanvas);
+            const z = zombies[zombies.length - 1];
+            z.x = boss.x + 30;
+            z.y = Math.max(CONFIG.margeHaut, Math.min(hauteurCanvas - CONFIG.margeBas, boss.y + decalage));
+        }
+    }
+}
+
+function update_crachats(dt) {
+    const zoneJoueur = hitbox(joueur.x, joueur.y, joueur.taille);
+    crachats = crachats.filter(c => {
+        c.x -= CONFIG.boss.vitesseCrachat * dt;
+        if (collision(zoneJoueur, { x: c.x, y: c.y, largeur: c.taille, hauteur: c.taille })) {
+            perdre_vie();
+            return false;
+        }
+        return c.x + c.taille > 0;
+    });
+}
+
+function draw_crachats(ctx) {
+    for (const c of crachats) {
+        ctx.fillStyle = '#7dff3a';
+        ctx.strokeStyle = '#1f5a0a';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.ellipse(c.x + 8, c.y + 8, 10, 7, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(125, 255, 58, 0.4)';
+        ctx.fillRect(c.x + 14, c.y + 5, 14, 6);   // traînée
     }
 }
 
@@ -142,6 +245,13 @@ function toucher_zombie(z, degats = 1) {
     zombies.splice(index, 1);
     ajouter_cadavre(z);
     ajouter_score(TYPES_ZOMBIE[z.type].config.points);
+    Son.effet('mort');
+    if (z === boss) {
+        fin_boss();
+        secouer_ecran(4);
+        Son.effet('bossMort');
+    }
+    if (typeof Succes !== 'undefined') Succes.zombie_tue(z.type);
 }
 
 /* ---------- Animation de mort ----------
@@ -152,14 +262,14 @@ let cadavres = [];
 
 function ajouter_cadavre(z) {
     const couleurs = z.type === 'magicalgirl' ? ['#ff6ec7', '#ffe14d', '#ffffff'] : ['#8a0f0f', '#b01818', '#5a0808'];
-    const nombre = z.type === 'tank' ? 18 : 12;
+    const nombre = z.type === 'boss' ? 60 : z.type === 'tank' ? 18 : 12;
     const particules = Array.from({ length: nombre }, () => ({
         x: z.x + z.taille / 2, y: z.y + z.taille * 0.4,
         vx: 40 + Math.random() * 160, vy: -60 - Math.random() * 140,
         taille: 2 + Math.random() * 3,
         couleur: couleurs[Math.floor(Math.random() * couleurs.length)]
     }));
-    cadavres.push({ image: TYPES_ZOMBIE[z.type].images[z.etape], x: z.x, y: z.y, taille: z.taille, age: 0, particules, etoiles: z.type === 'magicalgirl' });
+    cadavres.push({ image: TYPES_ZOMBIE[z.type].images[z.etape], filtre: TYPES_ZOMBIE[z.type].filtre, x: z.x, y: z.y, taille: z.taille, age: 0, particules, etoiles: z.type === 'magicalgirl' });
 }
 
 function update_cadavres(dt) {
@@ -181,6 +291,7 @@ function draw_cadavres(ctx) {
         ctx.translate(c.x + c.taille / 2, c.y + c.taille);
         ctx.rotate(chute * chute * Math.PI / 2);
         if (c.age < 0.08) ctx.filter = 'brightness(3)';     // flash blanc à l'impact
+        else if (c.filtre) ctx.filter = c.filtre;
         ctx.drawImage(c.image, -c.taille / 2, -c.taille, c.taille, c.taille);
         ctx.restore();
 
@@ -197,7 +308,10 @@ function draw_cadavres(ctx) {
 
 /* ---------- Mise à jour ---------- */
 function update_zombies(dt, largeurCanvas, hauteurCanvas, tempsJeu) {
-    gerer_apparitions(dt, largeurCanvas, hauteurCanvas, tempsJeu);
+    // Pendant le combat de boss, seuls ses invocations arrivent
+    if (!boss) gerer_apparitions(dt, largeurCanvas, hauteurCanvas, tempsJeu);
+    gerer_boss(dt, largeurCanvas, hauteurCanvas, tempsJeu);
+    update_crachats(dt);
 
     const zoneJoueur = hitbox(joueur.x, joueur.y, joueur.taille);
 
@@ -216,7 +330,14 @@ function update_zombies(dt, largeurCanvas, hauteurCanvas, tempsJeu) {
         // Un zombie qui atteint le joueur ou qui sort de l'écran coûte une vie
         if (collision(zoneJoueur, hitbox_zombie(z)) || z.x + z.taille < 0) {
             zombies.splice(i, 1);
-            perdre_vie();
+            if (z === boss) {
+                // Le boss passe : grosse perte, mais la partie continue
+                fin_boss();
+                secouer_ecran(3);
+                for (let k = 0; k < CONFIG.boss.degatsSiPasse; k++) perdre_vie();
+            } else {
+                perdre_vie();
+            }
         }
     }
 
@@ -280,9 +401,21 @@ function dessiner_effets(ctx) {
 
 function draw_zombies(ctx) {
     draw_cadavres(ctx);
+    draw_crachats(ctx);
     for (const z of zombies) {
         if (z.teleport && z.teleport.annonce) dessiner_annonce(ctx, z);
 
+        const filtre = TYPES_ZOMBIE[z.type].filtre;
+        if (filtre) {
+            // Boss : teinte rouge, et il « gonfle » en virant au rouge vif avant de cracher
+            ctx.save();
+            ctx.filter = z.charge ? `${filtre} brightness(1.6)` : filtre;
+            const gonfle = z.charge ? 1 + 0.06 * Math.sin(performance.now() / 40) : 1;
+            const t = z.taille * gonfle;
+            ctx.drawImage(TYPES_ZOMBIE[z.type].images[z.etape], z.x - (t - z.taille) / 2, z.y - (t - z.taille), t, t);
+            ctx.restore();
+            continue;   // sa barre de vie est en haut de l'écran
+        }
         ctx.drawImage(TYPES_ZOMBIE[z.type].images[z.etape], z.x, z.y, z.taille, z.taille);
 
         // Barre de vie des zombies blessés

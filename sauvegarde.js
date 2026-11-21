@@ -23,7 +23,11 @@ const Sauvegarde = (() => {
 
     const defauts = () => ({
         perso: 'soldat',
-        loot: { cranes: 0, possedes: [], dechets: {}, equipes: {}, ouvertes: 0, depuisLegendaire: 0 }
+        loot: { cranes: 0, possedes: [], dechets: {}, equipes: {}, ouvertes: 0, depuisLegendaire: 0 },
+        // Ajoutés après coup : les anciennes sauvegardes les reçoivent vides, sans migration
+        stats: { tues: {}, parties: 0, bossTues: 0, persosJoues: [], meilleurTemps: {}, meilleurScore: {}, mythiques: 0 },
+        succes: [],
+        titre: ''
     });
 
     /* ---------- Migrations ----------

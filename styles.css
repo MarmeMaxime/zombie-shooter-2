@@ -31,10 +31,10 @@ body {
 }
 
 /* Gestion des couches (Z-Index) */
-#main-menu, #game-view, #tutorial-overlay, #perso-overlay, #loot-overlay, #vestiaire-overlay, #save-overlay, #game-over-overlay {
+#main-menu, #game-view, #tutorial-overlay, #perso-overlay, #loot-overlay, #vestiaire-overlay, #save-overlay, #succes-overlay, #pause-overlay, #game-over-overlay {
   position: absolute; top: 0; left: 0; width: 100%; height: 100%;
 }
-#main-menu, #tutorial-overlay, #perso-overlay, #loot-overlay, #vestiaire-overlay, #save-overlay, #game-over-overlay {
+#main-menu, #tutorial-overlay, #perso-overlay, #loot-overlay, #vestiaire-overlay, #save-overlay, #succes-overlay, #pause-overlay, #game-over-overlay {
   display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10; 
 }
 #game-view { display: block; z-index: 1; }
@@ -107,7 +107,7 @@ span#score.score-ready {
 /* =========================================================================
    6. MODALES (TUTO & GAME OVER)
    ========================================================================= */
-#tutorial-overlay, #perso-overlay, #loot-overlay, #vestiaire-overlay, #save-overlay, #game-over-overlay { 
+#tutorial-overlay, #perso-overlay, #loot-overlay, #vestiaire-overlay, #save-overlay, #succes-overlay, #pause-overlay, #game-over-overlay { 
   background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(5px); z-index: 100; 
 }
 #game-over-overlay { background: rgba(50, 0, 0, 0.9); z-index: 200; }
@@ -157,7 +157,7 @@ span#score.score-ready {
 .stat-value { color: white; }
 
 /* Boutons Communs */
-#btn-close-tuto, #btn-retry, #btn-close-perso, #btn-ouvrir, #btn-close-vestiaire, #btn-close-save {
+#btn-close-tuto, #btn-retry, #btn-close-perso, #btn-ouvrir, #btn-close-vestiaire, #btn-close-save, #btn-close-succes, #btn-reprendre {
   background: #ff3333; color: white; border: none; font-size: 1.1rem; padding: 10px 20px; 
   width: 100%; font-weight: bold; text-transform: uppercase; cursor: pointer; border-radius: 4px; 
   transition: transform 0.1s;
@@ -411,3 +411,45 @@ span#score.score-ready {
 @media (prefers-reduced-motion: reduce) {
   .tremble-1, .tremble-2, .tremble-3, .tremble-4, .confetti, .loot-case.loot-gagnante { animation: none; }
 }
+
+/* =========================================================================
+   12. PAUSE, BOSS, SUCCÈS
+   ========================================================================= */
+#btn-pause {
+  position: absolute; top: 10px; left: 10px; z-index: 6; width: 34px; height: 34px; padding: 0;
+  font-size: 1rem; border-radius: 50%; background: rgba(0, 0, 0, 0.4); border-color: rgba(255, 255, 255, 0.6);
+}
+#btn-pause-menu { width: 100%; }
+
+#boss-barre {
+  position: absolute; top: 44px; left: 50%; transform: translateX(-50%); z-index: 5;
+  width: 60%; text-align: center; pointer-events: none;
+}
+#boss-nom { color: #ff3333; font-weight: bold; letter-spacing: 3px; text-shadow: 0 0 6px #000, 1px 1px 0 #000; font-size: 0.9rem; }
+.boss-jauge { height: 10px; margin-top: 3px; background: #300; border: 2px solid #000; box-shadow: 0 0 8px rgba(255, 0, 0, 0.6); }
+#boss-vie { height: 100%; width: 100%; background: linear-gradient(#ff5a3a, #b01010); transition: width 0.15s; }
+
+#toast-succes {
+  position: absolute; top: 12px; left: 50%; transform: translateX(-50%); z-index: 300;
+  background: #1a1a1a; border: 2px solid #ffd700; color: #ffd700; padding: 8px 16px; border-radius: 6px;
+  font-size: 0.8rem; font-weight: bold; white-space: nowrap; box-shadow: 0 0 18px rgba(255, 215, 0, 0.6);
+  animation: toast-entree 0.4s ease-out; pointer-events: none;
+}
+@keyframes toast-entree { from { transform: translate(-50%, -60px); } to { transform: translate(-50%, 0); } }
+
+#titre-joueur { order: 1; margin-top: -18px; color: #ffd700; font-size: 0.85rem; font-style: italic; min-height: 1em; }
+
+#succes-compte { color: #aaa; font-size: 0.72rem; margin-bottom: 6px; }
+#succes-liste { display: flex; flex-direction: column; gap: 4px; max-height: 250px; overflow-y: auto; margin-bottom: 10px; }
+.succes-ligne {
+  display: flex; align-items: center; gap: 10px; text-align: left; padding: 5px 8px;
+  font-size: 0.75rem; border: 1px solid #333; background: #151515; color: #777; text-transform: none;
+}
+.succes-ligne:disabled { cursor: default; transform: none; }
+.succes-ligne.ok { color: #eee; border-color: #6a5a1a; }
+.succes-ligne.ok:hover { background: #2a2410; color: #fff; }
+.succes-ligne.porte { border-color: #ffd700; background: #2a2410; box-shadow: 0 0 8px rgba(255, 215, 0, 0.4); }
+.succes-icone { font-size: 1.2rem; }
+.succes-texte { display: flex; flex-direction: column; }
+.succes-texte small { color: #999; }
+.succes-ligne.ok .succes-texte small { color: #c9b26a; }
