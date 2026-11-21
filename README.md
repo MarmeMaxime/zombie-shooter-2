@@ -30,7 +30,10 @@ réimportée depuis le menu 💾.
 ## Ennemis
 
 Zombie, Tank, Magical girl (hardcore, se téléporte), Joggeur (charge quand il est
-aligné), Anti-émeute (3 PV, un seul par tir, arrête la foudre) et le boss, le Mastodonte.
+aligné), Anti-émeute (3 PV, un seul par tir, arrête la foudre), Pondeuse (éclate en
+larves), Infirmier (soigne les zombies autour de lui), Boxeur (hardcore, esquive un
+tir puis s'essouffle) et le boss, le Mastodonte. Un ennemi spécial prend la place
+d'un zombie normal, et leur nombre à l'écran est plafonné.
 
 ## Contenu
 

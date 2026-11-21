@@ -30,7 +30,7 @@ const ctx = vm.createContext({
     performance: { now: () => 0 }, requestAnimationFrame: () => 1, cancelAnimationFrame() {},
     Math: Object.assign(Object.create(Math), { random: rand }), console, localStorage: { getItem() {}, setItem() {} }
 });
-for (const f of ['config.js', 'sauvegarde.js', 'audio.js', 'pixel_art.js', 'boss_sprite.js', 'joggeur_sprite.js', 'emeute_sprite.js', 'deplacement_joueur.js', 'tir_joueur.js', 'zombie.js', 'boss.js', 'joggeur.js', 'emeute.js', 'morts.js', 'pouvoirs.js', 'main.js', 'lootbox.js', 'succes.js', 'missions.js', 'menu.js']) {
+for (const f of ['config.js', 'sauvegarde.js', 'audio.js', 'pixel_art.js', 'boss_sprite.js', 'joggeur_sprite.js', 'emeute_sprite.js', 'pondeuse_sprite.js', 'infirmier_sprite.js', 'boxeur_sprite.js', 'deplacement_joueur.js', 'tir_joueur.js', 'zombie.js', 'boss.js', 'joggeur.js', 'emeute.js', 'morts.js', 'pondeuse.js', 'infirmier.js', 'boxeur.js', 'pouvoirs.js', 'main.js', 'lootbox.js', 'succes.js', 'missions.js', 'menu.js']) {
     vm.runInContext(fs.readFileSync(path.join(dir, f), 'utf8'), ctx, { filename: f });
 }
 
@@ -143,7 +143,7 @@ const resultat = vm.runInContext(`
             pertesMinute = pertes;
         }
     }
-    return { pouvoirsUtilises, joggeurs: (Sauvegarde.donnees.stats.tues.joggeur || 0) + ' tués, ' + Sauvegarde.donnees.stats.esquives + ' esquives, ' + Sauvegarde.donnees.stats.sprintsStoppes + ' sprints stoppés', missionsRatees: MISSIONS[perso].filter(m => !Sauvegarde.donnees.missions.includes(m.id)).map(m => m.nom + ' ' + m.valeur(statsPerso(perso)) + '/' + m.objectif).join(' | '), coupMax: statsPerso(perso).coupMax, crachatsRecus, bossPasses, dureesBoss: dureesBoss.join(','), boss: Sauvegarde.donnees.stats.bossTues, bossApparus, causes, survie: Math.round(etat.temps), vivant: etat.enCours, vies: etat.vies, pertes, achats, pertesParMinute: pertesParMinute.join('') };
+    return { tues: Sauvegarde.donnees.stats.tues, pouvoirsUtilises, joggeurs: (Sauvegarde.donnees.stats.tues.joggeur || 0) + ' tués, ' + Sauvegarde.donnees.stats.esquives + ' esquives, ' + Sauvegarde.donnees.stats.sprintsStoppes + ' sprints stoppés', missionsRatees: MISSIONS[perso].filter(m => !Sauvegarde.donnees.missions.includes(m.id)).map(m => m.nom + ' ' + m.valeur(statsPerso(perso)) + '/' + m.objectif).join(' | '), coupMax: statsPerso(perso).coupMax, crachatsRecus, bossPasses, dureesBoss: dureesBoss.join(','), boss: Sauvegarde.donnees.stats.bossTues, bossApparus, causes, survie: Math.round(etat.temps), vivant: etat.enCours, vies: etat.vies, pertes, achats, pertesParMinute: pertesParMinute.join('') };
 })`, ctx)(mode, Number(minutes) * 60, Number(reaction), process.env.PERSO || 'soldat');
 
 console.log(JSON.stringify({ perso: process.env.PERSO || 'soldat', mode, reaction: Number(reaction), ...resultat }));

@@ -42,8 +42,12 @@ const SUCCES = [
     // Pouvoirs spéciaux
     { id: 'super_pouvoir', nom: 'Super-pouvoir', desc: 'Utiliser un pouvoir spécial', titre: 'Éveillé', recompense: 30, objectif: 1, valeur: () => SV().stats.pouvoirs || 0 },
     { id: 'ultime', nom: 'Ultime', desc: 'Utiliser 50 pouvoirs spéciaux', titre: 'Surpuissant', recompense: 200, objectif: 50, valeur: () => SV().stats.pouvoirs || 0 },
-    { id: 'bestiaire', nom: 'Bestiaire complet', desc: 'Tuer au moins un monstre de chaque espèce', titre: 'Zoologiste', recompense: 250, objectif: 6,
-        valeur: () => ['normal', 'tank', 'magicalgirl', 'joggeur', 'emeute', 'boss'].filter(t => (SV().stats.tues[t] || 0) > 0).length }
+    // La Pondeuse, l'Infirmier, le Boxeur
+    { id: 'desinsectisation', nom: 'Désinsectisation', desc: 'Tuer 100 larves', titre: 'Exterminateur d\'asticots', recompense: 120, objectif: 100, valeur: () => SV().stats.tues.larve || 0 },
+    { id: 'pas_de_soin', nom: 'Faute professionnelle', desc: 'Tuer 25 Infirmiers', titre: 'Radié de l\'ordre', recompense: 120, objectif: 25, valeur: () => SV().stats.tues.infirmier || 0 },
+    { id: 'ko', nom: 'K.-O.', desc: 'Tuer 20 Boxeurs (hardcore)', titre: 'Champion poids lourd', recompense: 200, objectif: 20, valeur: () => SV().stats.tues.boxeur || 0 },
+    { id: 'bestiaire', nom: 'Bestiaire complet', desc: 'Tuer au moins un monstre de chaque espèce', titre: 'Zoologiste', recompense: 250, objectif: 10,
+        valeur: () => ['normal', 'tank', 'magicalgirl', 'joggeur', 'emeute', 'pondeuse', 'larve', 'infirmier', 'boxeur', 'boss'].filter(t => (SV().stats.tues[t] || 0) > 0).length }
 ];
 
 const Succes = (() => {
@@ -116,8 +120,8 @@ const Succes = (() => {
     }
 
     // Compteur générique de la sauvegarde (esquives, sprints stoppés…)
-    function compter(stat) {
-        SV().stats[stat] = (Number(SV().stats[stat]) || 0) + 1;
+    function compter(stat, combien = 1) {
+        SV().stats[stat] = (Number(SV().stats[stat]) || 0) + combien;
         verifier();
     }
 

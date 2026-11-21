@@ -30,7 +30,9 @@ const entre = (t, a, b) => Math.max(0, Math.min(1, (t - a) / (b - a)));   // pro
 const lisse = t => t * t * (3 - 2 * t);                                     // départ et arrivée en douceur
 
 function ajouter_cadavre(z) {
-    const style = z.type === 'boss' ? 'colosse'
+    const propre = TYPES_ZOMBIE[z.type].mort || {};   // style et couleurs propres à un type (pondeuse.js…)
+    const style = propre.style ? propre.style
+        : z.type === 'boss' ? 'colosse'
         : z.type === 'magicalgirl' ? 'paillettes'
         : z.type === 'tank' || z.type === 'emeute' ? 'dos'
         : z.type === 'joggeur' && z.joggeur && z.joggeur.etat === 'course' ? 'glissade'
@@ -38,8 +40,9 @@ function ajouter_cadavre(z) {
         : 'face';
     const couleurs = style === 'paillettes' ? ['#ff6ec7', '#ffe14d', '#ffffff']
         : style === 'electro' ? ['#5ae6ff', '#c8f8ff', '#2ab8ff']
+        : propre.couleurs ? propre.couleurs
         : style === 'colosse' ? ['#6a8a2a', '#8fa83e', '#3a5a1a'] : ['#8a0f0f', '#b01818', '#5a0808'];
-    const nombre = style === 'colosse' ? 60 : z.type === 'tank' ? 18 : 12;
+    const nombre = propre.particules || (style === 'colosse' ? 60 : z.type === 'tank' ? 18 : 12);
     const sens = MORTS[style].sens || 1;
     const particules = Array.from({ length: nombre }, () => ({
         x: z.x + z.taille / 2, y: z.y + z.taille * 0.4,
@@ -49,7 +52,7 @@ function ajouter_cadavre(z) {
     }));
     // Images de marche (celles de la course pour un joggeur en plein sprint)
     const images = z.joggeur && z.joggeur.etat === 'course' ? SPRITES_JOGGEUR.course
-        : z.emeute ? images_emeute(z) : TYPES_ZOMBIE[z.type].images;
+        : z.emeute ? images_emeute(z) : images_zombie(z);
     cadavres.push({
         style, images, etape: z.etape % images.length, x: z.x, y: z.y, taille: z.taille,
         age: 0, particules, poussiere: [], impact: false, etoiles: style === 'paillettes'

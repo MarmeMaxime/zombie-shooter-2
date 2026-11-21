@@ -208,6 +208,14 @@ const Son = (() => {
             bruit(0, 1.2, { vol: 0.6, filtre: 6000, filtreFin: 200 });
             ton(45, 0.05, 1.0, { type: 'sawtooth', vol: 0.15, f2: 30 });
         },
+        // La Pondeuse éclate, l'Infirmier soigne, le Boxeur esquive
+        eclatement: () => {
+            bruit(0, 0.35, { vol: 0.35, filtre: 700, filtreFin: 120 });
+            ton(160, 0, 0.3, { type: 'sawtooth', vol: 0.1, f2: 50 });
+            for (let k = 0; k < 3; k++) bruit(0.12 + k * 0.06, 0.05, { vol: 0.12, filtre: 1800, type: 'bandpass' });
+        },
+        soin: () => [523, 659, 880].forEach((f, i) => ton(f, i * 0.06, 0.3, { type: 'sine', vol: 0.07, attaque: 0.02 })),
+        esquive: () => bruit(0, 0.14, { vol: 0.12, filtre: 900, filtreFin: 3000, type: 'bandpass' }),
         succes: () => [784, 988, 1175, 1568].forEach((f, i) => ton(f, i * 0.09, 0.35, { type: 'triangle', vol: 0.15 })),
         degat: () => { ton(220, 0, 0.25, { type: 'square', vol: 0.12, f2: 90 }); bruit(0, 0.15, { vol: 0.15, filtre: 800 }); }
     };
