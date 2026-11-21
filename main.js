@@ -4,7 +4,6 @@
 const canvas = document.getElementById('jeu');
 const ctx = canvas.getContext('2d');
 
-const img_fond = chargerImage('./assets/FOND.jpg');
 
 /* ---------- Monde de jeu et plein écran ----------
    Le canvas couvre toute la page et est dessiné à la résolution réelle de
@@ -39,22 +38,20 @@ maj_echelle_ui();
 window.addEventListener('resize', () => { maj_echelle_ui(); redimensionner(); });
 
 function dessiner() {
-    // Décor : la photo du désert, ou le camp d'entraînement pendant le tutoriel (pixel art, non lissé)
-    const camp = etat.tuto && typeof decor_entrainement === 'function' ? decor_entrainement() : null;
-    const fond = camp || img_fond;
+    // Décor en pixel art : la zone de combat (combat_decor.js), ou le camp d'entraînement pendant le tutoriel
+    const fond = etat.tuto && typeof decor_entrainement === 'function' ? decor_entrainement() : decor_combat();
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     if (MONDE.decalageY > 0) {
         // Écran plus haut que le monde : le décor remplit aussi les bandes, assombri
-        ctx.imageSmoothingEnabled = !camp;
+        ctx.imageSmoothingEnabled = false;
         ctx.drawImage(fond, 0, 0, canvas.width, canvas.height);
         ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
     ctx.setTransform(MONDE.echelle, 0, 0, MONDE.echelle, 0, MONDE.decalageY);
 
-    ctx.imageSmoothingEnabled = !camp;    // la photo est lissée, le camp reste net
+    ctx.imageSmoothingEnabled = false;    // tout est en pixel art : net, sans flou
     ctx.drawImage(fond, 0, 0, MONDE.largeur, MONDE.hauteur);
-    ctx.imageSmoothingEnabled = false;    // le pixel art reste net, sans flou
     draw_zombies(ctx);
     draw_balles(ctx);
     draw_pouvoir(ctx);
