@@ -37,8 +37,12 @@ const Instructeur = (() => {
 
     // Le sergent parle : la partie se fige jusqu'à ce qu'on accepte (ensuite() est alors appelée).
     // qui : l'orateur (voir ORATEURS) ; par défaut le Sergent.
-    function parler(message, bouton, ensuite, qui = 'sergent') {
+    // bloque (ms) : on ne peut pas le passer tout de suite (fin de mission : on tirait encore
+    // avec Espace, on ne doit pas zapper ce qu'il dit sans comprendre que c'est fini).
+    let bloqueJusque = 0;
+    function parler(message, bouton, ensuite, qui = 'sergent', bloque = 0) {
         orateur = qui;
+        bloqueJusque = performance.now() + bloque;
         $i('instructeur-nom').textContent = T(ORATEURS[qui].nom);
         aFige = etat.enCours && !etat.pause;
         if (aFige) mettre_en_pause(true, false);   // pause sans l'écran « PAUSE »
@@ -49,6 +53,7 @@ const Instructeur = (() => {
         b.textContent = bouton || T('Compris, sergent !');
         b.addEventListener('click', () => { Son.bouton(); valider(); });
         boutons.replaceChildren(b);
+        if (bloque > 0) { b.disabled = true; setTimeout(() => { b.disabled = false; }, bloque); }
         // La bouche bouge le temps de « dire » la phrase
         parleJusque = performance.now() + Math.min(2600, 400 + message.length * 30);
         clearInterval(animation);
@@ -61,7 +66,7 @@ const Instructeur = (() => {
     }
 
     function valider() {
-        if (!ouvert()) return;
+        if (!ouvert() || performance.now() < bloqueJusque) return;
         const ensuite = suite;
         cacher();
         if (aFige) mettre_en_pause(false);

@@ -88,7 +88,7 @@ const MISSIONS_CAMPAGNE = [
         id: 'c1m5', chapitre: 1, numero: 5, titre: 'Coup de foudre', perso: 'soldat',
         // L'échantillon enfui a muté en Mastodonte : d'abord sa horde, puis elle arrive (elle est attirée par le Soldat).
         boss: {
-            avant: { normal: 25, hardcore: 30 },       // zombies à repousser avant qu'elle n'arrive
+            avant: { normal: 50, hardcore: 55 },       // zombies à repousser avant qu'elle n'arrive
             ralenti: { normal: 3.5, hardcore: 4 }     // pendant le combat, la horde arrive autant de fois moins souvent
         },
         apparition: {
@@ -381,7 +381,7 @@ const Campagne = (() => {
         const fin = () => game_over();
         const texte = victoire ? m.debrief[etat.mode] : m.echec;
         if (texte && typeof Instructeur !== 'undefined' && document.getElementById('instructeur'))
-            Instructeur.parler(T(texte), T(victoire ? 'Mission accomplie !' : 'Compris, sergent…'), fin);
+            Instructeur.parler(T(texte), T(victoire ? 'Mission accomplie !' : 'Compris, sergent…'), fin, 'sergent', 1000);   // impossible à passer pendant 1 s
         else fin();
     }
 

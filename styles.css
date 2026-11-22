@@ -729,3 +729,4 @@ span#score.score-ready {
 .campagne-ligne small { font-size: 0.66rem; }
 .campagne-ligne button { padding: 5px 10px; font-size: 0.75rem; }
 #btn-close-campagne { flex: none; padding: 8px; }
+#instructeur-boutons button:disabled { opacity: 0.4; cursor: default; }
