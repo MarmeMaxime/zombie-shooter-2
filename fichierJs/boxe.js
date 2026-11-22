@@ -25,6 +25,7 @@ const Boxe = (() => {
     const alea = (a, b) => a + Math.random() * (b - a);
 
     function demarrer(reglages) {
+        ui_combat(true);
         c = {
             r: reglages, lance: false, t: 0, fin: 0,
             b: { pv: 100, etat: 'garde', t: 0, duree: 0, cool: 0, alterne: 0, rage: 0, debutEsq: -9, frappe: false },
@@ -35,7 +36,10 @@ const Boxe = (() => {
         };
         maj_hud_rage();
     }
-    function arreter() { c = null; }
+    function arreter() { c = null; ui_combat(false); }
+    // Pendant le combat, l'interface du tir disparaît (score, vies, temps, achat de vie) :
+    // il reste la croix, TIR (frapper), ★ (uppercut) et la pause
+    function ui_combat(oui) { const j = typeof document !== 'undefined' && document.getElementById('game-container'); if (j) j.classList.toggle('en-boxe', oui); }
     const actif = () => Boolean(c);
 
     // Après la présentation (les répliques d'avant-combat) : la cloche sonne

@@ -746,3 +746,6 @@ span#score.score-ready {
 /* Fin secrète d'une mission */
 .mission-card.game-over.secrete { border-top-color: #b04aff; }
 .mission-card.game-over.secrete h2 { color: #d08aff; border-color: #d08aff; }
+
+/* Combat de boxe (boxe.js) : pas de score, de vies ni d'achat de vie, les barres du ring les remplacent */
+#game-container.en-boxe #info, #game-container.en-boxe #btn-touch-buy { display: none !important; }
