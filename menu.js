@@ -105,8 +105,22 @@ $('btn-close-perso').addEventListener('click', () => afficher(ecrans.perso, fals
 $('btn-start').addEventListener('click', () => {
     // Toute première partie : le sergent propose son entraînement
     if (typeof proposer_entrainement === 'function' && proposer_entrainement()) return;
+    afficher_records_variantes();
     $('choix-variante').classList.remove('hidden');   // Classique ou Vagues ?
 });
+
+// Record du perso choisi (pour la difficulté choisie) sous chaque mode
+function afficher_records_variantes() {
+    const perso = CONFIG.personnages[perso_choisi].nom;
+    const c = Records.lire(perso_choisi, difficulte_choisie, 'classique');
+    const v = Records.lire(perso_choisi, difficulte_choisie, 'vagues');
+    $('record-classique').textContent = c.temps > 0
+        ? T(c.score > 0 ? '🏅 Record de {perso} : {m} min {s} · {score} pts' : '🏅 Record de {perso} : {m} min {s}', { perso, m: Math.floor(c.temps / 60), s: String(c.temps % 60).padStart(2, '0'), score: c.score })
+        : T('Pas encore de record pour {perso}', { perso });
+    $('record-vagues').textContent = v.vague > 0
+        ? T('🏅 Record de {perso} : vague {n} · {score} pts', { perso, n: v.vague, score: v.score })
+        : T('Pas encore de record pour {perso}', { perso });
+}
 
 function lancer_combat(variante) {
     $('choix-variante').classList.add('hidden');

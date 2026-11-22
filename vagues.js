@@ -88,6 +88,7 @@ const Vagues = (() => {
         boutique = true;
         const st = Sauvegarde.donnees.stats;
         st.meilleureVague = Math.max(st.meilleureVague || 0, numero);
+        Records.maj({ vague: numero });
         if (typeof Succes !== 'undefined') Succes.verifier();
         Son.effet('succes');
         mettre_en_pause(true, false);   // la partie attend, sans l'écran « PAUSE »

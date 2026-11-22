@@ -14,6 +14,26 @@ const statsPerso = perso => {
     return p;
 };
 
+/* Records de chaque perso, par difficulté et par mode :
+   stats.persos[perso].records['normal-classique'] = { temps, score },
+   stats.persos[perso].records['hardcore-vagues'] = { vague, score }, etc.
+   Une ancienne sauvegarde reprend le meilleur temps déjà connu du perso. */
+const Records = {
+    lire(perso, mode, variante) {
+        const p = statsPerso(perso);
+        p.records ??= {};
+        const cle = mode + '-' + variante;
+        p.records[cle] ??= variante === 'vagues' ? { vague: 0, score: 0 } : { temps: Number(p.meilleurTemps[mode]) || 0, score: 0 };
+        return p.records[cle];
+    },
+    // Garde le meilleur de chaque valeur pour la partie en cours (pas pendant l'entraînement)
+    maj(valeurs) {
+        if (etat.tuto) return;
+        const r = Records.lire(etat.perso, etat.mode, etat.variante);
+        for (const [cle, v] of Object.entries(valeurs)) r[cle] = Math.max(r[cle] || 0, v);
+    }
+};
+
 // Fabriques de missions courantes
 const M = {
     tues: (n, nom, recompense) => ({ nom: T(nom), desc: T('Tuer {n} zombies', { n }), objectif: n, recompense, valeur: p => p.total }),
@@ -179,6 +199,7 @@ const Missions = (() => {
         p.meilleurTemps[etat.mode] = Math.max(p.meilleurTemps[etat.mode] || 0, Math.floor(etat.temps));
         p.meilleurScore = Math.max(p.meilleurScore, etat.gagnes);
         p.sansDegat = Math.max(p.sansDegat, Math.floor(etat.temps - debutSansDegat));
+        Records.maj(etat.variante === 'vagues' ? { score: etat.gagnes } : { temps: Math.floor(etat.temps), score: etat.gagnes });
         verifier();
     }
 

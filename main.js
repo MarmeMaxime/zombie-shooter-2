@@ -224,10 +224,8 @@ function init_game(mode, perso, tuto = false, variante = 'classique') {
         tues: {},
         missions: [],
         succes: [],
-        recordAvant: {
-            temps: Number(Sauvegarde.donnees.stats.meilleurTemps[mode]) || 0,
-            score: Number(Sauvegarde.donnees.stats.meilleurScore[mode]) || 0
-        }
+        // record du perso, pour cette difficulté et ce mode (copie d'avant la partie)
+        recordAvant: { ...Records.lire(perso, mode, tuto ? 'classique' : variante) }
     });
     maj_hud();
 
@@ -277,12 +275,13 @@ function remplir_bilan() {
     const $b = id => document.getElementById(id);
     const el = (tag, classe, texte) => { const e = document.createElement(tag); if (classe) e.className = classe; if (texte !== undefined) e.textContent = texte; return e; };
 
-    // Records battus (seulement s'il y avait déjà un record à battre)
-    const records = [];
-    if (etat.recordAvant.temps > 0 && Math.floor(etat.temps) > etat.recordAvant.temps) records.push(T('temps (avant : {n} s)', { n: etat.recordAvant.temps }));
-    if (etat.recordAvant.score > 0 && etat.gagnes > etat.recordAvant.score) records.push(T('score (avant : {n})', { n: etat.recordAvant.score }));
+    // Records du perso battus (seulement s'il y avait déjà un record à battre)
+    const avant = etat.recordAvant, apres = Records.lire(etat.perso, etat.mode, etat.variante), records = [];
+    if (avant.vague > 0 && apres.vague > avant.vague) records.push(T('vague (avant : {n})', { n: avant.vague }));
+    if (avant.temps > 0 && apres.temps > avant.temps) records.push(T('temps (avant : {n} s)', { n: avant.temps }));
+    if (avant.score > 0 && apres.score > avant.score) records.push(T('score (avant : {n})', { n: avant.score }));
     $b('bilan-vague').textContent = etat.variante === 'vagues' ? T('🌊 Vague atteinte : {n}', { n: etat.vague }) : '';
-    $b('bilan-records').textContent = records.length ? T('🏅 Nouveau record : {liste} !', { liste: records.join(T(' et ')) }) : '';
+    $b('bilan-records').textContent = records.length ? T('🏅 Nouveau record de {perso} : {liste} !', { perso: CONFIG.personnages[etat.perso].nom, liste: records.join(T(' et ')) }) : '';
 
     // Victimes par espèce, avec la vignette du monstre (boss en premier, puis les plus nombreux)
     const especes = Object.entries(etat.tues).filter(([type]) => TYPES_ZOMBIE[type])

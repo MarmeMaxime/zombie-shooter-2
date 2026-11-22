@@ -361,5 +361,11 @@ const TRADUCTIONS = {
     'Terminer la vague 10': ['Clear wave 10', 'Supera la oleada 10'],
     'Raz-de-marée': ['Tidal wave', 'Maremoto'],
     'Terminer la vague 25': ['Clear wave 25', 'Supera la oleada 25'],
-    'Digue humaine': ['Human dam', 'Dique humano']
+    'Digue humaine': ['Human dam', 'Dique humano'],
+    'vague (avant : {n})': ['wave (before: {n})', 'oleada (antes: {n})'],
+    '🏅 Nouveau record de {perso} : {liste} !': ['🏅 New record for {perso}: {liste}!', '🏅 ¡Nuevo récord de {perso}: {liste}!'],
+    '🏅 Record de {perso} : {m} min {s} · {score} pts': ['🏅 {perso}\'s record: {m} min {s} · {score} pts', '🏅 Récord de {perso}: {m} min {s} · {score} pts'],
+    '🏅 Record de {perso} : vague {n} · {score} pts': ['🏅 {perso}\'s record: wave {n} · {score} pts', '🏅 Récord de {perso}: oleada {n} · {score} pts'],
+    'Pas encore de record pour {perso}': ['No record yet for {perso}', 'Aún no hay récord para {perso}'],
+    '🏅 Record de {perso} : {m} min {s}': ['🏅 {perso}\'s record: {m} min {s}', '🏅 Récord de {perso}: {m} min {s}']
 };
