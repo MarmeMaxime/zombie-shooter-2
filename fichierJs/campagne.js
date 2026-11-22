@@ -89,7 +89,7 @@ const Campagne = (() => {
         $c('bandeau-vague').classList.remove('bandeau-mission');
     }
 
-    const objectif = () => m.objectif[etat.mode];
+    const objectif = () => (m.boss ? m.boss.avant[etat.mode] : m.objectif[etat.mode]);
     function maj_hud_mission() {
         if (!m) return;
         if (camion) {
@@ -135,7 +135,7 @@ const Campagne = (() => {
         const r = Math.random();
         // Les types spéciaux (part de chaque apparition), sinon un zombie normal
         let cumul = 0, type = 'normal';
-        for (const t of ['tank', 'joggeur', 'infirmier']) { cumul += a[t] || 0; if (r < cumul) { type = t; break; } }
+        for (const t of ['tank', 'joggeur', 'infirmier', 'emeute', 'pondeuse']) { cumul += a[t] || 0; if (r < cumul) { type = t; break; } }
         const z = creer_zombie(type, MONDE.largeur, MONDE.hauteur);
         if (a.panique) z.vitesse *= a.panique;   // ils fuient quelque chose : ils courent plus vite
         if (!camion) return;
@@ -192,11 +192,12 @@ const Campagne = (() => {
             if (phaseBoss) { if (z && est_boss(z.type)) terminer(true); return; }
             tues++;
             maj_hud_mission();
+            dire_pendant();
             if (tues >= m.boss.avant[etat.mode]) {
                 // La horde est repoussée… et elle arrive
                 phaseBoss = true;
-                faire_apparaitre_boss(MONDE.largeur, MONDE.hauteur);
-                bandeau(T('ELLE ARRIVE…'));
+                faire_apparaitre_boss(MONDE.largeur, MONDE.hauteur, m.boss.type);
+                bandeau(T(m.boss.bandeau || 'ELLE ARRIVE…'));
                 maj_hud_mission();
             }
             return;
@@ -204,14 +205,18 @@ const Campagne = (() => {
         if (finale) return;
         tues++;
         maj_hud_mission();
-        // Ce qu'on entend pendant la vague
+        dire_pendant();
+        if (tues < objectif()) return;
+        if (m.brutus) lancer_finale(); else terminer(true);
+    }
+
+    // Ce qu'on entend pendant la vague (à une fraction de l'objectif, ou de la horde avant le boss)
+    function dire_pendant() {
         const pendant = m.pendant || [];
         if (dits < pendant.length && tues >= pendant[dits].a * objectif() && typeof Instructeur !== 'undefined' && document.getElementById('instructeur')) {
             const l = pendant[dits++];
             Instructeur.parler(T(l.texte), T('Compris !'), null, l.qui);
         }
-        if (tues < objectif()) return;
-        if (m.brutus) lancer_finale(); else terminer(true);
     }
 
     /* Fin de « La Débandade » : Brutus sort de la poussière, du côté d'où venait

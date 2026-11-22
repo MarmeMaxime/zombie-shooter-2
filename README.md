@@ -35,6 +35,9 @@ Au lancement d'un combat, on choisit le mode :
   Haut ou Bas pour esquiver quand Gégé prévient (« ! »), une esquive au dernier moment
   le laisse ouvert pour un contre, et ★ lance l'uppercut quand la rage est pleine.
   (`outils/simulation_boxe.js` fait jouer un bot pour régler la difficulté.)
+  Enfin « La Longue Marche » : des mois dans le désert vers l'ouest, les monstres croisés
+  en route, puis le Fossoyeur. Le lendemain, Brutus voit le mur du camp : la boucle se
+  referme sur « La Débandade », et l'épilogue clôt le chapitre au coin du feu.
 
   Chaque mission garde son meilleur temps et ses vies restantes ; le chapitre se
   termine sur un épilogue. Le camp s'affiche derrière le menu et grandit avec la

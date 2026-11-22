@@ -28,9 +28,9 @@ function reset_boss() {
     ui_boss.barre.classList.add('hidden');
 }
 
-function faire_apparaitre_boss(largeurCanvas, hauteurCanvas) {
-    // Un boss sur deux : Mastodonte, Fossoyeur, Mastodonte…
-    const type = bossApparus % 2 === 0 ? 'boss' : 'fossoyeur';
+function faire_apparaitre_boss(largeurCanvas, hauteurCanvas, typeImpose = null) {
+    // Un boss sur deux : Mastodonte, Fossoyeur, Mastodonte… (une mission de la campagne peut imposer le sien)
+    const type = typeImpose || (bossApparus % 2 === 0 ? 'boss' : 'fossoyeur');
     const cfg = TYPES_ZOMBIE[type].config;
     const pv = Math.min(cfg.pvMax, cfg.pvBase + cfg.pvParBoss * bossApparus);   // chaque boss est plus résistant que le précédent
     bossApparus++;

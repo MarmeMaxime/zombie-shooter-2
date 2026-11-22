@@ -159,7 +159,7 @@ const MISSIONS_CAMPAGNE = [
         },
         // C'est Brutus qui raconte : il ouvre la mission, la commente et la conclut
         debut: [
-            { qui: 'brutus', texte: 'Il y a trois semaines. En ville. Le piano était sur le trottoir, et moi devant, à reprendre mon souffle.', bouton: 'Et alors ?' }
+            { qui: 'brutus', texte: 'Il y a des mois. En ville. Le piano était sur le trottoir, et moi devant, à reprendre mon souffle.', bouton: 'Et alors ?' }
         ],
         pendant: [
             { a: 0.35, qui: 'brutus', texte: 'Ils sortaient de partout. Des bureaux, du métro, d\'une boutique de robes de mariée. Il y avait une mariée. Elle courait bien.' },
@@ -250,6 +250,43 @@ const MISSIONS_CAMPAGNE = [
         texteFin: {
             victoire: 'Brutus récupère son fusil et la carte d\'un camp militaire. Direction : l\'ouest.',
             echec: 'Brutus jure qu\'il a glissé. Il reprend le combat depuis le début.'
+        }
+    },
+    {
+        id: 'c2m5', chapitre: 2, numero: 5, titre: 'La Longue Marche', perso: 'brute',
+        // La logique : Gégé avait la direction du camp (la radio), pas sa position. Brutus a
+        // marché vers l'ouest pendant des mois, de nuit, en croisant tout ce qui traîne dans
+        // le désert (les monstres du mode normal, sauf l'Anti-émeute gardé pour plus tard),
+        // jusqu'au village du Fossoyeur, sur sa
+        // route. Le lendemain, il voit le mur du camp : c'est le début de « La Débandade ».
+        // Le décor est le désert de la zone de combat.
+        boss: {
+            type: 'fossoyeur',
+            bandeau: 'IL CREUSE…',
+            avant: { normal: 90, hardcore: 120 },     // tout ce qu'il croise avant le village
+            ralenti: { normal: 3.5, hardcore: 4 }
+        },
+        apparition: {
+            normal: { depart: 1.35, min: 0.85, acceleration: 0.006, groupe: 0.15, tank: 0.08, joggeur: 0.08, infirmier: 0.07, pondeuse: 0.06 },
+            hardcore: { depart: 1.2, min: 0.75, acceleration: 0.007, groupe: 0.2, tank: 0.1, joggeur: 0.11, infirmier: 0.08, pondeuse: 0.07 }
+        },
+        debut: [
+            { qui: 'brutus', texte: 'Le désert. Des semaines, puis des mois. Je marchais la nuit, et je dormais le jour, à l\'ombre de ce que je trouvais.', bouton: 'Et alors ?' }
+        ],
+        pendant: [
+            { a: 0.35, qui: 'brutus', texte: 'Les femmes enceintes, c\'était le pire. Il fallait les toucher de loin. Très loin.' },
+            { a: 0.75, qui: 'brutus', texte: 'Et un matin, un village. Des croix partout, des trous tout frais. Et quelqu\'un qui creusait encore.' }
+        ],
+        debriefQui: 'brutus',
+        debrief: {
+            normal: 'Il a fini dans un de ses propres trous. Le lendemain, j\'ai vu un mur de sacs de sable au loin. Et une horde qui courait devant moi.',
+            hardcore: 'Il creusait plus vite que je ne tirais. Presque. Le lendemain, je voyais votre mur. Et la horde qui me fuyait.'
+        },
+        echec: 'Non, attends. Il ne m\'a pas enterré : je suis là, non ? Je reprends.',
+        echecBouton: 'Je reprends',
+        texteFin: {
+            victoire: 'Le Fossoyeur est enterré. À l\'horizon : un mur de sacs de sable. Le camp.',
+            echec: '« Non, attends, il ne m\'a pas enterré. » Brutus reprend la route depuis le début.'
         }
     }
 ];
@@ -368,6 +405,18 @@ SCENES_CAMPAGNE.c2m1 = {
 /* Épilogues : joués après le débriefing de la dernière mission d'un chapitre,
    la première fois qu'on le termine. Ils annoncent la suite sans rien en dire. */
 const EPILOGUES = {
+    // Fin du chapitre 2 : retour au coin du feu ; la boucle est bouclée avec « La Débandade »
+    2: [
+        { qui: 'sergent', texte: 'Donc la horde qui a failli nous passer dessus… c\'est toi qui l\'as amenée jusqu\'ici.' },
+        { qui: 'brutus', texte: 'Je ne l\'ai pas amenée, Chef. Elle me fuyait. Nuance.' },
+        { qui: 'chercheur', texte: 'Des infirmiers qui soignent les zombies. Un homme qui a muté et qui se souvient de tout… Sergent, cette fois, je retourne au labo.' },
+        { qui: 'sergent', texte: 'Vas-y. Et dors un peu, pour une fois.' },
+        { qui: 'brutus', texte: 'Et moi, Chef ? Je fais quoi, maintenant ?' },
+        { qui: 'sergent', texte: 'Toi ? Tu dors dans ta tente, les pieds dehors. Et demain, tu montes la garde avec la recrue.' },
+        { qui: 'soldat', texte: '…' },
+        { qui: 'brutus', texte: 'Il parle toujours autant ?' },
+        { qui: 'sergent', texte: 'Jamais. C\'est ce que je préfère chez lui.', bouton: 'Fin du chapitre 2' }
+    ],
     1: [
         { qui: 'sergent', texte: 'Bon. Le mur tient, la mutante est tombée, et le labo a ses échantillons. Enfin, ce qu\'il en reste.' },
         { qui: 'labo', texte: 'Sergent ? Les tissus de la mutante… ils réagissent au remède. Pas comme prévu. Mais ils réagissent.' },
@@ -446,5 +495,23 @@ SCENES_CAMPAGNE.c2m4 = {
         { qui: 'chercheur', texte: 'Muté… Et il parlait ? Il se souvenait de qui il était ?' },
         { qui: 'soldat', texte: '…' },
         { qui: 'brutus', texte: 'Oh oui. Il se souvenait très bien. Surtout de moi.', bouton: 'Raconte !' }
+    ]
+};
+
+/* Toujours au coin du feu : la longue marche jusqu'au camp. */
+SCENES_CAMPAGNE.c2m5 = {
+    ...SCENES_CAMPAGNE.c2m2,
+    lignes: [
+        { qui: 'sergent', texte: 'Ton fusil, une carte… Et de l\'usine jusqu\'ici, tu as mis combien de temps ?' },
+        { qui: 'brutus', texte: 'Des mois, Chef.' },
+        { qui: 'sergent', texte: 'Des mois. Avec une carte.' },
+        { qui: 'brutus', texte: 'Les guetteurs de Gégé avaient capté votre radio, pas votre adresse. Sur la carte, il y avait une flèche. « Ouest ». C\'est tout.' },
+        { qui: 'brutus', texte: 'Alors j\'ai marché vers l\'ouest. De nuit, à cause du soleil. J\'ai bu dans les citernes des fermes. Et il y avait du monde sur la route.' },
+        { qui: 'chercheur', texte: 'Du monde ?' },
+        { qui: 'brutus', texte: 'Tout ce que vous connaissez. Les coureurs, les videuses, les infirmiers… et les femmes enceintes qui éclatent.' },
+        { qui: 'sergent', texte: 'Le désert entier, en somme. Et tu les as tous gardés pour toi.' },
+        { qui: 'brutus', texte: 'Le pire, c\'était le village. Tout le monde y était enterré. Et celui qui les avait enterrés creusait encore. Il m\'avait gardé une place.' },
+        { qui: 'soldat', texte: '…' },
+        { qui: 'brutus', texte: 'Fais pas cette tête. Je suis là, non ?', bouton: 'Raconte !' }
     ]
 };
