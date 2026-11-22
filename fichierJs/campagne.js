@@ -180,7 +180,8 @@ const Campagne = (() => {
             { x: joueur.x + 32, y: joueur.y + 34, r: 70, force: 0.85 }
         ];
         if (joueur.animTir > 0) lumieres.push({ x: x + 30, y, r: 260, force: 0.55 });   // éclair du coup de feu
-        nuit(ctx, MONDE.largeur, MONDE.hauteur, lumieres, 0.9);
+        // Nuit noire : hors de la lampe, on ne voit que les yeux
+        nuit(ctx, MONDE.largeur, MONDE.hauteur, lumieres, 0.985);
         ctx.fillStyle = '#ffe070';
         for (const z of zombies) {
             const t = z.taille, ex = Math.round(z.x + t * 0.42), ey = Math.round(z.y + t * 0.08);
