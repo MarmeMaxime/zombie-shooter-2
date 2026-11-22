@@ -68,6 +68,13 @@ Chaque monstre rencontré rejoint le **bestiaire 📖**, avec sa fiche.
 
 ## Dossiers
 
+- `index.html`, `styles.css` : la page du jeu.
+- `fichierJs/` : tout le code du jeu.
+- `assets/persos/<perso>/` : les images d'un perso (`arret`, `tir`, `marche1` à `marche4`).
+- `assets/skins/<perso>/<tenue>/` : les mêmes images pour chaque tenue.
+- `assets/monstres/<monstre>/` : les images de marche des monstres dessinés à la main
+  (les autres sont générés par le code, dans `fichierJs/*_sprite.js`).
+- `assets/son/` : sons et playlist du mode hardcore.
 - `outils/` : scripts de génération des sprites (PowerShell) et simulateur
   d'équilibrage (`node outils/simulation.js`). Voir `outils/README.md`.
 - `ancien/` : fichiers que le jeu n'utilise plus, gardés pour mémoire.

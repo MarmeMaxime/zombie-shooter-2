@@ -7,22 +7,22 @@
    creer(z), maj(z, dt), vitesse(z), images(z), dessiner(ctx, z), mort(z).
    Leurs effets à l'écran passent par EXTENSIONS : { reset(), maj(dt), dessiner(ctx) }.
    ========================================================================= */
-const imagesNumerotees = (prefixe, nombre) =>
-    Array.from({ length: nombre }, (_, i) => chargerImage(`./assets/${prefixe}${i + 1}.png`));
+// Images de marche d'un monstre : assets/monstres/<dossier>/marche1..n.png
+const imagesNumerotees = (dossier, nombre) =>
+    Array.from({ length: nombre }, (_, i) => chargerImage(`./assets/monstres/${dossier}/marche${i + 1}.png`));
 
 const TYPES_ZOMBIE = {
     normal: {
         config: CONFIG.zombie,
-        images: [1, 2, 3, 4, 5, 6].map(n =>
-            chargerImage(n === 1 ? './assets/zombie_marche.png' : `./assets/zombie_marche${n}.png`))
+        images: imagesNumerotees('zombie', 6)
     },
     tank: {
         config: CONFIG.tank,
-        images: imagesNumerotees('marche_tank', 12)
+        images: imagesNumerotees('tank', 12)
     },
     magicalgirl: {
         config: CONFIG.magicalgirl,
-        images: imagesNumerotees('marche_magicalgirl', 12)
+        images: imagesNumerotees('magicalgirl', 12)
     },
     // Sprite dessiné dans joggeur_sprite.js (marche, course, essoufflé)
     joggeur: {

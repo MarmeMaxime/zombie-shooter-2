@@ -1,6 +1,6 @@
 /* =========================================================================
    ZOMBIE ATTACHÉ (cible de l'entraînement, voir tutoriel.js)
-   C'est le zombie de base (ses images de marche, assets/zombie_marche*.png),
+   C'est le zombie de base (ses images de marche, assets/monstres/zombie/),
    ficelé à un poteau de bois : le poteau est dessiné derrière lui, les cordes
    par-dessus son corps seulement. Il est bien attaché : ses jambes ne bougent
    pas, seuls le haut du corps et la tête tirent un peu sur les liens.

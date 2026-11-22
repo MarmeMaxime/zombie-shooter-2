@@ -5,17 +5,17 @@ Ces scripts ne sont pas utilisés par le jeu : ils servent à le fabriquer et à
 ## Sprites (Windows PowerShell)
 
 Les personnages et tenues sont générés à partir des sprites d'origine du soldat
-(`joueur_*.png`) et de la zombie tank (`marche_tank*.png`), par recoloration
+(`assets/persos/soldat/`) et de la zombie tank (`assets/monstres/tank/`), par recoloration
 pixel par pixel. À lancer dans cet ordre, depuis la racine du projet :
 
 ```powershell
 .\outils\generer_persos.ps1 -assets "$PWD\assets"   # Mira, Brutus, magical girl
-.\outils\generer_tenues.ps1 -assets "$PWD\assets"   # les 15 tenues des lootbox (skin_*.png)
 .\outils\generer_lassie.ps1 -assets "$PWD\assets"   # Lassie, à partir des sprites de Mira
+.\outils\generer_tenues.ps1 -assets "$PWD\assets"   # les 20 tenues des lootbox (assets/skins/)
 ```
 
 Pour une nouvelle tenue : ajouter une ligne `Recolor ...` dans `generer_tenues.ps1`,
-puis la déclarer dans `LOOT.skins` (`lootbox.js`).
+puis la déclarer dans `LOOT.skins` (`fichierJs/lootbox.js`).
 
 ## Simulation d'équilibrage (Node.js)
 

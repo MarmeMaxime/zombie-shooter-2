@@ -14,7 +14,10 @@ $cU='322B28'; $cD='171819'; $cH='4C3D2E'; $cVd='14121D'; $cVl='242234'; $cC='586
 $cO1='FA6A0A'; $cO2='F9A31B'; $cWl='C68556'; $cWd='8C5B3E'; $cG='673931'; $cT='271F1B'; $cN='171516'
 $OUTL = @('000000', '050403')
 
-$soldat = @{ 'arret' = ('joueur_arr' + [char]0xEA + 't'); 'tir' = 'joueur_tir'; 'marche1' = 'joueur_marche1'; 'marche2' = 'joueur_marche2'; 'marche3' = 'joueur_marche3'; 'marche4' = 'joueur_marche4' }
+# Frames du soldat (assets\persos\soldat\<frame>.png)
+$soldat = @{}
+foreach ($fr in @('arret', 'tir', 'marche1', 'marche2', 'marche3', 'marche4')) { $soldat[$fr] = "persos\soldat\$fr" }
+foreach ($d in @('persos\mira', 'persos\brutus', 'monstres\magicalgirl')) { New-Item -ItemType Directory -Force "$assets\$d" | Out-Null }
 
 function HeadLeft($src) {
     for ($x = 0; $x -lt $src.Width; $x++) { if ($src.GetPixel($x, 4).A -gt 0) { return $x } }
@@ -140,7 +143,7 @@ foreach ($nom in $soldat.Keys) {
     }
     Px $bmp ($hl - 2 - [Math]::Floor(20 / 6)) 26 '6E5414'
 
-    $bmp.Save("$assets\grenadier_$nom.png", [System.Drawing.Imaging.ImageFormat]::Png)
+    $bmp.Save("$assets\persos\mira\$nom.png", [System.Drawing.Imaging.ImageFormat]::Png)
     $bmp.Dispose(); $src.Dispose()
 }
 
@@ -210,7 +213,7 @@ foreach ($nom in $soldat.Keys) {
         $sx = [Math]::Floor($x / $f)
         if ($sx -lt $tmp.Width) { $out.SetPixel($x, $y, $tmp.GetPixel($sx, $y)) }
     } }
-    $out.Save("$assets\brute_$nom.png",[System.Drawing.Imaging.ImageFormat]::Png)
+    $out.Save("$assets\persos\brutus\$nom.png",[System.Drawing.Imaging.ImageFormat]::Png)
     $out.Dispose(); $tmp.Dispose(); $src.Dispose()
 }
 
@@ -219,8 +222,8 @@ $etoile = @('...X...', '..XXX..', 'XXXXXXX', '.XXXXX.', '..XXX..', '.XX.XX.', '.
 $noeudPoitrine = @('.RR.RR.', 'RRRYRRR', '.RR.RR.', '..R.R..')
 $grandNoeud = @('RR...RR', 'RRRYRRR', 'RR.R.RR')
 for ($i = 1; $i -le 12; $i++) {
-    $src = Load "$assets\marche_tank$i.png"
-    $bmp = Load "$assets\marche_tank$i.png"
+    $src = Load "$assets\monstres\tank\marche$i.png"
+    $bmp = Load "$assets\monstres\tank\marche$i.png"
     $W = $src.Width; $Hh = $src.Height
 
     # Measure the frame
@@ -314,7 +317,7 @@ for ($i = 1; $i -le 12; $i++) {
         Px $bmp ($ex + 3) ($ey + 3) 'FF7EB9'
     }
 
-    $bmp.Save("$assets\marche_magicalgirl$i.png", [System.Drawing.Imaging.ImageFormat]::Png)
+    $bmp.Save("$assets\monstres\magicalgirl\marche$i.png", [System.Drawing.Imaging.ImageFormat]::Png)
     $bmp.Dispose(); $src.Dispose()
 }
 "ok"

@@ -7,24 +7,17 @@ function chargerImage(src) {
     return img;
 }
 
-// Sprites de chaque personnage (le soldat garde les noms de fichiers d'origine)
-function charger_sprites(prefixe) {
-    if (!prefixe) {
-        return {
-            arret: chargerImage('./assets/joueur_arrêt.png'),
-            tir: chargerImage('./assets/joueur_tir.png'),
-            marche: [1, 2, 3, 4].map(n => chargerImage(`./assets/joueur_marche${n}.png`))
-        };
-    }
+// Images d'un perso ou d'une tenue : un dossier avec arret.png, tir.png, marche1..4.png
+function charger_sprites(dossier) {
     return {
-        arret: chargerImage(`./assets/${prefixe}_arret.png`),
-        tir: chargerImage(`./assets/${prefixe}_tir.png`),
-        marche: [1, 2, 3, 4].map(n => chargerImage(`./assets/${prefixe}_marche${n}.png`))
+        arret: chargerImage(`./assets/${dossier}/arret.png`),
+        tir: chargerImage(`./assets/${dossier}/tir.png`),
+        marche: [1, 2, 3, 4].map(n => chargerImage(`./assets/${dossier}/marche${n}.png`))
     };
 }
 
 const SPRITES_PERSO = {};
-for (const id in CONFIG.personnages) SPRITES_PERSO[id] = charger_sprites(CONFIG.personnages[id].sprites);
+for (const id in CONFIG.personnages) SPRITES_PERSO[id] = charger_sprites('persos/' + CONFIG.personnages[id].sprites);
 
 const joueur = {
     x: CONFIG.joueur.x,

@@ -19,7 +19,8 @@ const LOOT = {
 
     /* Skins
        - Tenues dédiées à un perso (« perso ») : de vrais sprites redessinés,
-         fichiers assets/skin_<id>_arret.png, _tir.png, _marche1..4.png
+         dans assets/skins/<dossier du perso>/<tenue>/ (l'id « mira_cyber » donne
+         assets/skins/mira/cyber/) : arret.png, tir.png, marche1..4.png
        - Skins universels (sans « perso ») : un filtre de couleur sur n'importe quel perso */
     skins: {
         soldat_urbain: { nom: 'Gris urbain', rarete: 'commun', perso: 'soldat' },
@@ -147,7 +148,8 @@ const Loot = (() => {
     function sprites_skin(perso, skinId) {
         const skin = LOOT.skins[skinId];
         if (!skin || !skin.perso) return SPRITES_PERSO[perso];
-        return cacheSprites[skinId] || (cacheSprites[skinId] = charger_sprites(`skin_${skinId}`));
+        const tenue = skinId.slice(skinId.indexOf('_') + 1);
+        return cacheSprites[skinId] || (cacheSprites[skinId] = charger_sprites(`skins/${CONFIG.personnages[skin.perso].sprites}/${tenue}`));
     }
     const sprites = perso => sprites_skin(perso, connu(L().equipes[perso]) ? L().equipes[perso] : null);
 

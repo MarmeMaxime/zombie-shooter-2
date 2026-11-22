@@ -27,8 +27,9 @@ const CONFIG = {
     canon: { x: 50, y: 28 },
 
     /* ---------- Personnages jouables ----------
-       Pour en ajouter un : une entrée ici (sprites = préfixe des images
-       <prefixe>_arret.png, _tir.png, _marche1..4.png) + une arme ci-dessous. */
+       Pour en ajouter un : une entrée ici (sprites = son dossier d'images,
+       assets/persos/<sprites>/ : arret.png, tir.png, marche1..4.png ; ses
+       tenues vont dans assets/skins/<sprites>/<tenue>/) + une arme ci-dessous. */
     /* Pouvoirs spéciaux (pouvoirs.js) : la jauge se remplit en tuant des zombies
        (« kills » éliminations pour la remplir), puis touche E ou bouton ★. */
     pouvoirs: {
@@ -72,6 +73,7 @@ const CONFIG = {
     personnages: {
         soldat: {
             nom: 'Soldat',
+            sprites: 'soldat',
             arme: 'fusil',
             pouvoir: 'rafale',
             vitesse: 1.25,      // plus rapide que les autres : compense son arme à une seule cible
@@ -81,7 +83,7 @@ const CONFIG = {
             nom: 'Brutus',
             arme: 'pompe',
             pouvoir: 'onde',
-            sprites: 'brute',
+            sprites: 'brutus',
             vitesse: 1.12,      // le plus lent avec Mira, mais assez pour couvrir les lignes en hardcore (simulation)
             description: '5 plombs en éventail : pas besoin de viser juste, mais portée limitée.'
         },
@@ -89,7 +91,7 @@ const CONFIG = {
             nom: 'Mira',
             arme: 'grenade',
             pouvoir: 'artillerie',
-            sprites: 'grenadier',
+            sprites: 'mira',
             description: 'Explose au contact et blesse tout autour. Idéal contre les groupes.'
         },
         // Sprites dérivés de ceux de Mira (outils/generer_lassie.ps1)
