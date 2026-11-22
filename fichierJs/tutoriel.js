@@ -24,7 +24,10 @@ const Instructeur = (() => {
         radio: { nom: 'Éclaireur (radio)', image: ouvert => SPRITES_RADIO[ouvert ? 1 : 0] },
         soldat: { nom: 'Soldat', image: () => Loot.sprites('soldat').arret, cadre: [3, 0, 22, 22] },
         brutus: { nom: 'Brutus', image: () => Loot.sprites('brute').arret, cadre: [5, 0, 22, 22] },
-        chercheur: { nom: 'Labo', image: ouvert => SPRITES_CHERCHEUR[ouvert ? 1 : 0], cadre: [20, 2, 24, 24] }   // sorti du labo, dans l'ombre
+        chercheur: { nom: 'Labo', image: ouvert => SPRITES_CHERCHEUR[ouvert ? 1 : 0], cadre: [20, 2, 24, 24] },   // sorti du labo, dans l'ombre
+        // Gégé, le gorille (« Le Ring ») : un inconnu, jusqu'à ce que Brutus le reconnaisse
+        gorilleInconnu: { nom: '???', image: ouvert => (ouvert ? SPRITES_BOXE.gorille.parle : SPRITES_BOXE.gorille.garde[0]), cadre: [14, 10, 38, 38] },
+        gorille: { nom: 'Gégé', image: ouvert => (ouvert ? SPRITES_BOXE.gorille.parle : SPRITES_BOXE.gorille.garde[0]), cadre: [14, 10, 38, 38] }
     };
     let orateur = 'sergent';
 
@@ -60,7 +63,7 @@ const Instructeur = (() => {
         parleJusque = performance.now() + Math.min(2600, 400 + message.length * 30);
         clearInterval(animation);
         let ouvert = false;
-        const VOIX = { sergent: 'voixSergent', sergentPyjama: 'voixSergent', labo: 'voixLabo', radio: 'voixRadio', brutus: 'voixBrutus', chercheur: 'voixLabo' };   // le Soldat ne dit rien
+        const VOIX = { sergent: 'voixSergent', sergentPyjama: 'voixSergent', labo: 'voixLabo', radio: 'voixRadio', brutus: 'voixBrutus', chercheur: 'voixLabo', gorilleInconnu: 'voixBrutus', gorille: 'voixBrutus' };   // le Soldat ne dit rien
         if (qui === 'radio') Son.effet('radio');
         animation = setInterval(() => {
             ouvert = performance.now() < parleJusque && !ouvert;

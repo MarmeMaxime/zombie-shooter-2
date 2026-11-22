@@ -57,6 +57,7 @@ function dessiner() {
 
     ctx.imageSmoothingEnabled = false;    // tout est en pixel art : net, sans flou
     ctx.drawImage(fond, 0, 0, MONDE.largeur, MONDE.hauteur);
+    if (typeof Boxe !== 'undefined' && Boxe.actif()) return Boxe.dessiner(ctx);   // le ring, la foule, les deux boxeurs
     if (etat.variante === 'campagne' && typeof Campagne !== 'undefined') Campagne.dessiner_sol(ctx);   // camion à escorter
     draw_zombies(ctx);
     draw_balles(ctx);
@@ -190,12 +191,15 @@ function boucle(instant) {
         if (!etat.tuto) Succes.seconde();   // l'entraînement ne compte pas
     }
 
-    // Mise à jour
-    update_joueur(dt, MONDE.hauteur);
-    update_pouvoir(dt);
-    update_balles(dt, MONDE.largeur, MONDE.hauteur);
-    update_zombies(dt, MONDE.largeur, MONDE.hauteur, etat.temps);
-    Missions.fin_image();   // zombies tués « d'un seul coup » pendant cette image
+    // Mise à jour (un combat de boxe de la campagne remplace le tir : boxe.js)
+    if (typeof Boxe !== 'undefined' && Boxe.actif()) Boxe.maj(dt);
+    else {
+        update_joueur(dt, MONDE.hauteur);
+        update_pouvoir(dt);
+        update_balles(dt, MONDE.largeur, MONDE.hauteur);
+        update_zombies(dt, MONDE.largeur, MONDE.hauteur, etat.temps);
+        Missions.fin_image();   // zombies tués « d'un seul coup » pendant cette image
+    }
     if (typeof Tutoriel !== 'undefined') Tutoriel.maj(dt);
 
     dessiner();

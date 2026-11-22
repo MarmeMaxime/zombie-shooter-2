@@ -251,6 +251,13 @@ const Son = (() => {
         tombe: () => { bruit(0, 0.6, { vol: 0.25, filtre: 300, filtreFin: 900 }); ton(55, 0, 0.6, { type: 'sawtooth', vol: 0.08, f2: 45 }); },
         succes: () => [784, 988, 1175, 1568].forEach((f, i) => ton(f, i * 0.09, 0.35, { type: 'triangle', vol: 0.15 })),
         degat: () => { ton(220, 0, 0.25, { type: 'square', vol: 0.12, f2: 90 }); bruit(0, 0.15, { vol: 0.15, filtre: 800 }); },
+        // Le combat de boxe (boxe.js) : coups, garde, cloche du ring, foule, rugissement
+        coupPoing: () => { bruit(0, 0.08, { vol: 0.22, filtre: 1400, filtreFin: 250 }); ton(160, 0, 0.09, { vol: 0.14, f2: 70 }); },
+        coupFort: () => { bruit(0, 0.18, { vol: 0.32, filtre: 1100, filtreFin: 120 }); ton(110, 0, 0.18, { vol: 0.22, f2: 45 }); },
+        coupBloque: () => { bruit(0, 0.05, { vol: 0.12, filtre: 600, filtreFin: 300 }); ton(240, 0, 0.05, { type: 'triangle', vol: 0.05, f2: 180 }); },
+        cloche: () => [0, 0.32].forEach(t => { ton(1180, t, 1.1, { type: 'sine', vol: 0.09 }); ton(2950, t, 0.6, { type: 'sine', vol: 0.03 }); }),
+        foule: () => bruit(0, 1.1, { vol: 0.09, filtre: 900, filtreFin: 1600, type: 'bandpass' }),
+        rugissement: () => { ton(150, 0, 0.9, { type: 'sawtooth', vol: 0.07, f2: 95, attaque: 0.05 }); ton(300, 0, 0.7, { type: 'square', vol: 0.02, f2: 190 }); bruit(0, 0.8, { vol: 0.1, filtre: 700, filtreFin: 300, type: 'bandpass' }); },
 
         /* Grognements de zombies, de temps en temps pendant les parties (plus graves
            pour les Tanks). Assez aigus pour passer sur des haut-parleurs de portable

@@ -38,6 +38,7 @@ function pouvoir_zombie_tue() {
 }
 
 function activer_pouvoir() {
+    if (typeof Boxe !== 'undefined' && Boxe.actif()) { if (partie_en_cours()) Boxe.super(); return; }   // l'uppercut de Brutus
     if (!partie_en_cours() || !pouvoir_pret()) return;
     pouvoir.charge = 0;
     maj_hud_pouvoir();

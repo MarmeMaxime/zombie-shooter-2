@@ -29,7 +29,12 @@ Au lancement d'un combat, on choisit le mode :
   une horde qui fuit quelque chose… et la rencontre avec Brutus. Puis « Déménagement
   express » : au coin du feu, Brutus raconte comment il est arrivé, et on joue son
   histoire avec lui, en ville, le jour où tout a commencé. Puis « Terminus » : il quitte
-  la ville par le métro, dans le noir, et croise les Infirmiers de l'hôpital.
+  la ville par le métro, dans le noir, et croise les Infirmiers de l'hôpital. Puis
+  « Le Ring » : on lui a volé son fusil, et il doit le regagner à la boxe contre Gégé,
+  un ancien collègue qui a muté en gorille. Un vrai combat, sans tir : Tir pour frapper,
+  Haut ou Bas pour esquiver quand Gégé prévient (« ! »), une esquive au dernier moment
+  le laisse ouvert pour un contre, et ★ lance l'uppercut quand la rage est pleine.
+  (`outils/simulation_boxe.js` fait jouer un bot pour régler la difficulté.)
 
   Chaque mission garde son meilleur temps et ses vies restantes ; le chapitre se
   termine sur un épilogue. Le camp s'affiche derrière le menu et grandit avec la

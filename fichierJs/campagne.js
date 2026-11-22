@@ -57,11 +57,16 @@ const Campagne = (() => {
         }
         $c('hud-mission').classList.remove('hidden');
         maj_hud_mission();
+        // Un combat de boxe (boxe.js) : pas d'objectif à afficher, la vie des deux boxeurs suffit
+        if (m.boxe) { $c('hud-mission').classList.add('hidden'); Boxe.demarrer(m.boxe[etat.mode]); }
         // Deux lignes : le numéro, puis le titre (un long titre tient même sur un petit téléphone)
         bandeau(T('MISSION {n}', { n: m.numero }) + '\n' + T(m.titre).toUpperCase());
         // Une mission racontée (un souvenir) : le narrateur pose le décor, après le bandeau
         const mi = m;
-        if (m.debut) setTimeout(() => { if (m === mi && etat.enCours && !fini) dire_epilogue(mi.debut, 0, () => {}); }, 1700);
+        // (pour un combat de boxe : la présentation, puis la cloche)
+        const go = () => { if (mi.boxe && m === mi) Boxe.commencer(); };
+        if (m.debut) setTimeout(() => { if (m === mi && etat.enCours && !fini) dire_epilogue(mi.debut, 0, go); }, 1700);
+        else if (m.boxe) setTimeout(go, 1700);
     }
 
     // Bandeau animé au centre de l'écran (le même que pour les vagues, en plus petit)
@@ -76,6 +81,7 @@ const Campagne = (() => {
 
     function arreter() {
         m = null;
+        if (typeof Boxe !== 'undefined') Boxe.arreter();
         camion = null;
         if (moteurCamion) { moteurCamion.arreter(); moteurCamion = null; }
         chantier = null;
@@ -337,7 +343,7 @@ const Campagne = (() => {
         etat.finChapitre = Boolean(epilogue);
         const suite = epilogue ? () => dire_epilogue(epilogue, 0, fin) : fin;
         if (texte && typeof Instructeur !== 'undefined' && document.getElementById('instructeur'))
-            Instructeur.parler(T(texte), T(victoire ? 'Mission accomplie !' : 'Compris, sergent…'), suite, m.debriefQui || 'sergent', 1000);   // impossible à passer pendant 1 s
+            Instructeur.parler(T(texte), T(victoire ? 'Mission accomplie !' : (m.echecBouton || 'Compris, sergent…')), suite, m.debriefQui || 'sergent', 1000);   // impossible à passer pendant 1 s
         else fin();
     }
 
@@ -720,5 +726,7 @@ const Campagne = (() => {
     }
 
     return { demarrer, arreter, maj, tue, fin, lancer, ouvrir, etape, dessiner_nuit, dessiner_sol, balle_sur_brutus, miroir: () => Boolean(m && m.miroir),
-        decor: () => (!m || !m.decor ? null : m.decor === 'ville' ? decor_ville() : m.decor === 'metro' ? decor_metro() : null) };
+        decor: () => (!m || !m.decor ? null : m.decor === 'ville' ? decor_ville() : m.decor === 'metro' ? decor_metro() : m.decor === 'arene' ? decor_arene() : null),
+        // Fin d'un combat de boxe (boxe.js) : comme la fin d'une vague
+        fin_boxe: victoire => { if (m && !fini) terminer(victoire); } };
 })();

@@ -204,6 +204,45 @@ const MISSIONS_CAMPAGNE = [
             victoire: 'Brutus sort du tunnel. Devant lui : le désert, et l\'ouest.',
             echec: '« Non, attends. Je me suis trompé de station. » Brutus reprend depuis l\'entrée du tunnel.'
         }
+    },
+    {
+        id: 'c2m4', chapitre: 2, numero: 4, titre: 'Le Ring', perso: 'brute',
+        // On a volé son fusil à Brutus pendant qu'il dormait. Les traces mènent à une
+        // vieille usine : des survivants, et leur roi, Gégé, un ancien collègue qui a muté
+        // en gorille. Tout s'y gagne sur le ring : le fusil, et une carte (le camp du Sergent).
+        // Un combat de boxe (boxe.js) : coups, esquives et contres, sans tir.
+        decor: 'arene',
+        objectif: { normal: 1, hardcore: 1 },
+        boxe: {
+            // pv de Gégé ; armer : temps entre le « ! » et l'impact ; parfait : fenêtre de l'esquive parfaite
+            normal: { pv: 620, armer: 0.8, degats: 13, garde: [1.1, 2.0], ouvert: 1.0, parfait: 0.2, jab: 5, contre: 14, super: 45, feintes: 0 },
+            hardcore: { pv: 700, armer: 0.62, degats: 22, garde: [0.8, 1.6], ouvert: 0.85, parfait: 0.16, jab: 4, contre: 13, super: 45, feintes: 0.25 }
+        },
+        debut: [
+            { qui: 'gorilleInconnu', texte: 'Tiens, tiens. Le dormeur s\'est réveillé. Il cherche son joujou ?' },
+            { qui: 'brutus', texte: 'C\'est mon fusil. Rends-le, et je ne casse rien.' },
+            { qui: 'gorilleInconnu', texte: 'Tu ne me reconnais pas ? Regarde bien. Imagine-moi avec moins de poils.' },
+            { qui: 'brutus', texte: '… Non.' },
+            { qui: 'gorilleInconnu', texte: 'Le piano du conservatoire. Quatrième étage. Tu l\'as lâché sur mon pied.' },
+            { qui: 'brutus', texte: '… GÉGÉ ?! Qu\'est-ce qui t\'est arrivé ?' },
+            { qui: 'gorille', texte: 'J\'ai muté. Toi, tu as juste vieilli.' },
+            { qui: 'gorille', texte: 'Ici, c\'est chez moi. Et chez moi, tout se gagne sur le ring. Ton fusil… et ça.' },
+            { qui: 'gorille', texte: 'Une carte. Un camp militaire, à l\'ouest. Des vivres, des murs, des soldats. Le paradis.' },
+            { qui: 'brutus', texte: 'Et si je perds ?' },
+            { qui: 'gorille', texte: 'Tu restes ici. À porter mes caisses. Comme au bon vieux temps.' },
+            { qui: 'brutus', texte: 'Au bon vieux temps, c\'est toi qui portais. Monte sur le ring, Gégé.', bouton: 'Au combat !' }
+        ],
+        debriefQui: 'brutus',
+        debrief: {
+            normal: 'Gégé est tombé comme un piano. Il m\'a rendu mon fusil, et la carte. Un camp, à l\'ouest, avec des vivres et des murs.',
+            hardcore: 'Il cognait plus fort qu\'avant, Gégé. Mais il a gardé son vieux défaut : il prévient toujours avant de frapper.'
+        },
+        echec: 'Non, attends. Je ne suis pas tombé. J\'ai… glissé. Je reprends.',
+        echecBouton: 'Revanche !',
+        texteFin: {
+            victoire: 'Brutus récupère son fusil et la carte d\'un camp militaire. Direction : l\'ouest.',
+            echec: 'Brutus jure qu\'il a glissé. Il reprend le combat depuis le début.'
+        }
     }
 ];
 
@@ -379,5 +418,24 @@ SCENES_CAMPAGNE.c2m3 = {
         { qui: 'sergent', texte: 'Assieds-toi. Personne ne quitte le feu avant la fin de l\'histoire. C\'est le règlement.' },
         { qui: 'soldat', texte: '…' },
         { qui: 'brutus', texte: 'Donc : le tunnel. Le noir. Et un bruit de roulettes de brancard.', bouton: 'Raconte !' }
+    ]
+};
+
+/* Toujours au coin du feu : le fusil volé, et la grande bâtisse. */
+SCENES_CAMPAGNE.c2m4 = {
+    ...SCENES_CAMPAGNE.c2m2,
+    lignes: [
+        { qui: 'chercheur', texte: 'Et après le tunnel ? Vous avez marché jusqu\'ici, à travers le désert ?' },
+        { qui: 'brutus', texte: 'Pas tout de suite. J\'ai dormi dans une cabane, au bord de la voie. Et au réveil… plus de fusil.' },
+        { qui: 'sergent', texte: 'On t\'a volé ton fusil. Pendant que tu dormais. Toi.' },
+        { qui: 'brutus', texte: 'Je dors profondément, Chef. Tu le sais. Aux Trois Collines, j\'ai dormi pendant un bombardement.' },
+        { qui: 'sergent', texte: 'C\'était un orage.' },
+        { qui: 'brutus', texte: 'Bref. Il y avait des traces. De grosses traces. Je les ai suivies jusqu\'à une grande bâtisse, une vieille usine.' },
+        { qui: 'brutus', texte: 'Et dedans, des gens. Des vivants ! Et au milieu, assis sur des caisses comme sur un trône… un gorille.' },
+        { qui: 'chercheur', texte: 'Un gorille ? Un vrai ?' },
+        { qui: 'brutus', texte: 'Un homme. Enfin, à moitié. Il avait muté.' },
+        { qui: 'chercheur', texte: 'Muté… Et il parlait ? Il se souvenait de qui il était ?' },
+        { qui: 'soldat', texte: '…' },
+        { qui: 'brutus', texte: 'Oh oui. Il se souvenait très bien. Surtout de moi.', bouton: 'Raconte !' }
     ]
 };
