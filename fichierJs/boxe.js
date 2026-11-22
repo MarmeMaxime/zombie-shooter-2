@@ -18,7 +18,8 @@
    ========================================================================= */
 const Boxe = (() => {
     let c = null;
-    const ECH = 2;                 // les combattants sont dessinés en 2×
+    const ECH = 2;                 // Gégé est dessiné en 2×
+    const ECH_B = 2.25;            // Brutus un peu plus (son sprite est plus fin)
     const SOL = 334;               // ligne des pieds sur le ring (unités du monde)
 
     const alea = (a, b) => a + Math.random() * (b - a);
@@ -286,7 +287,7 @@ const Boxe = (() => {
         Son.effet('coupFort');
         secouer_ecran(3);
         if (typeof Son.vibrer === 'function') Son.vibrer(1, 150);
-        eclat(MONDE.largeur / 2 - 92, SOL - 108, true);
+        eclat(MONDE.largeur / 2 - 92, SOL - 104, true);
         texte('-' + c.r.degats, MONDE.largeur / 2 - 110, SOL - 140, '#ff5a4a', 15);
         rage(4);
         c.ferveur = Math.min(1, c.ferveur + 0.15);
@@ -366,7 +367,7 @@ const Boxe = (() => {
         cordes(ctx, false);
         // Ombres au sol
         ctx.fillStyle = 'rgba(0,0,0,0.35)';
-        ctx.beginPath(); ctx.ellipse(cx - 76, SOL - 2, 40, 7, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(cx - 86, SOL - 2, 38, 7, 0, 0, Math.PI * 2); ctx.fill();
         ctx.beginPath(); ctx.ellipse(cx + 40, SOL - 2, 62, 9, 0, 0, Math.PI * 2); ctx.fill();
 
         // Gégé (derrière Brutus) : il avance quand il frappe, recule quand il est touché
@@ -374,7 +375,8 @@ const Boxe = (() => {
         poser(ctx, image_g(), cx - 60 + (g.etat === 'ko' ? 20 : dxg), SOL - 92 * ECH + 4, 96 * ECH);
         // Brutus : il recule quand il esquive ou qu'il est sonné
         const dxb = b.etat === 'esquive' ? -14 : b.etat === 'sonne' ? -18 * (1 - b.t / 0.5) : (b.etat === 'jab' || b.etat === 'direct') ? 6 : b.etat === 'uppercut' ? 10 : 0;
-        poser(ctx, image_b(), cx - 150 + (b.etat === 'ko' ? -30 : dxb), SOL - 61 * ECH, 64 * ECH);
+        // (son vrai sprite : les pieds sur la dernière ligne, le corps vers la gauche de l'image)
+        poser(ctx, image_b(), cx - 140 + (b.etat === 'ko' ? -24 : dxb), SOL - 63 * ECH_B, 64 * ECH_B);
 
         cordes(ctx, true);
         dessiner_foule(ctx, true);

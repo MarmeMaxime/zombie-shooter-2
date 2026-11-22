@@ -1,10 +1,12 @@
 /* =========================================================================
    SPRITES DU COMBAT DE BOXE (chapitre 2, « Le Ring »), pixel art généré au
    chargement (voir pixel_art.js). Dessinés en 2× à l'écran par boxe.js.
-   - SPRITES_BOXE.brutus (grille 64, tourné vers la droite) : Brutus sans
-     son fusil (on le lui a volé), poings bandés.
-       garde ×4 (il sautille), jab ×2 (bras avant), direct ×2 (bras arrière),
-       uppercut ×3, esquive ×2 (il plonge en arrière), touche, victoire
+   - SPRITES_BOXE.brutus (grille 64, tourné vers la droite) : construit à
+     partir de son vrai sprite (ou de sa tenue), sans le fusil qu'on lui a volé,
+     avec des bras de boxeur.
+       garde ×4, jab ×2 (bras du fond), direct ×2 (bras proche), uppercut ×3,
+       esquive ×2 (il recule en se baissant), touche, victoire (il gonfle les
+       biceps), ko (couché)
    - SPRITES_BOXE.gorille (grille 96, tourné vers la gauche) : Gégé, ancien
      déménageur qui a muté en gorille. Fourrure sombre, torse gris, short en
      jean déchiré, grosse chaîne en or : le roi de la bâtisse.
@@ -15,115 +17,200 @@
 const SPRITES_BOXE = (() => {
     const { poser, ellipse, rect, trait, membre } = PixelArt;
 
-    /* ---------- Brutus ---------- */
-    const COULEURS_B = {
-        S: '#c68a5e', s: '#9e6640', L: '#dda27a',   // peau
-        U: '#5e6e34', u: '#3e4a22',                 // débardeur
-        P: '#4a5a2a', p: '#28331a',                 // pantalon
-        N: '#1e1a18',                               // rangers
-        B: '#2d1b1e',                               // barbe, sourcils
-        W: '#e6dccb', w: '#b8ac98',                 // bandages des poings
-        R: '#8a3a2a',                               // bouche
-        Y: '#fef3c0',                               // œil
-        K: '#050403'
-    };
-    const PARTIES_B = {
-        b: { rang: 0, base: 'S', ombre: 's', bande: 'fine' },     // bras arrière
-        g: { rang: 0.5, base: 'W', ombre: 'w', bande: 'fine' },   // poing arrière
-        q: { rang: 0, base: 'P', ombre: 'p', bande: 'fine' },     // jambe arrière
-        T: { rang: 1, base: 'U', ombre: 'u', bande: 'large' },    // torse
-        J: { rang: 2, base: 'P', ombre: 'p', bande: 'fine' },     // jambe avant
-        H: { rang: 3, base: 'S', ombre: 's', bande: 'large' },    // tête
-        A: { rang: 4, base: 'S', ombre: 's', bande: 'fine' },     // bras avant
-        G: { rang: 5, base: 'W', ombre: 'w', bande: 'fine' }      // poing avant
-    };
+    /* ---------- Brutus : construit à partir de son VRAI sprite ----------
+       On part de assets/persos/brutus/arret.png (ou de la tenue équipée, qui a la
+       même forme) : la tête, le gilet, le pantalon et les rangers sont repris pixel
+       pour pixel. On retire le fusil et les deux bras, on redessine le bas du gilet
+       et la ceinture que le fusil cachait, puis on lui remet des bras de boxeur,
+       ombrés comme les siens (reflet à gauche, ombre à droite, contour noir), avec
+       les couleurs lues sur le sprite. Construit au premier combat (l'image doit
+       être chargée), et gardé en cache pour chaque tenue. */
+    const cacheBrutus = new Map();
+    const N = 64;
 
-    // pose : { bas (accroupi), penche (torse en avant +), tete: [dx, dy], avant: [coude, poing], arriere: [coude, poing], bouche }
-    function brutus(pose) {
-        const g = PixelArt.grille(64);
-        const bas = pose.bas || 0, pe = pose.penche || 0;
-        const hx = 30, hy = 40 + bas;
-        // Jambes : appui large, genoux fléchis
-        const jambe = (x0, genou, pied, partie) => {
-            membre(g, x0, hy, genou[0], genou[1] + bas * 0.5, 8, partie);
-            membre(g, genou[0], genou[1] + bas * 0.5, pied[0], pied[1], 7, partie);
-            rect(g, pied[0] - 4, 58, pied[0] + 5, 61, 'N');
-            rect(g, pied[0] - 3, 56, pied[0] + 3, 57, 'N');
+    function brutus_depuis(img) {
+        const toile = document.createElement('canvas'); toile.width = toile.height = N;
+        const tg = toile.getContext('2d'); tg.drawImage(img, 0, 0, N, N);
+        const d = tg.getImageData(0, 0, N, N).data;
+        const px = (x, y) => { const i = (y * N + x) * 4; return d[i + 3] < 128 ? null : `rgb(${d[i]},${d[i + 1]},${d[i + 2]})`; };
+        const ou = (c, def) => c || def;
+        // Les couleurs de Brutus, lues sur son sprite (une tenue garde les siennes)
+        const C = {
+            A: ou(px(3, 21), '#050403'),            // contour
+            J: ou(px(4, 21), '#dda27a'),            // peau : reflet
+            S: ou(px(5, 21), '#c68a5e'),            // peau
+            G: ou(px(8, 21), '#9e6640'),            // peau : ombre
+            K: ou(px(17, 18), '#5e6e34'),           // gilet
+            M: ou(px(15, 18), '#3e4a22'),           // gilet : ombre
+            X: ou(px(9, 37), '#6e7e3c'),            // pantalon : reflet
+            Y: ou(px(12, 37), '#4a5a2a'),           // pantalon
+            Z: ou(px(17, 37), '#28331a'),           // pantalon : ombre
+            B: '#4f342f', b: '#2d1b1e', F: '#c8a040'   // ceinture, boucle
         };
-        jambe(hx - 3, [22, 50], [19, 56], 'q');
-        // Bras arrière (derrière le torse)
-        const epaule = [27 + pe, 24 + bas], epauleAv = [37 + pe, 24 + bas];
-        const bras = (ep, [coude, poing], partieBras, partiePoing) => {
-            membre(g, ep[0], ep[1], coude[0] + pe, coude[1] + bas, 7, partieBras);
-            membre(g, coude[0] + pe, coude[1] + bas, poing[0] + pe, poing[1] + bas, 6, partieBras);
-            ellipse(g, poing[0] + pe, poing[1] + bas, 4, 3.6, partiePoing, 0);
+
+        // 1. Le corps sans bras ni fusil
+        const corps = Array.from({ length: N }, () => Array(N).fill(null));
+        const copier = (y, x0, x1) => { for (let x = x0; x <= x1; x++) corps[y][x] = px(x, y); };
+        for (let y = 0; y <= 12; y++) copier(y, 0, 40);          // la tête, les trapèzes
+        for (let y = 13; y <= 14; y++) copier(y, 10, 26);        // les épaules du gilet
+        for (let y = 15; y <= 19; y++) copier(y, 13, 26);        // le gilet et le col en V
+        // Le bas du gilet (caché par le fusil) : ombre à gauche, couture, reflet, contour
+        for (let y = 20; y <= 31; y++) {
+            const g = 12, dr = y >= 25 ? 27 : 26;                  // un peu de ventre
+            for (let x = g; x <= dr; x++) corps[y][x] = C.K;
+            corps[y][g] = C.A; corps[y][dr] = C.A;
+            corps[y][g + 1] = C.M; corps[y][g + 2] = C.M;
+            corps[y][19] = C.M;                                  // l'ouverture du gilet
+            if (y % 3 === 0) corps[y][23] = C.X;                 // reflet sur le tissu
+            if (y >= 29) for (let x = g + 1; x < dr; x++) if ((x + y) % 2) corps[y][x] = C.M;   // le pli du ventre
+        }
+        // La ceinture, sa boucle, et une poche de cuir sur la hanche
+        for (let y = 32; y <= 33; y++) { for (let x = 11; x <= 27; x++) corps[y][x] = y === 32 ? C.B : C.b; corps[y][10] = C.A; corps[y][28] = C.A; }
+        for (let y = 31; y <= 34; y++) for (let x = 18; x <= 20; x++) corps[y][x] = (x === 19 && (y === 32 || y === 33)) ? C.b : C.F;
+        for (let y = 30; y <= 36; y++) for (let x = 12; x <= 15; x++) corps[y][x] = (x === 12 || y === 36) ? C.A : y === 30 ? C.B : C.b;
+        // Le haut du pantalon
+        for (let y = 34; y <= 35; y++) {
+            for (let x = 10; x <= 27; x++) corps[y][x] = C.Y;
+            corps[y][9] = C.A; corps[y][28] = C.A; corps[y][10] = C.X;
+            corps[y][18] = C.Z; corps[y][19] = C.Z; corps[y][20] = C.A; corps[y][21] = C.Z;
+        }
+        copier(36, 9, 40); corps[36][8] = C.A;
+        for (let y = 37; y < N; y++) copier(y, 0, 40);          // les jambes et les rangers
+
+        /* 2. Un bras de boxeur. Même ombrage que le bras de son sprite, en travers du
+           membre : reflet sur deux pixels (côté lumière, en haut à gauche), peau,
+           ombre, puis le trait sombre entre biceps et triceps, et un liseré de peau
+           avant le contour (« jjccgg·cc » sur son sprite). Le poing : reflet en haut,
+           ombre en bas, les doigts repliés marqués, le pouce. */
+        function bras(epaule, coude, poing) {
+            const forme = new Map(), cle = (x, y) => x + ',' + y;   // pixel → { morceau, s (−1 ombre … +1 lumière) }
+            const membre = (a, b, r0, r1, morceau) => {
+                const ux = b[0] - a[0], uy = b[1] - a[1], l = Math.hypot(ux, uy) || 1;
+                let nx = -uy / l, ny = ux / l;
+                if (nx * -1 + ny * -1 < 0) { nx = -nx; ny = -ny; }      // la normale regarde la lumière (en haut à gauche)
+                const rmax = Math.max(r0, r1);
+                for (let y = Math.floor(Math.min(a[1], b[1]) - rmax - 1); y <= Math.ceil(Math.max(a[1], b[1]) + rmax + 1); y++)
+                    for (let x = Math.floor(Math.min(a[0], b[0]) - rmax - 1); x <= Math.ceil(Math.max(a[0], b[0]) + rmax + 1); x++) {
+                        const t = Math.max(0, Math.min(1, ((x - a[0]) * ux + (y - a[1]) * uy) / (l * l)));
+                        const px0 = a[0] + ux * t, py0 = a[1] + uy * t, r = r0 + (r1 - r0) * t;
+                        const ddx = x - px0, ddy = y - py0;
+                        if (ddx * ddx + ddy * ddy > r * r) continue;
+                        const s = (ddx * nx + ddy * ny) / r;
+                        const avant = forme.get(cle(x, y));
+                        if (!avant || avant.morceau !== 'poing') forme.set(cle(x, y), { morceau, s, t });
+                    }
+            };
+            membre(epaule, coude, 5.2, 4, 'biceps');                 // le biceps : énorme, comme sur son sprite
+            membre([epaule[0] - 0.5, epaule[1]], [epaule[0] + 0.5, epaule[1] + 1], 5.4, 5.4, 'biceps');   // l'épaule
+            membre(coude, poing, 3.9, 3.4, 'avantbras');            // l'avant-bras
+            // Le poing
+            const fx = poing[0] - coude[0], fy = poing[1] - coude[1], fl = Math.hypot(fx, fy) || 1, vx = fx / fl, vy = fy / fl;
+            const R = 4.4;
+            for (let y = Math.floor(poing[1] - R); y <= Math.ceil(poing[1] + R); y++) for (let x = Math.floor(poing[0] - R); x <= Math.ceil(poing[0] + R); x++) {
+                const ox = x - poing[0], oy = y - poing[1];
+                if (ox * ox + oy * oy <= R * R) forme.set(cle(x, y), { morceau: 'poing', f: ox * vx + oy * vy, l: -ox * vy + oy * vx, s: (-ox - oy) / (R * 1.4) });
+            }
+            const dans = (x, y) => forme.has(cle(x, y));
+            const calque = new Map();
+            for (const [k, p] of forme) {
+                let c;
+                if (p.morceau === 'poing') {
+                    c = p.s > 0.35 ? C.J : p.s < -0.4 ? C.G : C.S;
+                    // Les doigts repliés : des plis sombres à l'avant du poing, tous les deux pixels
+                    if (p.f > 1 && Math.abs(p.l) < 3.6 && Math.round(p.l + 10) % 2 === 0) c = C.G;
+                    if (p.f > 2.2 && Math.abs(p.l) < 3.6 && Math.round(p.l + 10) % 2 === 0) c = C.A;
+                } else if (p.morceau === 'biceps') {
+                    c = p.s > 0.45 ? C.J : p.s > -0.15 ? C.S : p.s > -0.5 ? C.G : p.s > -0.68 ? C.A : C.S;
+                } else {
+                    c = p.s > 0.45 ? C.J : p.s > -0.3 ? C.S : C.G;
+                }
+                calque.set(k, c);
+            }
+            // Le creux du coude : une petite ombre
+            const cx = Math.round(coude[0]), cy = Math.round(coude[1]);
+            for (const [x, y] of [[cx, cy], [cx + 1, cy]]) if (dans(x, y)) calque.set(cle(x, y), C.G);
+            // Le poignet : un trait sombre sépare le poing de l'avant-bras
+            for (const [k, p] of forme) if (p.morceau === 'poing' && p.f < -3.2) calque.set(k, C.A);
+            // Le contour noir
+            for (const k of forme.keys()) {
+                const [x, y] = k.split(',').map(Number);
+                for (const [vx, vy] of [[x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]]) if (!dans(vx, vy)) calque.set(cle(vx, vy), calque.get(cle(vx, vy)) || C.A);
+            }
+            return calque;
+        }
+
+        // 3. Une pose : le haut du corps se déplace (dx, dy), la tête peut partir en arrière,
+        // le bras du fond est dessiné derrière le corps, le bras proche par-dessus
+        function pose({ dx = 0, dy = 0, tete = [0, 0], proche, loin }) {
+            const grille = Array.from({ length: N }, () => Array(N).fill(null));
+            const poserCalque = (calque, ox, oy) => { for (const [k, c] of calque) { const [x, y] = k.split(',').map(Number); const X = x + ox, Y = y + oy; if (X >= 0 && Y >= 0 && X < N && Y < N && c) grille[Y][X] = c; } };
+            // Le bras du fond, derrière
+            poserCalque(bras(...loin), dx, dy);
+            // Le corps : les jambes restent plantées, le haut bouge
+            for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+                const c = corps[y][x];
+                if (!c) continue;
+                const haut = y < 36, ox = haut ? dx + (y <= 12 ? tete[0] : 0) : 0, oy = haut ? dy + (y <= 12 ? tete[1] : 0) : 0;
+                const X = x + ox, Y = y + oy;
+                if (X >= 0 && Y >= 0 && X < N && Y < N) grille[Y][X] = c;
+            }
+            // Le bras proche, devant
+            poserCalque(bras(...proche), dx, dy);
+            return grille;
+        }
+
+        const en_image = grille => {
+            const t = document.createElement('canvas'); t.width = t.height = N;
+            const c = t.getContext('2d');
+            for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (grille[y][x]) { c.fillStyle = grille[y][x]; c.fillRect(x, y, 1, 1); }
+            return t;
         };
-        bras(epaule, pose.arriere, 'b', 'g');
-        // Torse massif (débardeur), épaules nues
-        ellipse(g, 32 + pe, 30 + bas, 10, 11, 'T', 0.04);
-        rect(g, 23 + pe, 30 + bas, 41 + pe, 41 + bas, 'T');
-        ellipse(g, 26 + pe, 23 + bas, 4, 3.5, 'b', 0); ellipse(g, 38 + pe, 23 + bas, 4, 3.5, 'A', 0);
-        jambe(hx + 4, [40, 50], [42, 56], 'J');
-        rect(g, 23 + pe, 39 + bas, 41 + pe, 42 + bas, 'J');                                   // ceinture du pantalon
-        // Tête : crâne rasé, barbe, nuque épaisse
-        const [tx, ty] = pose.tete || [0, 0];
-        const cx = 36 + pe + tx, cy = 14 + bas + ty;
-        rect(g, cx - 4, cy + 4, cx + 2, cy + 9, 'H');
-        ellipse(g, cx, cy, 6.5, 7, 'H', 0.04);
-        bras(epauleAv, pose.avant, 'A', 'G');
-        const res = PixelArt.finir(g, PARTIES_B);
-        // Détails du visage (après les finitions) : barbe, sourcil, œil, oreille, bouche
-        const set = (x, y, c) => { x = Math.round(x); y = Math.round(y); if (res[y] && res[y][x] && res[y][x] !== 'K') res[y][x] = c; };
-        // Barbe de quelques jours : le long de la mâchoire, piquetée sur la peau
-        for (let y = cy + 3; y <= cy + 7; y++) for (let x = cx - 1; x <= cx + 6; x++)
-            if ((x - cx - 2) ** 2 / 20 + (y - cy - 4) ** 2 / 10 <= 1) set(x, y, (x + y) % 2 || y >= cy + 6 ? 'B' : 's');
-        for (let x = cx + 1; x <= cx + 5; x++) set(x, cy - 2, 'B');
-        set(cx + 3, cy - 1, 'Y'); set(cx + 4, cy - 1, 'K');
-        set(cx - 3, cy, 's'); set(cx - 3, cy + 1, 's');
-        if (pose.bouche) { set(cx + 4, cy + 4, 'R'); set(cx + 5, cy + 4, 'R'); set(cx + 4, cy + 5, 'R'); }
-        for (let y = 0; y < 64; y++) for (let x = 0; x < 64; x++) if (res[y][x] === 'S' && (x + y) % 9 === 0 && y > 20 && y < 40) res[y][x] = 'L';   // reflets sur les muscles
-        return PixelArt.en_image(res, COULEURS_B);
+        // K.O. : la pose « touché », tournée d'un quart de tour (la tête vers la gauche), posée au sol
+        const couche = grille => {
+            const r = Array.from({ length: N }, () => Array(N).fill(null));
+            for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (grille[y][x]) r[N - 1 - x][y] = grille[y][x];
+            let bas = 0; for (let y = 0; y < N; y++) if (r[y].some(Boolean)) bas = y;
+            const dec = N - 1 - bas, res = Array.from({ length: N }, () => Array(N).fill(null));
+            for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (r[y][x] && y + dec < N) res[y + dec][x] = r[y][x];
+            return res;
+        };
+
+        // Épaules : la proche (à gauche, énorme, devant le gilet), la lointaine (à droite, derrière)
+        const EP = [9, 16], EL = [26, 15];
+        const GARDE_P = [EP, [12, 27], [21, 18]], GARDE_L = [EL, [33, 24], [34, 13]];
+        const touche = pose({ dx: -3, dy: 1, tete: [-1, 0], proche: [EP, [6, 26], [5, 33]], loin: [EL, [33, 24], [38, 30]] });
+        const f = (o) => en_image(pose(o));
+        return {
+            garde: [0, 1, 1, 0].map(k => f({ dy: k, proche: GARDE_P, loin: [EL, [33, 24], [34, 13 + k]] })),
+            jab: [
+                f({ dx: 1, proche: GARDE_P, loin: [EL, [36, 17], [43, 14]] }),
+                f({ dx: 2, proche: GARDE_P, loin: [EL, [38, 15], [50, 13]] })
+            ],
+            direct: [
+                f({ dx: 2, proche: [EP, [17, 22], [30, 16]], loin: [EL, [31, 24], [30, 13]] }),
+                f({ dx: 3, proche: [EP, [22, 17], [42, 14]], loin: [EL, [31, 24], [29, 14]] })
+            ],
+            uppercut: [
+                f({ dx: -1, dy: 3, proche: [EP, [10, 28], [18, 34]], loin: GARDE_L }),
+                f({ dx: 1, dy: 1, proche: [EP, [18, 26], [28, 18]], loin: GARDE_L }),
+                f({ dx: 2, proche: [EP, [22, 13], [30, 3]], loin: [EL, [33, 24], [33, 15]] })
+            ],
+            esquive: [
+                f({ dx: -2, dy: 3, proche: [EP, [12, 27], [19, 17]], loin: [EL, [30, 25], [30, 14]] }),
+                f({ dx: -4, dy: 5, tete: [-1, 0], proche: [EP, [12, 27], [18, 16]], loin: [EL, [29, 25], [29, 14]] })
+            ],
+            touche: en_image(touche),
+            // Victoire : il gonfle les deux biceps
+            victoire: f({ proche: [EP, [2, 15], [5, 5]], loin: [EL, [35, 15], [33, 5]] }),
+            ko: en_image(couche(touche))
+        };
     }
 
-    const GARDE_AV = [[44, 30], [47, 16]], GARDE_AR = [[33, 33], [41, 19]];
-    const b = {
-        garde: [0, 1, 2, 1].map(k => brutus({ bas: k, avant: [[44, 30 - k * 0.3], [47, 16]], arriere: GARDE_AR })),
-        jab: [
-            brutus({ penche: 2, avant: [[50, 22], [57, 19]], arriere: GARDE_AR }),
-            brutus({ penche: 3, avant: [[52, 20], [61, 18]], arriere: GARDE_AR, bouche: true })
-        ],
-        direct: [
-            brutus({ penche: 3, avant: GARDE_AV, arriere: [[44, 26], [55, 19]] }),
-            brutus({ penche: 5, avant: [[42, 30], [44, 20]], arriere: [[48, 22], [60, 18]], bouche: true })
-        ],
-        uppercut: [
-            brutus({ bas: 6, penche: -1, avant: GARDE_AV, arriere: [[30, 38], [38, 40]] }),
-            brutus({ bas: 2, penche: 3, avant: GARDE_AV, arriere: [[44, 30], [50, 16]], bouche: true }),
-            brutus({ bas: -1, penche: 4, tete: [-1, -1], avant: [[42, 30], [44, 22]], arriere: [[46, 14], [50, 3]], bouche: true })
-        ],
-        esquive: [
-            brutus({ bas: 6, penche: -5, tete: [-2, 2], avant: [[42, 30], [43, 17]], arriere: [[32, 33], [38, 19]] }),
-            brutus({ bas: 9, penche: -7, tete: [-3, 3], avant: [[40, 32], [42, 19]], arriere: [[30, 35], [37, 21]] })
-        ],
-        touche: brutus({ penche: -6, tete: [-3, 1], avant: [[42, 34], [48, 38]], arriere: [[24, 30], [20, 22]], bouche: true }),
-        victoire: brutus({ tete: [0, -1], avant: [[42, 12], [44, 1]], arriere: [[26, 14], [24, 2]], bouche: true }),
-        ko: brutus_ko()
-    };
-
-    // Brutus K.O. : sur le dos, la tête vers la gauche (il est tombé en arrière)
-    function brutus_ko() {
-        const g = PixelArt.grille(64);
-        membre(g, 38, 56, 48, 47, 7, 'q'); membre(g, 48, 47, 58, 55, 6, 'q'); rect(g, 56, 52, 61, 57, 'N');   // jambe repliée
-        membre(g, 22, 52, 16, 44, 6, 'b'); ellipse(g, 15, 42, 3.6, 3.4, 'g', 0);                            // bras en l'air
-        ellipse(g, 30, 55, 11, 6, 'T', 0.04);
-        membre(g, 38, 58, 52, 59, 7, 'J'); membre(g, 52, 59, 60, 60, 6, 'J'); rect(g, 58, 56, 62, 61, 'N');   // jambe tendue
-        ellipse(g, 14, 55, 6.5, 6, 'H', 0.04);
-        membre(g, 28, 56, 36, 61, 6, 'A'); ellipse(g, 39, 61, 3.6, 3, 'G', 0);                              // bras au sol
-        const res = PixelArt.finir(g, PARTIES_B);
-        const set = (x, y, c) => { if (res[y] && res[y][x] && res[y][x] !== 'K') res[y][x] = c; };
-        for (let x = 10; x <= 18; x++) if ((x + 1) % 2) set(x, 59, 'B');          // barbe (vers le haut : il est sur le dos)
-        for (const [x, y] of [[12, 52], [14, 54], [14, 52], [12, 54], [16, 52], [18, 54], [18, 52], [16, 54]]) set(x, y, 'K');   // les yeux en croix
-        return PixelArt.en_image(res, COULEURS_B);
+    // Les sprites de boxe de Brutus, dans sa tenue du moment (construits au premier besoin)
+    function sprites_brutus() {
+        const img = typeof Loot !== 'undefined' ? Loot.sprites('brute').arret : SPRITES_PERSO.brute.arret;
+        if (!cacheBrutus.has(img)) cacheBrutus.set(img, brutus_depuis(img));
+        return cacheBrutus.get(img);
     }
 
     /* ---------- Gégé, le Gorille ---------- */
@@ -241,5 +328,5 @@ const SPRITES_BOXE = (() => {
         return PixelArt.en_image(res, COULEURS_G);
     }
 
-    return { brutus: b, gorille: gg };
+    return { get brutus() { return sprites_brutus(); }, gorille: gg };
 })();
