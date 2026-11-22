@@ -1,12 +1,16 @@
 /* =========================================================================
    GESTION DU SON
-   Un seul lecteur de musique est utilisé (menu, normal ou playlist hardcore) :
+   Un seul lecteur de musique est utilisé (menu, normal, entraînement ou
+   playlist hardcore) :
    les gros fichiers MP3 ne sont téléchargés que lorsqu'ils sont joués.
    ========================================================================= */
 const Son = (() => {
     const PISTES = {
         menu: { src: './assets/son/menu_theme.mp3', volume: 0.1 },
         normal: { src: './assets/son/background_sound.mp3', volume: 0.1 },
+        // L'entraînement reprend la musique du mode normal, en plus posé :
+        // un peu plus lente (même tonalité) et un peu plus douce
+        entrainement: { src: './assets/son/background_sound.mp3', volume: 0.08, vitesse: 0.9 },
         hardcore: [
             './assets/son/hardcore_gamer_music.mp3',
             './assets/son/hardcore_gamer2.mp3',
@@ -31,14 +35,17 @@ const Son = (() => {
     const reglages = Sauvegarde.donnees.son;
     let actif = reglages.actif;
     let volumeBase = 0.1;       // volume propre au morceau en cours (avant le réglage « musique »)
-    let ambiance = null;        // 'menu' | 'normal' | 'hardcore' | null
+    let ambiance = null;        // 'menu' | 'normal' | 'entrainement' | 'hardcore' | null
     let indexHardcore = 0;
 
     // play() renvoie une promesse rejetée si le navigateur refuse la lecture
     const lire = (audio) => audio.play().catch(() => {});
 
-    function chargerPiste(src, volume, enBoucle) {
+    function chargerPiste(src, volume, enBoucle, vitesse = 1) {
         musique.src = src;
+        musique.preservesPitch = true;
+        musique.playbackRate = vitesse;
+        musique.defaultPlaybackRate = vitesse;
         volumeBase = volume;
         musique.volume = volume * reglages.musique;
         musique.loop = enBoucle;
@@ -55,18 +62,11 @@ const Son = (() => {
 
     function jouerAmbiance(nom) {
         ambiance = nom;
-        arreter_marche();
-        // L'entraînement a sa propre musique, générée (marche militaire, plus bas)
-        if (nom === 'entrainement') {
-            musique.pause();
-            if (actif) demarrer_marche();
-            return;
-        }
         if (nom === 'hardcore') {
             indexHardcore = Math.floor(Math.random() * PISTES.hardcore.length);
             chargerPiste(PISTES.hardcore[indexHardcore], VOLUME_HARDCORE, false);
         } else {
-            chargerPiste(PISTES[nom].src, PISTES[nom].volume, true);
+            chargerPiste(PISTES[nom].src, PISTES[nom].volume, true, PISTES[nom].vitesse);
         }
         if (actif) lire(musique);
     }
@@ -74,12 +74,10 @@ const Son = (() => {
     function arreterMusique() {
         ambiance = null;
         musique.pause();
-        arreter_marche();
     }
 
-    // Musique de l'ambiance en cours : le lecteur MP3, ou la marche de l'entraînement
-    function jouer() { if (ambiance === 'entrainement') demarrer_marche(); else lire(musique); }
-    function couper() { musique.pause(); arreter_marche(); }
+    const jouer = () => lire(musique);
+    const couper = () => musique.pause();
 
     function setActif(valeur) {
         actif = valeur;
@@ -263,165 +261,6 @@ const Son = (() => {
         Sauvegarde.sauver();
     }
 
-    /* ---------- Marche militaire de l'entraînement (générée, en boucle) ----------
-       Sonorité « orchestre » : violons (vibrato), cuivres, nappe de cordes,
-       contrebasse, caisse claire et grosse caisse, dans une réverbération de
-       salle. 16 mesures à 100 battements par minute (environ 40 s) :
-         A  (mesures 1-4)   thème aux cuivres
-         A' (mesures 5-8)   thème aux violons et cuivres
-         B  (mesures 9-12)  pont : les violons seuls chantent
-         A" (mesures 13-16) reprise de tout l'orchestre, cadence finale
-       Les notes sont programmées un peu à l'avance : la marche ne dépend pas de
-       la boucle du jeu et continue quand la partie est figée (le Sergent parle). */
-    const NOTES = {
-        A3: 220, B3: 246.9, C4: 261.6, D4: 293.7, E4: 329.6, F4: 349.2, G4: 392, A4: 440, B4: 493.9,
-        C5: 523.3, D5: 587.3, E5: 659.3, F5: 698.5, G5: 784
-    };
-    // Mélodie en croches : une note, '-' la prolonge, '.' un silence
-    const THEME = [
-        'G4', '-', 'C5', 'D5', 'E5', '-', 'C5', '-',
-        'D5', '-', 'B4', 'C5', 'D5', '-', 'G4', '-',
-        'E5', '-', 'F5', 'E5', 'D5', '-', 'C5', 'B4',
-        'C5', '-', 'D5', 'B4', 'C5', '-', '-', '.'
-    ];
-    const PONT = [
-        'A4', '-', 'C5', '-', 'F5', '-', 'E5', 'D5',
-        'E5', '-', 'G5', '-', 'E5', '-', 'C5', '-',
-        'F5', '-', 'E5', 'D5', 'A4', '-', 'D5', '-',
-        'B4', '-', 'D5', '-', 'G5', '-', '-', '.'
-    ];
-    const FINALE = [
-        'G4', '-', 'C5', 'D5', 'E5', '-', 'C5', '-',
-        'D5', '-', 'B4', 'C5', 'D5', '-', 'G4', '-',
-        'F5', '-', 'F5', 'E5', 'D5', '-', 'B4', '-',
-        'C5', '-', '-', '-', '-', '-', '-', '.'
-    ];
-    const MELODIE = [...THEME, ...THEME, ...PONT, ...FINALE];
-    // Qui joue la mélodie, mesure par mesure
-    const PUPITRE = ['cuivres', 'cuivres', 'cuivres', 'cuivres', 'tutti', 'tutti', 'tutti', 'tutti',
-        'violons', 'violons', 'violons', 'violons', 'tutti', 'tutti', 'tutti', 'tutti'];
-    const ACCORDS = {
-        C: { notes: ['C4', 'E4', 'G4'], basse: [65.4, 98] }, G: { notes: ['B3', 'D4', 'G4'], basse: [49, 73.4] },
-        Am: { notes: ['C4', 'E4', 'A4'], basse: [55, 82.4] }, G7: { notes: ['B3', 'D4', 'F4'], basse: [49, 73.4] },
-        F: { notes: ['C4', 'F4', 'A4'], basse: [43.7, 65.4] }, Dm: { notes: ['D4', 'F4', 'A4'], basse: [73.4, 110] }
-    };
-    const GRILLE = ['C', 'G', 'Am', 'G7', 'C', 'G', 'Am', 'G7', 'F', 'C', 'Dm', 'G', 'C', 'G', 'G7', 'C'];
-    let marche = null;
-
-    // Réverbération de salle : réponse impulsionnelle de bruit qui s'éteint
-    function salle(c) {
-        const duree = 2.4, n = Math.floor(c.sampleRate * duree);
-        const ir = c.createBuffer(2, n, c.sampleRate);
-        for (let canal = 0; canal < 2; canal++) {
-            const d = ir.getChannelData(canal);
-            for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 3);
-        }
-        const conv = c.createConvolver();
-        conv.buffer = ir;
-        return conv;
-    }
-
-    function demarrer_marche() {
-        if (marche || !actif) return;
-        const c = contexte(); if (!c) return;
-        // Bus de la marche : son direct + réverbération, vers le volume de la musique
-        const bus = c.createGain();
-        const reverb = salle(c), mouille = c.createGain();
-        mouille.gain.value = 0.4;
-        bus.connect(sortieMusique);
-        bus.connect(reverb).connect(mouille).connect(sortieMusique);
-        marche = { bus, prochain: c.currentTime + 0.1, pas: 0, minuterie: setInterval(programmer_marche, 50) };
-        programmer_marche();
-    }
-    function arreter_marche() {
-        if (!marche) return;
-        clearInterval(marche.minuterie);
-        const bus = marche.bus, c = contexte();
-        if (c) { bus.gain.setTargetAtTime(0, c.currentTime, 0.08); setTimeout(() => bus.disconnect(), 1500); }
-        marche = null;
-    }
-    function programmer_marche() {
-        const c = contexte(); if (!c || !marche) return;
-        const croche = 60 / 100 / 2;
-        while (marche.prochain < c.currentTime + 0.3) {
-            jouer_croche(marche.pas, marche.prochain, croche);
-            marche.prochain += croche;
-            marche.pas = (marche.pas + 1) % MELODIE.length;
-        }
-    }
-
-    /* Une voix d'instrument : oscillateurs désaccordés, filtre passe-bas, enveloppe
-       douce. vibrato (en cents) : ondulation de la hauteur qui arrive après l'attaque,
-       comme un violoniste. */
-    function voix(f, t, duree, { vol, type = 'sawtooth', filtre = 1400, attaque = 0.05, sortie = 0.18, desaccord = [-6, 6], brillance = 1.6, vibrato = 0 }) {
-        const c = contexte();
-        const g = c.createGain();
-        g.gain.setValueAtTime(0.0001, t);
-        g.gain.exponentialRampToValueAtTime(vol, t + attaque);
-        g.gain.setValueAtTime(vol, t + Math.max(attaque, duree - sortie));
-        g.gain.exponentialRampToValueAtTime(0.0001, t + duree + sortie);
-        const fl = c.createBiquadFilter();
-        fl.type = 'lowpass';
-        fl.frequency.setValueAtTime(filtre * 0.6, t);
-        fl.frequency.exponentialRampToValueAtTime(filtre * brillance, t + attaque * 2);
-        fl.frequency.exponentialRampToValueAtTime(filtre, t + attaque * 4);
-        fl.connect(g).connect(marche.bus);
-        let lfo = null, profondeur = null;
-        if (vibrato) {
-            lfo = c.createOscillator();
-            lfo.frequency.value = 5.5;
-            profondeur = c.createGain();
-            profondeur.gain.setValueAtTime(0, t);
-            profondeur.gain.linearRampToValueAtTime(vibrato, t + Math.min(0.35, duree * 0.6));
-            lfo.connect(profondeur);
-            lfo.start(t);
-            lfo.stop(t + duree + sortie + 0.05);
-        }
-        for (const cents of desaccord) {
-            const o = c.createOscillator();
-            o.type = type;
-            o.frequency.value = f;
-            o.detune.value = cents;
-            if (profondeur) profondeur.connect(o.detune);
-            o.connect(fl);
-            o.start(t);
-            o.stop(t + duree + sortie + 0.05);
-        }
-    }
-    const violons = (f, t, duree, vol) => voix(f, t, duree, { vol, filtre: 3200, attaque: 0.09, sortie: 0.2, desaccord: [-9, 0, 9], brillance: 1.3, vibrato: 14 });
-    const cuivres = (f, t, duree, vol) => voix(f, t, duree, { vol, filtre: 1300, attaque: 0.06, sortie: 0.15, desaccord: [-7, 0, 7] });
-
-    function jouer_croche(i, t, d) {
-        const o = { sortie: marche.bus, absolu: true };
-        const mesure = Math.floor(i / 8), dansMesure = i % 8, temps = Math.floor(dansMesure / 2);
-        const accord = ACCORDS[GRILLE[mesure]], pont = PUPITRE[mesure] === 'violons';
-        if (dansMesure % 2 === 0) {
-            if (temps === 0 || (temps === 2 && !pont)) {
-                ton(80, t, 0.45, { vol: pont ? 0.18 : 0.3, f2: 42, ...o });                                    // grosse caisse
-                bruit(t, 0.06, { vol: 0.05, filtre: 500, ...o });
-            } else if (!pont || temps === 3) {
-                bruit(t, 0.22, { vol: pont ? 0.08 : 0.15, filtre: 2200, filtreFin: 900, type: 'bandpass', ...o });   // caisse claire
-                ton(190, t, 0.1, { type: 'triangle', vol: 0.07, f2: 150, ...o });
-            }
-            // Contrebasse : fondamentale puis quinte
-            voix(accord.basse[temps % 2], t, d * 1.6, { vol: 0.13, type: 'triangle', filtre: 500, attaque: 0.02, sortie: 0.12, desaccord: [0], brillance: 1.2 });
-        } else if (temps === 3 && !pont) {
-            bruit(t, 0.08, { vol: 0.05, filtre: 2500, type: 'bandpass', ...o });
-        }
-        // Roulement de caisse claire en fin de phrase (toutes les 4 mesures)
-        if (mesure % 4 === 3 && dansMesure >= 4 && dansMesure < 7) bruit(t + d / 2, 0.1, { vol: 0.08, filtre: 2400, type: 'bandpass', ...o });
-        // Nappe de cordes : l'accord de la mesure, tenu (plus présente pendant le pont)
-        if (dansMesure === 0) for (const n of accord.notes) voix(NOTES[n], t, d * 7.5, { vol: pont ? 0.03 : 0.022, filtre: 1100, attaque: 0.35, sortie: 0.5, brillance: 1.1, vibrato: 8 });
-        // La mélodie
-        const n = MELODIE[i];
-        if (n === '-' || n === '.') return;
-        let tenue = 1;
-        while (MELODIE[(i + tenue) % MELODIE.length] === '-' && tenue < 8) tenue++;
-        const duree = d * tenue * 0.9, pupitre = PUPITRE[mesure];
-        if (pupitre === 'cuivres' || pupitre === 'tutti') cuivres(NOTES[n], t, duree, pupitre === 'tutti' ? 0.035 : 0.045);
-        if (pupitre === 'violons' || pupitre === 'tutti') violons(NOTES[n] * (pupitre === 'violons' ? 1 : 2), t, duree, pupitre === 'violons' ? 0.05 : 0.025);
-    }
-
     /* Vibrations : téléphone (navigator.vibrate, Android) et manette (vibreurs).
        force de 0 à 1, duree en millisecondes. Désactivables dans le panneau du son. */
     function vibrer(force, duree) {
@@ -448,7 +287,6 @@ const Son = (() => {
     return {
         jouerAmbiance,
         ambiance: () => ambiance,              // ambiance en cours (tests, débogage)
-        marcheActive: () => Boolean(marche),   // la marche de l'entraînement joue-t-elle ?
         setVolume,
         vibrer,
         setVibrations,
