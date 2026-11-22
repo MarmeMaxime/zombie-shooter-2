@@ -269,6 +269,7 @@ function game_over() {
 
     remplir_bilan();
     ui.gameOver.classList.remove('hidden');
+    ouvertureFin = performance.now();
 }
 
 /* ---------- Bilan de la partie (écran de fin) ---------- */
@@ -307,6 +308,15 @@ function remplir_bilan() {
 }
 
 document.getElementById('btn-retry').addEventListener('click', () => init_game(etat.mode, etat.perso, false, etat.variante));
+
+// Raccourcis de l'écran de fin : Entrée pour réessayer, Échap pour le menu. Une courte
+// attente évite qu'une touche encore enfoncée au moment de mourir ne relance tout de suite.
+let ouvertureFin = 0;
+document.addEventListener('keydown', e => {
+    if (ui.gameOver.classList.contains('hidden') || e.repeat || performance.now() - ouvertureFin < 600) return;
+    if (e.code === 'Enter' || e.code === 'NumpadEnter') { e.preventDefault(); document.getElementById('btn-retry').click(); }
+    else if (e.code === 'Escape') { e.preventDefault(); document.getElementById('btn-return-menu').click(); }
+});
 document.getElementById('btn-return-menu').addEventListener('click', () => {
     quitter_partie();
     retour_menu_principal();

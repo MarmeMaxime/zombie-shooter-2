@@ -1,12 +1,11 @@
 /* =========================================================================
    GESTION DU SON
-   Un seul lecteur MP3 (mode normal ou playlist hardcore) ; le menu et
+   Un seul lecteur MP3 (la playlist hardcore) ; le menu, le mode normal et
    l'entraînement ont des musiques générées (Web Audio, plus bas) :
    les gros fichiers MP3 ne sont téléchargés que lorsqu'ils sont joués.
    ========================================================================= */
 const Son = (() => {
     const PISTES = {
-        normal: { src: './assets/son/background_sound.mp3', volume: 0.1 },
         hardcore: [
             './assets/son/hardcore_gamer_music.mp3',
             './assets/son/hardcore_gamer2.mp3',
@@ -57,20 +56,19 @@ const Son = (() => {
     });
 
     function jouerAmbiance(nom) {
+        // Déjà en train de jouer cette musique générée : on la laisse continuer
+        if (nom === ambiance && piste && piste.compo === COMPOSITIONS[nom]) return;
         ambiance = nom;
         arreter_piste();
-        // Le menu et l'entraînement ont leur musique générée (plus bas)
+        // Le menu, le mode normal et l'entraînement ont leur musique générée (plus bas)
         if (COMPOSITIONS[nom]) {
             musique.pause();
+            COMPOSITIONS[nom].reprise = 0;          // nouvelle ambiance : depuis le début
             if (actif) demarrer_piste(COMPOSITIONS[nom]);
             return;
         }
-        if (nom === 'hardcore') {
-            indexHardcore = Math.floor(Math.random() * PISTES.hardcore.length);
-            chargerPiste(PISTES.hardcore[indexHardcore], VOLUME_HARDCORE, false);
-        } else {
-            chargerPiste(PISTES[nom].src, PISTES[nom].volume, true, PISTES[nom].vitesse);
-        }
+        indexHardcore = Math.floor(Math.random() * PISTES.hardcore.length);
+        chargerPiste(PISTES.hardcore[indexHardcore], VOLUME_HARDCORE, false);
         if (actif) lire(musique);
     }
 
@@ -144,6 +142,7 @@ const Son = (() => {
         g.gain.setValueAtTime(vol, t);
         g.gain.exponentialRampToValueAtTime(0.0001, t + duree);
         src.connect(f).connect(g).connect(sortie || sortieEffets);
+        src.loop = true;                     // le tampon fait 1 s : en boucle, les longs souffles vont jusqu'au bout
         src.start(t, Math.random() * 0.5); src.stop(t + duree + 0.05);
     }
 
@@ -297,7 +296,8 @@ const Son = (() => {
     const TAIKO_PIC = [1, 0, 0.5, 0.5, 1, 0, 1, 0, 1, 0, 0.5, 0.5, 1, 0.5, 1, 0.5];
     let piste = null;
 
-    // Réverbération de grande salle : réponse impulsionnelle de bruit qui s'éteint
+    // Réverbération de grande salle : réponse impulsionnelle de bruit qui s'éteint.
+    // Une seule par musique en cours, débranchée à l'arrêt (sinon elles s'accumulent).
     function salle(c) {
         const duree = 3, n = Math.floor(c.sampleRate * duree);
         const ir = c.createBuffer(2, n, c.sampleRate);
@@ -320,19 +320,31 @@ const Son = (() => {
         mouille.gain.value = compo.reverb;
         bus.connect(sortieMusique);
         bus.connect(reverb).connect(mouille).connect(sortieMusique);
-        piste = { compo, bus, prochain: c.currentTime + 0.1, pas: 0, minuterie: setInterval(programmer_piste, 50) };
+        // Reprend là où elle s'était arrêtée (pause, écran des caisses), au début de la mesure
+        piste = { compo, bus, reverb, mouille, prochain: c.currentTime + 0.1, pas: compo.reprise || 0, minuterie: setInterval(programmer_piste, 50) };
         programmer_piste();
     }
     function arreter_piste() {
         if (!piste) return;
         clearInterval(piste.minuterie);
-        const bus = piste.bus, c = contexte();
-        if (c) { bus.gain.setTargetAtTime(0, c.currentTime, 0.15); setTimeout(() => bus.disconnect(), 2000); }
+        const { bus, reverb, mouille, compo } = piste, c = contexte();
+        compo.reprise = Math.floor(piste.pas / 16) * 16;
+        if (c) {
+            bus.gain.setTargetAtTime(0, c.currentTime, 0.15);
+            setTimeout(() => { bus.disconnect(); reverb.disconnect(); mouille.disconnect(); }, 2500);
+        }
         piste = null;
     }
     function programmer_piste() {
         const c = contexte(); if (!c || !piste) return;
-        while (piste.prochain < c.currentTime + 0.3) {
+        // Minuterie en retard (onglet en arrière-plan, gros calcul) : on saute les notes
+        // passées au lieu de les jouer toutes d'un coup
+        if (piste.prochain < c.currentTime) {
+            const retard = Math.ceil((c.currentTime - piste.prochain) / piste.compo.double);
+            piste.prochain += retard * piste.compo.double;
+            piste.pas = (piste.pas + retard) % (piste.compo.mesures * 16);
+        }
+        while (piste.prochain < c.currentTime + 0.4) {
             const { compo } = piste;
             compo.jouer(piste.pas, piste.prochain);
             piste.prochain += compo.double;
@@ -443,12 +455,13 @@ const Son = (() => {
        qui n'éclatent jamais… quelque chose est sur le point d'arriver.
        32 mesures (≈ 107 s) : calme, inquiétude, tension, retombée. */
     const M_DOUBLE = 60 / 72 / 4;
+    // nappe : l'accord tenu ; haut : 4 notes de l'accord pour le piano et le trémolo
     const M_ACCORDS = {
-        Gm: { basse: 31, nappe: [55, 58, 62, 69] },          // sol mineur, avec le la aigu (neuvième)
-        Eb: { basse: 27, nappe: [55, 58, 63, 70] },
-        Ebm: { basse: 27, nappe: [54, 58, 63, 70] },         // le sol bémol qui assombrit tout
-        Cm: { basse: 24, nappe: [55, 60, 63, 67] },
-        D: { basse: 26, nappe: [54, 57, 62, 63] }            // ré avec mi bémol : la tension qui ne se résout pas
+        Gm: { basse: 31, nappe: [55, 58, 62, 69], haut: [62, 67, 69, 70] },     // sol mineur, avec le la aigu (neuvième)
+        Eb: { basse: 27, nappe: [55, 58, 63, 70], haut: [63, 67, 70, 74] },
+        Ebm: { basse: 27, nappe: [54, 58, 63, 70], haut: [63, 66, 70, 73] },    // le sol bémol qui assombrit tout
+        Cm: { basse: 24, nappe: [55, 60, 63, 67], haut: [60, 63, 67, 70] },
+        D: { basse: 26, nappe: [54, 57, 60, 62], haut: [62, 66, 69, 72] }       // ré 7 : la tension qui attend sa résolution
     };
     const M_GRILLE = [
         'Gm', 'Gm', 'Gm', 'Gm', 'Eb', 'Eb', 'Ebm', 'Ebm',   // calme
@@ -456,8 +469,9 @@ const Son = (() => {
         'Gm', 'Gm', 'Eb', 'Eb', 'Cm', 'Cm', 'D', 'D',       // tension
         'Ebm', 'Ebm', 'Gm', 'Gm', 'Ebm', 'Ebm', 'D', 'D'    // retombée
     ];
-    // Motif de piano (notes MIDI, null = silence), une note par croche, sur 2 mesures
-    const M_PIANO = [69, null, 67, null, 62, null, null, null, 70, null, 69, null, 62, null, null, null];
+    // Motif de piano : rang de la note dans « haut » (null = silence), une note par croche, sur 2 mesures.
+    // Sur sol mineur, ça donne la-sol-ré puis si♭-la-ré ; sur les autres accords, la même forme.
+    const M_PIANO = [2, null, 1, null, 0, null, null, null, 3, null, 2, null, 0, null, null, null];
     const MENU = { nom: 'menu', double: M_DOUBLE, mesures: M_GRILLE.length, volume: 0.2, reverb: 0.7, jouer: jouer_menu };
 
     // Une note de piano : attaque nette, extinction lente, un peu de corps
@@ -490,7 +504,7 @@ const Son = (() => {
         }
         // Note aiguë qui tremble au loin (trémolo de violons), à partir de l'inquiétude
         if (partie >= 1 && partie !== 3 && pos % 2 === 0) {
-            const n = accord.nappe[3] + 12;
+            const n = accord.haut[2] + 12;
             voix(hz(n), t, M_DOUBLE * 1.6, { vol: partie === 2 ? 0.009 : 0.006, filtre: 3000, attaque: 0.04, sortie: 0.1, desaccord: [-10, 10] });
         }
 
@@ -506,16 +520,16 @@ const Son = (() => {
 
         // Piano clairsemé : le motif du thème, joué doucement (pas dans la toute première partie)
         if (partie >= 1 && pos % 2 === 0) {
-            const n = M_PIANO[(mesure % 2) * 8 + pos / 2];
-            if (n) piano(hz(nom === 'D' && n === 70 ? 69 : n), t, partie === 3 ? 0.04 : 0.055);
+            const rang = M_PIANO[(mesure % 2) * 8 + pos / 2];
+            if (rang !== null) piano(hz(accord.haut[rang]), t, partie === 3 ? 0.04 : 0.055);
         }
-        if (partie === 0 && dansPartie >= 4 && pos === 0) piano(hz(accord.nappe[3]), t, 0.035);   // une seule note, qui annonce
+        if (partie === 0 && dansPartie >= 4 && pos === 0) piano(hz(accord.haut[2]), t, 0.035);   // une seule note, qui annonce
 
         // Montée de souffle sur les deux dernières mesures de chaque partie… qui s'arrête net
         if (dansPartie === 6 && pos === 0) {
             const duree = mesureDuree * 2 - M_DOUBLE * 2;
             bruit(t, duree, { vol: partie === 2 ? 0.05 : 0.03, filtre: 300, filtreFin: 5000, type: 'bandpass', ...o });
-            voix(hz(accord.basse + 24), t, duree, { vol: 0.02, filtre: 200, filtreFin: 2500, attaque: duree * 0.9, sortie: 0.05, desaccord: [-20, -8, 8, 20] });
+            voix(hz(accord.basse + 24), t, duree, { vol: 0.02, filtre: 200, filtreFin: 2500, attaque: duree * 0.85, sortie: 0.3, desaccord: [-20, -8, 8, 20] });
         }
         // Après la tension : un grondement lointain, étouffé (ce qui arrive est encore loin)
         if (partie === 3 && dansPartie === 0 && pos === 0) {
@@ -524,7 +538,82 @@ const Son = (() => {
         }
     }
 
-    const COMPOSITIONS = { menu: MENU, entrainement: ENTRAINEMENT };
+    /* ---------- Musique du mode normal (générée, en boucle) ----------
+       La recette de l'ancienne musique du mode normal : 133 BPM, pédale sur la
+       qui frissonne vers sol# et si♭, puis une basse qui rampe chromatiquement
+       (do, do#, ré) sous une ligne en la mineur, avec des éclairs de la majeur
+       (do#). Batterie qui pousse, cordes en contretemps, thème aux cuivres,
+       « braams ». Intensité constante : on est en plein combat.
+       48 mesures (≈ 87 s) : arrivée, assaut, thème, accalmie qui remonte. */
+    const N_DOUBLE = 60 / 133 / 4;
+    const N_PEDALE = [33, 33, 32, 33, 33, 33, 34, 33];             // la, avec sol# et si♭ qui frissonnent
+    const N_RAMPE = [36, 36, 37, 37, 38, 38, 37, 37];              // do, do#, ré, do# : la basse qui rampe
+    const N_RAMPE2 = [36, 37, 38, 39, 38, 37, 36, 35];             // variante qui monte plus haut
+    // Thème aux cuivres : une note par demi-mesure, sur 8 mesures
+    const N_THEME = [69, 72, 76, 77, 76, 72, 71, 69, 69, 72, 76, 79, 77, 76, 72, 76];
+    const NORMAL = { nom: 'normal', double: N_DOUBLE, mesures: 48, volume: 0.18, reverb: 0.4, jouer: jouer_normal };
+
+    function jouer_normal(i, t) {
+        const o = { sortie: piste.bus, absolu: true };
+        const mesure = Math.floor(i / 16), pos = i % 16, mesureDuree = N_DOUBLE * 16;
+        // Parties : 0 arrivée (8 mesures), 1 assaut (16), 2 thème (16), 3 accalmie qui remonte (8)
+        const partie = mesure < 8 ? 0 : mesure < 24 ? 1 : mesure < 40 ? 2 : 3;
+        const debutPartie = [0, 8, 24, 40][partie], dansPartie = mesure - debutPartie;
+        const pedale = partie === 0 || partie === 3;
+        // Accord tenu : la majeur / la mineur qui hésitent sur la pédale, puis la mineur et fa
+        const nappe = pedale ? (mesure % 2 ? [57, 60, 64] : [57, 61, 64]) : (Math.floor(mesure / 2) % 2 ? [57, 60, 65] : [57, 60, 64]);
+
+        // Basse en croches
+        if (pos % 2 === 0) {
+            const k = pos / 2;
+            const n = pedale ? N_PEDALE[mesure % 8] : (partie === 2 && mesure % 4 >= 2 ? N_RAMPE2 : N_RAMPE)[k];
+            const accent = k % 4 === 0;
+            voix(hz(n), t, N_DOUBLE * 1.7, { vol: accent ? 0.07 : 0.05, filtre: accent ? 650 : 450, attaque: 0.008, sortie: 0.07, desaccord: [-7, 7] });
+            if (!pedale) voix(hz(n + 12), t, N_DOUBLE * 1.5, { vol: 0.02, type: 'square', filtre: 900, attaque: 0.008, sortie: 0.06, desaccord: [0] });
+        }
+        // Nappe sombre et la aigu tenu
+        if (pos === 0) {
+            for (const n of nappe) voix(hz(n), t, mesureDuree * 0.98, { vol: 0.011, filtre: 900, attaque: 0.25, sortie: 0.4, vibrato: 6 });
+            if (!pedale) voix(hz(81), t, mesureDuree * 0.98, { vol: 0.006, filtre: 2600, attaque: 0.3, sortie: 0.4, desaccord: [-10, 10], vibrato: 12 });
+        }
+
+        // Batterie : grosse caisse, caisse claire lourde, charleston
+        const plein = partie === 1 || partie === 2 || (partie === 3 && dansPartie >= 4);
+        const kick = plein ? (pos === 0 || pos === 8 || (partie === 2 && (pos === 6 || pos === 10))) : (pos === 0 && (partie === 3 || dansPartie >= 2));
+        if (kick) { ton(70, t, 0.35, { vol: 0.32, f2: 40, ...o }); bruit(t, 0.03, { vol: 0.04, filtre: 900, ...o }); }
+        if (plein && (pos === 4 || pos === 12)) {
+            bruit(t, 0.2, { vol: 0.13, filtre: 1900, filtreFin: 900, type: 'bandpass', ...o });
+            ton(185, t, 0.12, { type: 'triangle', vol: 0.08, f2: 140, ...o });
+        }
+        if ((plein || dansPartie >= 4) && pos % 2 === 0)
+            bruit(t, 0.035, { vol: pos % 4 === 2 ? 0.024 : 0.014, filtre: 7500, type: 'highpass', ...o });
+        // Toms qui roulent à la fin de chaque groupe de 4 mesures
+        if (plein && mesure % 4 === 3 && pos >= 12) taiko(t, 0.6 + (pos - 12) * 0.1, pos === 15);
+
+        // Cordes en contretemps (assaut et thème) : deux notes de l'accord, piquées
+        if (!pedale && pos % 4 === 2)
+            for (const n of [nappe[1] + 12, nappe[2] + 12]) voix(hz(n), t, N_DOUBLE * 0.8, { vol: 0.014, filtre: 2200, attaque: 0.006, sortie: 0.05, desaccord: [-6, 6] });
+
+        // Thème aux cuivres (partie 2), une note par demi-mesure, deux fois
+        if (partie === 2 && pos % 8 === 0) {
+            const n = N_THEME[(dansPartie % 8) * 2 + pos / 8];
+            voix(hz(n), t, N_DOUBLE * 7.4, { vol: 0.03, filtre: 1500, attaque: 0.05, sortie: 0.15, desaccord: [-7, 0, 7] });
+            voix(hz(n - 12), t, N_DOUBLE * 7.4, { vol: 0.02, filtre: 900, attaque: 0.05, sortie: 0.15, desaccord: [-5, 5] });
+        }
+        // « Braam » au début de l'assaut et toutes les 4 mesures du thème
+        if (pos === 0 && ((partie === 1 && dansPartie === 0) || (partie === 2 && dansPartie % 4 === 0))) {
+            for (const n of [45, 52, 57]) voix(hz(n), t, mesureDuree * 0.9, { vol: 0.04, filtre: 180, filtreFin: 1500, attaque: 0.06, sortie: 0.6, desaccord: [-14, -5, 5, 14] });
+            ton(46, t, 1.3, { vol: 0.3, f2: 28, ...o });
+            bruit(t, 1, { vol: 0.04, filtre: 3000, filtreFin: 200, ...o });
+        }
+        // Roulement de caisse claire avant l'assaut et avant la reprise
+        if ((mesure === 7 || mesure === 47) && pos >= 8) {
+            const k = (pos - 8) / 8;
+            for (const d of [0, N_DOUBLE / 2]) bruit(t + d, 0.06, { vol: 0.03 + 0.07 * k, filtre: 2200, filtreFin: 1200, type: 'bandpass', ...o });
+        }
+    }
+
+    const COMPOSITIONS = { menu: MENU, normal: NORMAL, entrainement: ENTRAINEMENT };
 
     /* Vibrations : téléphone (navigator.vibrate, Android) et manette (vibreurs).
        force de 0 à 1, duree en millisecondes. Désactivables dans le panneau du son. */
