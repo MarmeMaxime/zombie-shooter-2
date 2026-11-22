@@ -98,7 +98,27 @@ const decor_camp = (() => {
         for (let k = 0; k < 3; k++) { rect(fx + 24, fy - 6 + k * 4, 14, 3, '#6a4a2e'); rect(fx + 24, fy - 6 + k * 4, 2, 3, '#c8a070'); }
         rect(fx - 30, fy + 6, 16, 5, '#6a4a2e'); rect(fx - 30, fy + 6, 3, 5, '#c8a070');
 
-        void etape;   // les prochains chapitres feront grandir le camp ici
+        // Étape 1 (après « La Brèche ») : palissade de pieux derrière les sacs, et une tour de guet
+        if (etape >= 1) {
+            for (let y = 2; y < H - 4; y += 5) {
+                if (y > 248 && y < 292) continue;                 // l'entrée de la jeep reste libre
+                ombre(() => rect(B - 23, y + 2, 4, 5, '#5a3420'));
+                rect(B - 26, y, 4, 5, '#7a5232'); rect(B - 26, y, 1, 5, '#9a6e44'); rect(B - 23, y, 1, 5, '#4a2e1c');
+            }
+            const tx = 136, ty = 218;                              // entre la jeep et le labo (le haut est caché par le titre du menu)
+            ombre(() => rect(tx + 10, ty + 66, 34, 6, '#5a3420'));
+            for (const lx of [tx + 2, tx + 28]) { rect(lx, ty + 14, 4, 56, '#6a4a2e'); rect(lx, ty + 14, 1, 56, '#8a6440'); }
+            for (let k = 0; k < 3; k++) {                          // croisillons
+                const y0 = ty + 20 + k * 16;
+                for (let i = 0; i <= 26; i++) { rect(tx + 4 + i, y0 + Math.round(i * 0.55), 1, 2, '#5a3a24'); rect(tx + 30 - i, y0 + Math.round(i * 0.55), 1, 2, '#5a3a24'); }
+            }
+            for (let y = ty + 18; y < ty + 70; y += 5) rect(tx + 14, y, 6, 1, '#8a6440');   // échelle
+            rect(tx + 13, ty + 16, 1, 54, '#5a3a24'); rect(tx + 20, ty + 16, 1, 54, '#5a3a24');
+            rect(tx - 2, ty + 10, 38, 5, '#7a5232'); rect(tx - 2, ty + 10, 38, 1, '#a07848');   // plateforme
+            for (const lx of [tx - 2, tx + 34]) rect(lx, ty + 2, 2, 9, '#6a4a2e');            // garde-corps
+            rect(tx - 2, ty + 3, 38, 2, '#6a4a2e');
+            rect(tx - 4, ty - 4, 42, 4, '#5e6a3a'); rect(tx - 4, ty - 4, 42, 1, '#7e8a50');    // toit en toile
+        }
         return c;
     }
 

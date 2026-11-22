@@ -66,6 +66,23 @@ const MISSIONS_CAMPAGNE = [
             hardcore: 'Ces videuses ne lâchaient rien, et toi non plus. Le camion est criblé de griffures, mais il est là. Le café a survécu. C\'est l\'essentiel.'
         },
         echec: 'Le camion… Mon café… Tu sais quoi ? On ne dira rien au labo.'
+    },
+    {
+        id: 'c1m4', chapitre: 1, numero: 4, titre: 'La Brèche', perso: 'soldat',
+        // Tenir pendant qu'on répare le mur : le chantier s'arrête tant qu'un zombie est trop près du camp.
+        // Arrivée des Joggeurs (le marathon de charité), et quelques videuses.
+        chantier: {
+            duree: { normal: 70, hardcore: 80 },         // secondes de travail pour réparer le mur
+            seuil: 250                                   // un zombie plus à gauche que ça : tout le monde se met à l'abri
+        },
+        apparition: {
+            normal: { depart: 1.5, min: 1.0, acceleration: 0.006, groupe: 0.1, joggeur: 0.2, tank: 0.06 },
+            hardcore: { depart: 1.4, min: 0.9, acceleration: 0.006, groupe: 0.12, joggeur: 0.25, tank: 0.08 }
+        },
+        debrief: {
+            normal: 'Le mur tient. Plus solide qu\'avant, même. Et j\'ai fait monter une tour de guet. Si tu vois un marathonien, tu tires d\'en haut.',
+            hardcore: 'Ils couraient plus vite qu\'aux Jeux olympiques, et le mur est quand même debout. Je commence à t\'apprécier. Ne le répète pas.'
+        }
     }
 ];
 
@@ -126,6 +143,24 @@ const SCENES_CAMPAGNE = {
             { qui: 'sergent', texte: 'Celui-là même. Avec mon café dedans. Donc il arrive entier.' },
             { qui: 'sergent', texte: 'Le camion entre par l\'est et file jusqu\'au camp. Toi, tu le couvres : rien ne s\'y agrippe, rien ne le touche. En position !', bouton: 'À mon poste !' }
         ]
+    },
+    c1m4: {
+        breche: true,                                // le mur éventré, le camion garé sur le feu de camp
+        camera: 100,                                 // cadré plus bas : la brèche et le camion
+        sergent: { x: CAMP.sergent.x, y: CAMP.sergent.y },
+        soldat: { x: 22, y: 126 },
+        attente: 900,
+        lignes: [
+            { qui: 'sergent', texte: 'Tu as vu l\'arrivée du chauffeur, hier ? Il a traversé le mur. Sans freiner.' },
+            { qui: 'sergent', texte: 'Et il s\'est garé sur le feu de camp. Il conduit comme il se gare : pas du tout.' },
+            { qui: 'soldat', texte: '…' },
+            { qui: 'sergent', texte: 'Non, je ne sais pas qui c\'est. Il dort dans son camion et il ne parle à personne. Ça me rappelle quelqu\'un.' },
+            { qui: 'labo', texte: 'Sergent ? Les échantillons sont intacts. Enfin… presque tous. L\'un d\'eux bouge encore.' },
+            { qui: 'sergent', texte: 'Formidable. Je note : « bouge encore ». Je le range avec mes autres soucis.' },
+            { qui: 'sergent', texte: 'Bref. On répare la brèche. Les gars posent les sacs, toi tu les couvres. Tant qu\'un zombie traîne près du mur, personne ne travaille.' },
+            { qui: 'sergent', texte: 'Et ouvre l\'œil : un marathon de charité passait par ici le jour où tout a commencé. Ils courent toujours.' },
+            { qui: 'sergent', texte: 'Pour une bonne cause, j\'imagine. Ils chargent dès qu\'ils te voient dans l\'axe : ne reste pas planté en face d\'eux. Au travail !', bouton: 'À mon poste !' }
+        ]
     }
 };
 
@@ -141,13 +176,14 @@ const Campagne = (() => {
     const debloquee = id => { const i = MISSIONS_CAMPAGNE.findIndex(m => m.id === id); return i <= 0 || reussieUneFois(MISSIONS_CAMPAGNE[i - 1].id); };
     // Ancienne sauvegarde : « introVue » valait pour l'intro de la première mission
     const introVue = id => Boolean((S().intros && S().intros[id]) || (id === 'c1m1' && S().introVue));
-    // Étape du camp : il grandira à chaque chapitre terminé (première version pour l'instant)
-    const etape = () => 0;
+    // Étape du camp : il grandit avec la campagne (1 : mur renforcé et tour de guet, après « La Brèche »)
+    const etape = () => (reussieUneFois('c1m4') ? 1 : 0);
 
     /* ---------- Mission en cours ----------
-       Deux sortes d'objectifs : « objectif » (nombre de zombies à repousser)
-       ou « camion » (un camion à escorter jusqu'au camp). */
-    let m = null, chrono = 0, tues = 0, fini = false, camion = null;
+       Trois sortes d'objectifs : « objectif » (nombre de zombies à repousser),
+       « camion » (un camion à escorter jusqu'au camp) ou « chantier » (tenir
+       pendant une réparation, qui s'arrête quand un zombie est trop près). */
+    let m = null, chrono = 0, tues = 0, fini = false, camion = null, chantier = null;
 
     // Camion : sa caisse dans le sprite 128×128 (x 6..122, y 54..120), et l'arrière où les zombies s'agrippent
     const CAISSE = { x: 6, y: 54, l: 116, h: 66 }, ARRIERE = 96;
@@ -159,6 +195,7 @@ const Campagne = (() => {
         fini = false;
         etat.victoire = false;
         camion = null;
+        chantier = m.chantier ? { avance: 0, arret: false } : null;
         if (m.camion) {
             const c = m.camion;
             camion = { x: MONDE.largeur + 30, y: c.y, pv: c.pv[etat.mode], pvMax: c.pv[etat.mode], vitesse: (MONDE.largeur + 170) / c.duree[etat.mode], depart: c.depart, detruit: false };
@@ -176,6 +213,7 @@ const Campagne = (() => {
     function arreter() {
         m = null;
         camion = null;
+        chantier = null;
         $c('hud-mission').classList.add('hidden');
         $c('bandeau-vague').classList.remove('bandeau-mission');
     }
@@ -189,6 +227,10 @@ const Campagne = (() => {
             $c('hud-mission').textContent = T('🚚 {pv} % · ➜ {n} %', { pv: Math.max(0, Math.ceil(100 * camion.pv / camion.pvMax)), n: parcours });
             return;
         }
+        if (chantier) {
+            $c('hud-mission').textContent = T('🔨 Mur : {n} %', { n: Math.floor(100 * chantier.avance) }) + (chantier.arret ? ' ' + T('⏸ à l\'abri !') : '');
+            return;
+        }
         $c('hud-mission').textContent = '🎯 ' + Math.min(tues, objectif()) + ' / ' + objectif();
     }
 
@@ -196,6 +238,7 @@ const Campagne = (() => {
     function maj(dt) {
         if (!m || fini) return;
         if (camion) maj_camion(dt);
+        if (chantier) maj_chantier(dt);
         if (fini) return;
         const a = m.apparition[etat.mode];
         chrono -= dt;
@@ -207,9 +250,11 @@ const Campagne = (() => {
         if (Math.random() < a.groupe && (!a.max || zombies.length < a.max)) apparaitre(a);
     }
 
-    // Un zombie (ou un Tank, selon « a.tank ») ; pendant une escorte, certains visent le camion
+    // Un zombie, un Tank (« a.tank ») ou un Joggeur (« a.joggeur ») ; pendant une escorte, certains visent le camion
     function apparaitre(a) {
-        const z = creer_zombie(Math.random() < (a.tank || 0) ? 'tank' : 'normal', MONDE.largeur, MONDE.hauteur);
+        const r = Math.random();
+        const type = r < (a.tank || 0) ? 'tank' : r < (a.tank || 0) + (a.joggeur || 0) ? 'joggeur' : 'normal';
+        const z = creer_zombie(type, MONDE.largeur, MONDE.hauteur);
         if (!camion) return;
         // Jamais directement sur le camion (quand il entre par la droite) : on le fait apparaître au-dessus
         const by = camion.y + CAISSE.y;
@@ -243,9 +288,22 @@ const Campagne = (() => {
         if (camion.x + CAISSE.x + CAISSE.l < 0) return terminer(true);   // arrivé au camp
     }
 
+    /* Le chantier avance tant qu'aucun zombie n'est près du mur ; sinon les
+       réparateurs se mettent à l'abri et tout s'arrête. */
+    function maj_chantier(dt) {
+        const seuil = m.chantier.seuil * MONDE.echelleX;
+        const arret = zombies.some(z => z.x < seuil);
+        if (arret !== chantier.arret) { chantier.arret = arret; maj_hud_mission(); }
+        if (arret) return;
+        const avant = Math.floor(100 * chantier.avance);
+        chantier.avance = Math.min(1, chantier.avance + dt / m.chantier.duree[etat.mode]);
+        if (Math.floor(100 * chantier.avance) !== avant) maj_hud_mission();
+        if (chantier.avance >= 1) terminer(true);
+    }
+
     // Un zombie est tombé : objectif atteint ?
     function tue() {
-        if (!m || fini || camion) return;
+        if (!m || fini || camion || chantier) return;
         tues++;
         maj_hud_mission();
         if (tues >= objectif()) terminer(true);
@@ -379,6 +437,30 @@ const Campagne = (() => {
         }
     }
 
+    /* La brèche : le mur éventré là où le camion est passé, des sacs éparpillés,
+       et le camion garé de travers… sur le feu de camp. */
+    function dessiner_breche(c) {
+        const B = CAMP.bord, sacs = [[B - 40, 300], [B - 52, 318], [B + 18, 296], [B + 24, 330], [B - 30, 342], [B + 6, 352]];
+        c.fillStyle = '#b28456'; c.fillRect(B - 18, 286, 34, 74);
+        c.fillStyle = 'rgba(126, 86, 52, 0.5)';
+        for (let y = 290; y < 356; y += 6) c.fillRect(B - 16 + (y % 12), y, 3, 2);
+        for (const [x, y] of sacs) {
+            c.fillStyle = 'rgba(90, 52, 32, 0.3)'; c.fillRect(x + 3, y + 4, 12, 3);
+            c.fillStyle = '#b9a578'; c.fillRect(x, y, 12, 6);
+            c.fillStyle = '#d6c49a'; c.fillRect(x, y, 12, 1);
+            c.fillStyle = '#8a7a54'; c.fillRect(x, y + 5, 12, 1);
+        }
+        c.save();
+        c.translate(CAMP.feu.x - 70, CAMP.feu.y - 92);
+        c.rotate(-0.06);
+        c.drawImage(OBJETS_CAMP.camion, 0, 0);
+        c.restore();
+        // Un filet de fumée : le feu n'a pas apprécié
+        c.fillStyle = 'rgba(160, 160, 160, 0.5)';
+        const t = performance.now() / 1000;
+        for (let k = 0; k < 4; k++) c.fillRect(Math.round(CAMP.feu.x + 30 + Math.sin(t * 2 + k) * 3), Math.round(CAMP.feu.y - 30 - ((t * 12 + k * 9) % 36)), 3, 3);
+    }
+
     function dessiner_scene(instant) {
         if (!scene) return;
         requestAnimationFrame(dessiner_scene);   // en premier : une image ratée n'arrête pas la scène
@@ -395,7 +477,8 @@ const Campagne = (() => {
         c.setTransform(echelle, 0, 0, echelle, sx * echelle, (sy - haut) * echelle);
         c.imageSmoothingEnabled = false;
         c.drawImage(decor_camp(L, 400, 0), 0, 0);
-        dessiner_feu(c, t);
+        if (cfg.breche) dessiner_breche(c);
+        else dessiner_feu(c, t);
 
         // La jeep : elle arrive par la gauche et se gare (chapitre 1), ou elle est déjà là
         if (cfg.jeep) {
@@ -460,7 +543,7 @@ const Campagne = (() => {
                 const coche = mode => (reussie(mi.id, mode) ? '✔ ' : '✗ ') + T(mode === 'normal' ? 'Normal' : 'Hardcore');
                 texte.append(el('strong', '', (mi.nuit ? '🌙 ' : '') + T('Mission {n} — {titre}', { n: mi.numero, titre: T(mi.titre) })),
                     el('small', '', ouverte
-                        ? (mi.camion ? T('Escorter le camion jusqu\'au camp') : T('Repousser {n} zombies', { n: mi.objectif[difficulte_choisie] })) + ' · ' + coche('normal') + ' · ' + coche('hardcore')
+                        ? (mi.camion ? T('Escorter le camion jusqu\'au camp') : mi.chantier ? T('Couvrir la réparation du mur') : T('Repousser {n} zombies', { n: mi.objectif[difficulte_choisie] })) + ' · ' + coche('normal') + ' · ' + coche('hardcore')
                         : T('🔒 Réussis la mission précédente pour la débloquer')));
                 ligne.append(texte);
                 const boutons = el('span', 'campagne-boutons');
