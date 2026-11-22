@@ -31,6 +31,7 @@ const Son = (() => {
     let actif = reglages.actif;
     let volumeBase = 0.1;       // volume propre au morceau en cours (avant le réglage « musique »)
     let ambiance = null;        // 'menu' | 'normal' | 'entrainement' | 'hardcore' | null
+    let compoEnCours = null;    // musique générée de l'ambiance (null : lecteur MP3)
     let indexHardcore = 0;
 
     // play() renvoie une promesse rejetée si le navigateur refuse la lecture
@@ -57,14 +58,15 @@ const Son = (() => {
 
     function jouerAmbiance(nom) {
         // Déjà en train de jouer cette musique générée : on la laisse continuer
-        if (nom === ambiance && piste && piste.compo === COMPOSITIONS[nom]) return;
+        if (nom === ambiance && piste && compoEnCours === piste.compo) return;
         ambiance = nom;
         arreter_piste();
         // Le menu, le mode normal et l'entraînement ont leur musique générée (plus bas)
-        if (COMPOSITIONS[nom]) {
+        compoEnCours = choisir_compo(nom);
+        if (compoEnCours) {
             musique.pause();
-            COMPOSITIONS[nom].reprise = 0;          // nouvelle ambiance : depuis le début
-            if (actif) demarrer_piste(COMPOSITIONS[nom]);
+            compoEnCours.reprise = 0;               // nouvelle ambiance : depuis le début
+            if (actif) demarrer_piste(compoEnCours);
             return;
         }
         indexHardcore = Math.floor(Math.random() * PISTES.hardcore.length);
@@ -74,12 +76,13 @@ const Son = (() => {
 
     function arreterMusique() {
         ambiance = null;
+        compoEnCours = null;
         musique.pause();
         arreter_piste();
     }
 
     // Musique de l'ambiance en cours : le lecteur MP3, ou une musique générée
-    function jouer() { if (COMPOSITIONS[ambiance]) demarrer_piste(COMPOSITIONS[ambiance]); else lire(musique); }
+    function jouer() { if (compoEnCours) demarrer_piste(compoEnCours); else lire(musique); }
     function couper() { musique.pause(); arreter_piste(); }
 
     function setActif(valeur) {
@@ -693,7 +696,135 @@ const Son = (() => {
         }
     }
 
-    const COMPOSITIONS = { menu: MENU, normal: NORMAL, entrainement: ENTRAINEMENT };
+    /* ---------- Seconde musique du mode normal : « Le Siège » ----------
+       Même famille (sombre, dense, cinématique) mais un autre caractère : mi
+       phrygien dominant (mi, fa, sol#, la, si, do, ré : la couleur orientale la
+       plus noire), 140 BPM, un riff grave obstiné sur une batterie en 3-3-2,
+       un thème de cuivres, une respiration, puis une montée où le riff grimpe
+       marche après marche jusqu'à l'assaut final. Un tour sur deux, le thème
+       passe aux violoncelles et un contre-riff s'ajoute.
+       80 mesures (≈ 2 min 17). */
+    const S_DOUBLE = 60 / 140 / 4;
+    const S_PARTIES = [
+        { nom: 'veille', mesures: 8 },
+        { nom: 'riff', mesures: 16 },
+        { nom: 'cuivres', mesures: 16 },
+        { nom: 'souffle', mesures: 8 },
+        { nom: 'montee', mesures: 16 },
+        { nom: 'final', mesures: 12 },
+        { nom: 'fin', mesures: 4 }
+    ];
+    const S_DEBUTS = [];
+    S_PARTIES.reduce((debut, p) => (S_DEBUTS.push(debut), debut + p.mesures), 0);
+    // Le riff, en croches, sur deux mesures : mi-mi-fa-mi, puis la réponse
+    const S_RIFF = [[40, 40, 41, 40, 44, 45, 44, 41], [40, 40, 41, 40, 47, 48, 47, 45]];
+    // Thème aux cuivres : une note par demi-mesure, sur 8 mesures (null = silence)
+    const S_THEME = [76, 77, 76, 74, 72, 71, 72, 74, 76, 77, 80, 81, 80, 77, 76, null];
+    // Respiration : accords tenus mi majeur, fa, ré mineur, mi (la cadence phrygienne)
+    const S_SOUFFLE = [[52, 56, 59], [53, 57, 60], [50, 53, 57], [52, 56, 59]];
+    const SIEGE = { nom: 'siege', double: S_DOUBLE, mesures: 80, volume: 0.14, reverb: 0.45, jouer: jouer_siege, tour: 0 };
+
+    function jouer_siege(i, t) {
+        const o = { sortie: piste.bus, absolu: true };
+        if (i === 0) SIEGE.tour++;
+        const tourPair = SIEGE.tour % 2 === 0;
+        const mesure = Math.floor(i / 16), pos = i % 16, mesureDuree = S_DOUBLE * 16;
+        let k = S_DEBUTS.length - 1;
+        while (S_DEBUTS[k] > mesure) k--;
+        const partie = S_PARTIES[k].nom, dans = mesure - S_DEBUTS[k], derniere = dans === S_PARTIES[k].mesures - 1;
+        // La montée fait grimper le riff toutes les 4 mesures : mi, fa, sol, la
+        const T = partie === 'montee' ? [0, 1, 3, 5][Math.floor(dans / 4)] : 0;
+        const accordFa = mesure % 4 === 3;                       // une mesure sur quatre, l'accord de fa qui grince
+        const nappe = (partie === 'souffle' ? S_SOUFFLE[Math.floor(dans / 2) % 4] : accordFa ? [53, 57, 60] : [52, 56, 59]).map(n => n + T);
+
+        if (pos === 0 && dans === 0 && k > 0) bruit(t, 1.4, { vol: 0.05, filtre: 6000, filtreFin: 3000, type: 'highpass', ...o });
+
+        // Le riff grave (pas pendant la respiration ; seulement des bribes à la fin)
+        const riff = partie !== 'souffle' && (partie !== 'fin' || pos < 8);
+        if (riff && pos % 2 === 0) {
+            const n = S_RIFF[mesure % 2][pos / 2] + T;
+            const pizz = partie === 'veille';
+            voix(hz(n - 12), t, S_DOUBLE * (pizz ? 1 : 1.7), { vol: pizz ? 0.05 : 0.065, filtre: pizz ? 500 : 700, attaque: 0.006, sortie: pizz ? 0.12 : 0.06, desaccord: [-7, 7] });
+            if (!pizz) voix(hz(n), t, S_DOUBLE * 1.5, { vol: 0.022, type: 'square', filtre: 1000, attaque: 0.006, sortie: 0.05, desaccord: [0] });
+        }
+        // Pédale de mi tout au fond, et nappe
+        if (pos === 0) {
+            if (partie !== 'fin') voix(hz(28 + T), t, mesureDuree * 0.98, { vol: 0.04, filtre: 180, attaque: 0.2, sortie: 0.4, desaccord: [-5, 5] });
+            const vol = partie === 'souffle' ? 0.016 : 0.01;
+            for (const n of nappe) voix(hz(n), t, mesureDuree * 0.98, { vol, filtre: partie === 'souffle' ? 1400 : 900, attaque: 0.3, sortie: 0.5, vibrato: 7 });
+        }
+
+        // Batterie en 3-3-2 (grosse caisse sur 0, 3, 6 puis 8, 11, 14)
+        const plein = partie === 'riff' || partie === 'cuivres' || partie === 'montee' || partie === 'final';
+        if (plein) {
+            const kicks = partie === 'final' ? [0, 2, 3, 6, 8, 10, 11, 14] : [0, 3, 6, 8, 11, 14];
+            if (kicks.includes(pos)) { ton(68, t, 0.32, { vol: 0.3, f2: 38, ...o }); bruit(t, 0.03, { vol: 0.04, filtre: 900, ...o }); }
+            if (pos === 4 || pos === 12) {
+                bruit(t, 0.2, { vol: 0.13, filtre: 1800, filtreFin: 850, type: 'bandpass', ...o });
+                ton(175, t, 0.12, { type: 'triangle', vol: 0.08, f2: 130, ...o });
+            }
+            if (pos % 2 === 0) bruit(t, 0.035, { vol: pos % 4 === 0 ? 0.013 : 0.022, filtre: 8000, type: 'highpass', ...o });
+            // Fin de phrase : toms ou arrêt sec, en alternance
+            if (dans % 4 === 3 && pos >= 12) {
+                if (Math.floor(mesure / 4) % 2) taiko(t, 0.55 + (pos - 12) * 0.1, pos === 15);
+                else if (pos === 12) taiko(t, 0.9, true);
+            }
+            // La montée se resserre : roulement de caisse claire sur la dernière mesure de chaque marche
+            if (partie === 'montee' && dans % 4 === 3) bruit(t, 0.05, { vol: 0.03 + pos * 0.004, filtre: 2300, type: 'bandpass', ...o });
+        } else if (partie === 'veille' && pos === 0 && dans % 2 === 0) taiko(t, 0.7, true);
+        else if (partie === 'souffle' && (pos === 0 || pos === 3)) { ton(pos ? 50 : 56, t, 0.5, { vol: pos ? 0.18 : 0.26, f2: 30, ...o }); }   // battement de cœur
+        else if (partie === 'fin' && pos === 0 && dans === 3) { ton(44, t, 2, { vol: 0.32, f2: 26, ...o }); bruit(t, 1.5, { vol: 0.04, filtre: 200, filtreFin: 60, ...o }); }
+
+        // Ostinato de cordes en doubles croches (cuivres et final) : mi-fa-mi-sol#
+        if ((partie === 'cuivres' || partie === 'final') && pos % 2 === 0) {
+            const n = [64, 65, 64, 68][(pos / 2) % 4] + T;
+            voix(hz(n), t, S_DOUBLE * 1.4, { vol: 0.014, filtre: 2200, attaque: 0.005, sortie: 0.05, desaccord: [-7, 7] });
+        }
+        // Contre-riff aigu, un tour sur deux pendant le riff
+        if (partie === 'riff' && tourPair && dans >= 8 && pos % 4 === 2) {
+            const n = S_RIFF[(mesure + 1) % 2][(pos + 2) / 2 % 8] + 24;
+            voix(hz(n), t, S_DOUBLE * 1.2, { vol: 0.013, filtre: 2600, attaque: 0.005, sortie: 0.06, desaccord: [-6, 6] });
+        }
+
+        // Thème : cuivres (ou violoncelles un tour sur deux), puis en octaves au final
+        if ((partie === 'cuivres' || partie === 'final') && pos % 8 === 0) {
+            const n = S_THEME[(dans % 8) * 2 + pos / 8];
+            if (n !== null) {
+                if (partie === 'final' || tourPair) {
+                    voix(hz(n), t, S_DOUBLE * 7.4, { vol: 0.03, filtre: 1500, attaque: 0.05, sortie: 0.15, desaccord: [-7, 0, 7] });
+                    voix(hz(n - 12), t, S_DOUBLE * 7.4, { vol: 0.02, filtre: 900, attaque: 0.05, sortie: 0.15, desaccord: [-5, 5] });
+                }
+                if (partie === 'final' || !tourPair) voix(hz(n - (partie === 'final' ? -12 : 12)), t, S_DOUBLE * 7.6, { vol: partie === 'final' ? 0.018 : 0.034, filtre: partie === 'final' ? 3000 : 1100, attaque: 0.1, sortie: 0.25, desaccord: [-8, 0, 8], vibrato: 12 });
+            }
+        }
+        // Respiration : violon seul, très haut, sur la note de l'accord
+        if (partie === 'souffle' && pos === 0 && dans % 2 === 0)
+            voix(hz(nappe[2] + 24), t, mesureDuree * 1.9, { vol: 0.012, filtre: 3200, attaque: 0.6, sortie: 0.6, desaccord: [-4, 4], vibrato: 16 });
+
+        // « Braams » : début du riff, toutes les 4 mesures des cuivres et du final, à chaque marche de la montée
+        if (pos === 0 && ((partie === 'riff' && dans === 0) || ((partie === 'cuivres' || partie === 'final') && dans % 4 === 0) || (partie === 'montee' && dans % 4 === 0))) {
+            for (const n of [40, 47, 52]) voix(hz(n + T), t, mesureDuree * 0.9, { vol: 0.04, filtre: 180, filtreFin: 1500, attaque: 0.06, sortie: 0.6, desaccord: [-14, -5, 5, 14] });
+            ton(44, t, 1.3, { vol: 0.3, f2: 26, ...o });
+            bruit(t, 1, { vol: 0.04, filtre: 3000, filtreFin: 200, ...o });
+        }
+        // Montée de caisse claire avant chaque nouvelle partie
+        if (derniere && pos >= 8 && partie !== 'fin') {
+            const r = (pos - 8) / 8;
+            for (const d of [0, S_DOUBLE / 2]) bruit(t + d, 0.06, { vol: 0.03 + 0.07 * r, filtre: 2200, filtreFin: 1200, type: 'bandpass', ...o });
+        }
+    }
+
+    // Musiques générées par ambiance ; le mode normal en a deux, tirées tour à tour
+    const COMPOSITIONS = { menu: [MENU], normal: [NORMAL, SIEGE], entrainement: [ENTRAINEMENT] };
+    let dernierNormal = null;
+    function choisir_compo(nom) {
+        const liste = COMPOSITIONS[nom];
+        if (!liste) return null;
+        if (liste.length === 1) return liste[0];
+        // Au hasard, mais jamais deux fois de suite la même
+        const autres = liste.filter(c => c !== dernierNormal);
+        return (dernierNormal = autres[Math.floor(Math.random() * autres.length)]);
+    }
 
     /* Vibrations : téléphone (navigator.vibrate, Android) et manette (vibreurs).
        force de 0 à 1, duree en millisecondes. Désactivables dans le panneau du son. */
