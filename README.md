@@ -26,7 +26,9 @@ Au lancement d'un combat, on choisit le mode :
   5. « Coup de foudre » : une horde, puis la Mastodonte, échantillon du labo qui a muté.
 
   Chapitre 2, « Le Cogneur » : « La Débandade », à l'ouest (l'écran est en miroir),
-  une horde qui fuit quelque chose… et la rencontre avec Brutus.
+  une horde qui fuit quelque chose… et la rencontre avec Brutus. Puis « Déménagement
+  express » : au coin du feu, Brutus raconte comment il est arrivé, et on joue son
+  histoire avec lui, en ville, le jour où tout a commencé.
 
   Chaque mission garde son meilleur temps et ses vies restantes ; le chapitre se
   termine sur un épilogue. Le camp s'affiche derrière le menu et grandit avec la

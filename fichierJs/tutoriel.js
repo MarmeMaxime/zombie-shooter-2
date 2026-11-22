@@ -23,7 +23,8 @@ const Instructeur = (() => {
         labo: { nom: 'Labo', image: ouvert => PORTE_LABO.portrait[ouvert ? 1 : 0] },
         radio: { nom: 'Éclaireur (radio)', image: ouvert => SPRITES_RADIO[ouvert ? 1 : 0] },
         soldat: { nom: 'Soldat', image: () => Loot.sprites('soldat').arret, cadre: [3, 0, 22, 22] },
-        brutus: { nom: 'Brutus', image: () => Loot.sprites('brute').arret, cadre: [5, 0, 22, 22] }
+        brutus: { nom: 'Brutus', image: () => Loot.sprites('brute').arret, cadre: [5, 0, 22, 22] },
+        chercheur: { nom: 'Labo', image: ouvert => SPRITES_CHERCHEUR[ouvert ? 1 : 0], cadre: [20, 2, 24, 24] }   // sorti du labo, dans l'ombre
     };
     let orateur = 'sergent';
 
@@ -59,7 +60,7 @@ const Instructeur = (() => {
         parleJusque = performance.now() + Math.min(2600, 400 + message.length * 30);
         clearInterval(animation);
         let ouvert = false;
-        const VOIX = { sergent: 'voixSergent', sergentPyjama: 'voixSergent', labo: 'voixLabo', radio: 'voixRadio', brutus: 'voixBrutus' };   // le Soldat ne dit rien
+        const VOIX = { sergent: 'voixSergent', sergentPyjama: 'voixSergent', labo: 'voixLabo', radio: 'voixRadio', brutus: 'voixBrutus', chercheur: 'voixLabo' };   // le Soldat ne dit rien
         if (qui === 'radio') Son.effet('radio');
         animation = setInterval(() => {
             ouvert = performance.now() < parleJusque && !ouvert;

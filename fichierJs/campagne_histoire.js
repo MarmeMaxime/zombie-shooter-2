@@ -145,6 +145,35 @@ const MISSIONS_CAMPAGNE = [
             normal: 'Bon. On a un nouveau pensionnaire. Je sens que mes nuits calmes, c\'est terminé.',
             hardcore: 'Une horde en panique, et le pire, c\'était encore celui qui la poussait. Bienvenue au camp, Brutus. Hélas.'
         }
+    },
+    {
+        id: 'c2m2', chapitre: 2, numero: 2, titre: 'Déménagement express', perso: 'brute',
+        // L'histoire de Brutus, racontée au coin du feu : on la joue avec lui, en ville,
+        // le jour où tout a commencé. Des foules entières : son fusil à pompe est fait pour ça.
+        ville: true,
+        objectif: { normal: 55, hardcore: 100 },
+        apparition: {
+            normal: { depart: 1.25, min: 0.78, acceleration: 0.008, groupe: 0.3 },
+            hardcore: { depart: 0.9, min: 0.46, acceleration: 0.01, groupe: 0.45, joggeur: 0.2, tank: 0.08 }
+        },
+        // C'est Brutus qui raconte : il ouvre la mission, la commente et la conclut
+        debut: [
+            { qui: 'brutus', texte: 'Il y a trois semaines. En ville. Le piano était sur le trottoir, et moi devant, à reprendre mon souffle.', bouton: 'Et alors ?' }
+        ],
+        pendant: [
+            { a: 0.35, qui: 'brutus', texte: 'Ils sortaient de partout. Des bureaux, du métro, d\'une boutique de robes de mariée. Il y avait une mariée. Elle courait bien.' },
+            { a: 0.7, qui: 'brutus', texte: 'Et je ne les laissais pas approcher du piano. Il n\'était pas encore payé.' }
+        ],
+        debriefQui: 'brutus',
+        debrief: {
+            normal: 'Et voilà : la rue était propre, et le piano, intact. Je l\'ai même livré. Cinquième étage, sans ascenseur.',
+            hardcore: 'En vrai, ils étaient deux fois plus. Trois fois. Et ils couraient à reculons. … Bon. Deux fois plus.'
+        },
+        // L'écran de fin : on n'est pas au camp, mais dans le souvenir de Brutus
+        texteFin: {
+            victoire: 'La rue est dégagée, et le piano n\'a pas une rayure. D\'après Brutus.',
+            echec: '« Non, attends. Ce n\'est pas comme ça que ça s\'est passé. » Brutus reprend son histoire depuis le début.'
+        }
     }
 ];
 
@@ -270,5 +299,35 @@ const EPILOGUES = {
         { qui: 'sergent', texte: 'À l\'ouest ? Il n\'y a jamais rien à l\'ouest.' },
         { qui: 'soldat', texte: '…' },
         { qui: 'sergent', texte: 'Repose-toi, Soldat. Tu l\'as mérité. Demain, on change de programme.', bouton: 'Fin du chapitre 1' }
+    ]
+};
+
+/* La nuit, au coin du feu : la tente de Brutus est montée, et la personne du
+   labo est sortie exprès (on ne voit d'elle qu'une silhouette). */
+SCENES_CAMPAGNE.c2m2 = {
+    nuit: true,
+    camera: 100,
+    sergent: { x: 86, y: 256 },
+    soldat: { x: 202, y: 214 },
+    brutus: { x: 182, y: 260 },
+    chercheur: { x: 120, y: 280 },
+    lanterne: { x: 70, y: 176 },                 // devant la tente de Brutus (camp_decor.js, étape 2)
+    attente: 1400,
+    lignes: [
+        { qui: 'brutus', texte: 'Elle est belle, ma tente, hein ? Un peu petite. Mes pieds dorment dehors.' },
+        { qui: 'sergent', texte: 'Tes pieds dorment dehors depuis la guerre des Trois Collines.' },
+        { qui: 'sergent', texte: 'Et toi ? Trois mois sans voir le soleil, et tu sors pour la lune ?' },
+        { qui: 'chercheur', texte: 'Il fallait que je voie ça de mes yeux. Un homme qui traverse une horde à mains nues.' },
+        { qui: 'brutus', texte: 'Pas à mains nues. J\'avais mon fusil. Je m\'en sers juste moins que de mes mains.' },
+        { qui: 'chercheur', texte: 'Justement. D\'où venez-vous ? Comment êtes-vous arrivé jusqu\'ici, au milieu de tout ça ?' },
+        { qui: 'brutus', texte: 'Ah ! Ça, c\'est une histoire. Chef, tu te souviens de ce que je faisais, après les Trois Collines ?' },
+        { qui: 'sergent', texte: 'Tu portais des choses lourdes. Et tu les cassais.' },
+        { qui: 'brutus', texte: 'Déménageur ! En ville. Le jour où tout a commencé, je montais un piano au cinquième. Sans ascenseur.' },
+        { qui: 'brutus', texte: 'Et en bas, dans la rue, les gens se sont mis à… mordre les autres gens.' },
+        { qui: 'soldat', texte: '…' },
+        { qui: 'brutus', texte: 'C\'est exactement ce que j\'ai dit ! Alors j\'ai posé le piano, et j\'ai sorti mon fusil à pompe.' },
+        { qui: 'sergent', texte: 'Pourquoi un déménageur a un fusil à pompe ?' },
+        { qui: 'brutus', texte: 'Les clients ne paient pas toujours, Chef.' },
+        { qui: 'brutus', texte: 'Bref. Imaginez la rue. Les sirènes. Le piano sur le trottoir. Et moi.', bouton: 'Raconte !' }
     ]
 };

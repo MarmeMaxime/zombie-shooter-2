@@ -119,6 +119,8 @@ const decor_camp = (() => {
             rect(tx - 2, ty + 3, 38, 2, '#6a4a2e');
             rect(tx - 4, ty - 4, 42, 4, '#5e6a3a'); rect(tx - 4, ty - 4, 42, 1, '#7e8a50');    // toit en toile
         }
+        // Étape 2 (après « La Débandade ») : la tente rapiécée de Brutus, près du feu
+        if (etape >= 2) poser(OBJETS_CAMP.tenteBrutus, 14, 126, 26);
         return c;
     }
 

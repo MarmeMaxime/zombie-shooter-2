@@ -152,6 +152,7 @@ const OBJETS_CAMP = (() => {
         Z: '#ece6da',                               // étoile blanche
         Y: '#f0d060',                               // phare
         B: '#4a3220', R: '#c83030',                 // mât, fanion
+        X: '#8a6a3a', x: '#6a4a6a',                 // pièces de la tente de Brutus
         K: '#050403'
     };
     const PARTIES = {
@@ -234,8 +235,16 @@ const OBJETS_CAMP = (() => {
         return res;
     }
 
+    // La tente de Brutus : la même, rapiécée de partout (il l'a portée sur son dos depuis la ville)
+    function tenteBrutus() {
+        const res = tente(false);
+        const piece = (x0, y0, l, h, c) => { for (let y = y0; y < y0 + h; y++) for (let x = x0; x < x0 + l; x++) if ('TtW'.includes(res[y][x])) res[y][x] = (x === x0 || y === y0) ? 'r' : c; };
+        piece(22, 40, 7, 6, 'X'); piece(36, 30, 6, 5, 'x'); piece(41, 46, 8, 6, 'X'); piece(29, 22, 4, 4, 'x');
+        return res;
+    }
+
     const img = g => PixelArt.en_image(g, COULEURS);
-    return { tente: img(tente(false)), tenteCommandement: img(tente(true)), jeep: img(jeep()), camion: img(camion()) };
+    return { tente: img(tente(false)), tenteCommandement: img(tente(true)), tenteBrutus: img(tenteBrutus()), jeep: img(jeep()), camion: img(camion()) };
 })();
 
 /* Talkie-walkie : le « portrait » de l'éclaireur, qu'on n'entend que par radio.
@@ -264,4 +273,56 @@ const SPRITES_RADIO = (() => {
         return res;
     }
     return [false, true].map(v => PixelArt.en_image(dessiner(v), COULEURS, 2));
+})();
+
+/* La personne du labo, sortie exprès pour voir Brutus. On ne dévoile rien :
+   une blouse blanche, une tasse de café, et le visage dans l'ombre (on ne
+   voit que le reflet du feu dans ses lunettes).
+   0 : silencieuse ; 1 : elle parle (le reflet bouge). Grille 64×64. */
+const SPRITES_CHERCHEUR = (() => {
+    const { poser, ellipse, rect, trait } = PixelArt;
+    const COULEURS = {
+        U: '#e4eaee', u: '#a8b0b8',     // blouse
+        P: '#34343e', p: '#22222a',     // pantalon
+        V: '#2e2630', v: '#1e181e',     // visage dans l'ombre
+        H: '#16121a',                   // cheveux
+        G: '#ffe0a0', g: '#8a6a40',     // reflet du feu dans les lunettes
+        M: '#b83030', m: '#7a1c1c',     // tasse
+        F: '#c8c8c8',                   // vapeur du café
+        N: '#141414',                   // chaussures
+        K: '#050403'
+    };
+    const PARTIES = {
+        P: { rang: 0, base: 'P', ombre: 'p', bande: 'fine' },
+        U: { rang: 1, base: 'U', ombre: 'u', bande: 'large' },
+        V: { rang: 2, base: 'V', ombre: 'v', bande: 'large' },
+        A: { rang: 3, base: 'U', ombre: 'u', bande: 'fine' },
+        X: { rang: 4, base: 'H', ombre: 'H', bande: 'fine' }
+    };
+    function dessiner(parle) {
+        const g = PixelArt.grille(64);
+        rect(g, 27, 46, 30, 58, 'P'); rect(g, 34, 46, 37, 58, 'P');
+        rect(g, 26, 58, 30, 61, 'N'); rect(g, 34, 58, 38, 61, 'N');
+        // Blouse longue, ouverte en bas
+        ellipse(g, 32, 28, 9, 8, 'U', 0.03);
+        rect(g, 23, 28, 41, 48, 'U');
+        trait(g, 32, 34, 32, 48, 'u');
+        // Cou, tête, cheveux (une silhouette : rien de plus)
+        rect(g, 30, 17, 34, 21, 'V');
+        ellipse(g, 32, 12, 5.5, 6, 'V', 0.03);
+        ellipse(g, 32, 9, 6.5, 4.5, 'X', 0.05);
+        rect(g, 26, 9, 27, 15, 'X'); rect(g, 37, 9, 38, 15, 'X');
+        // Bras repliés, la tasse tenue à deux mains
+        rect(g, 24, 30, 28, 38, 'A'); rect(g, 36, 30, 40, 38, 'A');
+        rect(g, 27, 36, 37, 39, 'A');
+        rect(g, 30, 33, 34, 37, 'M');
+        const res = PixelArt.finir(g, PARTIES);
+        // Lunettes : le reflet du feu (il glisse d'une lentille à l'autre quand elle parle)
+        for (const x of [29, 35]) { res[12][x] = 'g'; res[12][x + 1] = 'g'; }
+        res[12][parle ? 35 : 29] = 'G'; res[12][parle ? 36 : 30] = 'G';
+        res[33][31] = 'm'; res[33][32] = 'm';
+        for (const [x, y] of [[32, 31], [33, 29], [32, 27]]) res[y][x] = 'F';
+        return res;
+    }
+    return [false, true].map(v => PixelArt.en_image(dessiner(v), COULEURS));
 })();

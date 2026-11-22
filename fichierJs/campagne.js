@@ -27,7 +27,7 @@ const Campagne = (() => {
     // Ancienne sauvegarde : « introVue » valait pour l'intro de la première mission
     const introVue = id => Boolean((S().intros && S().intros[id]) || (id === 'c1m1' && S().introVue));
     // Étape du camp : il grandit avec la campagne (1 : mur renforcé et tour de guet, après « La Brèche »)
-    const etape = () => (reussieUneFois('c1m4') ? 1 : 0);
+    const etape = () => (reussieUneFois('c2m1') ? 2 : reussieUneFois('c1m4') ? 1 : 0);
 
     /* ---------- Mission en cours ----------
        Trois sortes d'objectifs : « objectif » (nombre de zombies à repousser),
@@ -59,6 +59,9 @@ const Campagne = (() => {
         maj_hud_mission();
         // Deux lignes : le numéro, puis le titre (un long titre tient même sur un petit téléphone)
         bandeau(T('MISSION {n}', { n: m.numero }) + '\n' + T(m.titre).toUpperCase());
+        // Une mission racontée (un souvenir) : le narrateur pose le décor, après le bandeau
+        const mi = m;
+        if (m.debut) setTimeout(() => { if (m === mi && etat.enCours && !fini) dire_epilogue(mi.debut, 0, () => {}); }, 1700);
     }
 
     // Bandeau animé au centre de l'écran (le même que pour les vagues, en plus petit)
@@ -332,7 +335,7 @@ const Campagne = (() => {
         etat.finChapitre = Boolean(epilogue);
         const suite = epilogue ? () => dire_epilogue(epilogue, 0, fin) : fin;
         if (texte && typeof Instructeur !== 'undefined' && document.getElementById('instructeur'))
-            Instructeur.parler(T(texte), T(victoire ? 'Mission accomplie !' : 'Compris, sergent…'), suite, 'sergent', 1000);   // impossible à passer pendant 1 s
+            Instructeur.parler(T(texte), T(victoire ? 'Mission accomplie !' : 'Compris, sergent…'), suite, m.debriefQui || 'sergent', 1000);   // impossible à passer pendant 1 s
         else fin();
     }
 
@@ -413,6 +416,8 @@ const Campagne = (() => {
             : etat.victoire ? T('MISSION ACCOMPLIE') : T('MISSION ÉCHOUÉE');
         carte.querySelector('.game-over-text').textContent = etat.finChapitre
             ? T('Fin du chapitre {n}. La suite de l\'histoire arrive bientôt…', { n: mi.chapitre })
+            : mi.texteFin
+            ? T(etat.victoire ? mi.texteFin.victoire : mi.texteFin.echec)      // une mission qui ne se passe pas au camp
             : etat.victoire
             ? T('Le camp tient. Le labo aussi. Pour l\'instant.')
             : (mi.camion && etat.vies > 0)
@@ -580,13 +585,36 @@ const Campagne = (() => {
             c.drawImage(Loot.sprites('soldat').arret, cfg.soldat.x + appui, cfg.soldat.y + Math.round((Math.sin(t * 1.7 + 1) + 1) / 2), 64, 64);
             c.restore();
         }
+        // Brutus au coin du feu, tourné vers les autres (il parle avec les mains : il se balance)
+        if (cfg.brutus) {
+            const parleB = ligne && ligne.qui === 'brutus' && Instructeur.parleEncore();
+            c.save();
+            c.translate(cfg.brutus.x + 64, cfg.brutus.y + (parleB ? Math.round(Math.abs(Math.sin(t * 8))) : Math.round((Math.sin(t * 1.3) + 1) / 2)));
+            c.scale(-1, 1);
+            c.drawImage(Loot.sprites('brute').arret, 0, 0, 64, 64);
+            c.restore();
+        }
+        // La personne du labo, sortie pour l'occasion (le reflet du feu dans ses lunettes)
+        if (cfg.chercheur) {
+            const parleC = ligne && ligne.qui === 'chercheur' && Instructeur.parleEncore() && Math.floor(instant / 160) % 2;
+            c.drawImage(SPRITES_CHERCHEUR[parleC ? 1 : 0], cfg.chercheur.x, cfg.chercheur.y + Math.round((Math.sin(t * 1.1 + 2) + 1) / 2));
+        }
         // La nuit : seul le feu éclaire (il vacille), et un peu le voyant du labo
+        // Une lanterne devant la tente de Brutus (sinon on ne la verrait pas, la nuit)
+        if (cfg.lanterne) {
+            const { x, y } = cfg.lanterne;
+            c.fillStyle = '#2a2a2a'; c.fillRect(x, y - 6, 1, 3); c.fillRect(x - 2, y - 3, 5, 1);
+            c.fillStyle = Math.sin(t * 9) > -0.8 ? '#ffd060' : '#e0a040'; c.fillRect(x - 1, y - 2, 3, 4);
+            c.fillStyle = '#2a2a2a'; c.fillRect(x - 2, y + 2, 5, 1);
+        }
         if (cfg.nuit) {
             const vacille = 1 + Math.sin(t * 7) * 0.05 + Math.sin(t * 13) * 0.03;
-            nuit(c, L, 400, [
+            const lumieres = [
                 { x: CAMP.feu.x, y: CAMP.feu.y - 6, r: 110 * vacille, force: 0.95 },
                 { x: CAMP.labo.x + 58, y: CAMP.labo.y + 6, r: 14, force: 0.6 }
-            ], 0.86);
+            ];
+            if (cfg.lanterne) lumieres.push({ x: cfg.lanterne.x, y: cfg.lanterne.y, r: 46 * vacille, force: 0.8 });
+            nuit(c, L, 400, lumieres, 0.86);
         }
         // Sirène : l'écran clignote en rouge
         if (scene.sirene) {
@@ -672,5 +700,6 @@ const Campagne = (() => {
         });
     }
 
-    return { demarrer, arreter, maj, tue, fin, lancer, ouvrir, etape, dessiner_nuit, dessiner_sol, balle_sur_brutus, miroir: () => Boolean(m && m.miroir) };
+    return { demarrer, arreter, maj, tue, fin, lancer, ouvrir, etape, dessiner_nuit, dessiner_sol, balle_sur_brutus, miroir: () => Boolean(m && m.miroir),
+        decor: () => (m && m.ville && typeof decor_ville === 'function' ? decor_ville() : null) };
 })();
