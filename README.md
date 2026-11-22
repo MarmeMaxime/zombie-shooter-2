@@ -1,4 +1,4 @@
-# Zombie Shooter 2 — version 1.3
+# Zombie Shooter 2 — version 1.3.1
 
 Jeu de tir en pixel art dans le navigateur : les zombies arrivent par la droite,
 tu les retiens le plus longtemps possible. Deux difficultés (Normal et Hardcore),
