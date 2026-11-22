@@ -3,7 +3,7 @@
    Chaque personnage a un pouvoir lié à son arme (CONFIG.pouvoirs) :
    - Soldat, Rafale : tir automatique très rapide pendant quelques secondes
    - Brutus, Onde de choc : il frappe le sol, la terre se fend jusqu'au bout de l'écran ;
-     chaque zombie traversé est blessé, repoussé et étourdi
+     chaque zombie traversé perd un PV et reste étourdi
    - Mira, Tapis de bombes : des obus tombent sur les zombies les plus proches
    - Lassie, Orage : la foudre frappe chaque zombie à l'écran
    La jauge se remplit en tuant des zombies ; touche E (ou Maj) ou bouton ★.
@@ -120,12 +120,9 @@ function update_pouvoir(dt) {
             const c = centre_zombie(z);
             if (c.x < o.x - z.taille * 0.3 || c.x > o.front) continue;
             o.touches.add(z);
-            const pres = (c.x - o.x) / MONDE.echelleX < onde.porteePres;
-            const leBoss = z === boss;
-            z.x = Math.min(MONDE.largeur - z.taille * 0.5, z.x + onde.recul * (leBoss ? 0.25 : pres ? 1 : 0.7) * MONDE.echelleX);
-            z.etourdi = onde.etourdissement * (leBoss ? 0.4 : 1);
+            z.etourdi = onde.etourdissement * (z === boss ? 0.4 : 1);
             compteurTirs++;   // chaque zombie est un coup à part (l'Anti-émeute perd un PV)
-            toucher_zombie(z, leBoss ? onde.degatsBoss : pres ? onde.degatsPres : onde.degats, compteurTirs);
+            toucher_zombie(z, onde.degats, compteurTirs);
         }
         // Des pierres jaillissent le long de la fissure
         if (o.front < MONDE.largeur) for (let k = 0; k < 3; k++) o.cailloux.push({ x: o.front + (Math.random() - 0.5) * 10, y: 20 + Math.random() * (MONDE.hauteur - 40), age: 0 });
