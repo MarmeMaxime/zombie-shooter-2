@@ -8,7 +8,7 @@ const TRADUCTIONS = {
     // ---------- Écran titre, menu ----------
     'ILS ARRIVENT…': ['THEY\'RE COMING…', 'YA VIENEN…'],
     'Survivez. Ouvrez des caisses. Regrettez.': ['Survive. Open crates. Regret it.', 'Sobrevive. Abre cajas. Arrepiéntete.'],
-    'version 1.4': ['version 1.4', 'versión 1.4'],
+    'version 1.4.1': ['version 1.4.1', 'versión 1.4.1'],
     '▶ Appuie sur une touche ou touche l\'écran ◀': ['▶ Press any key or tap the screen ◀', '▶ Pulsa una tecla o toca la pantalla ◀'],
     'Normal': ['Normal', 'Normal'],
     'Hardcore': ['Hardcore', 'Hardcore'],
@@ -642,5 +642,18 @@ const TRADUCTIONS = {
     'Frappe le sol : la terre se fend sur tout l\'écran ; chaque zombie perd un PV et reste étourdi.': ['Punches the ground: the earth splits across the whole screen; every zombie loses 1 HP and is stunned.', 'Golpea el suelo: la tierra se parte en toda la pantalla; cada zombi pierde 1 PV y queda aturdido.'],
     'Passer ▶': ['Skip ▶', 'Saltar ▶'],
     'Revoir l\'outro': ['Watch the outro again', 'Volver a ver el final'],
-    'Fin ▶': ['End ▶', 'Fin ▶']
+    'Fin ▶': ['End ▶', 'Fin ▶'],
+    'Terminer le chapitre 2 de la campagne': ['Finish chapter 2 of the campaign', 'Terminar el capítulo 2 de la campaña'],
+    'Déménageur': ['Mover', 'Mudancero'],
+    'Chef Cigare': ['Chief Cigar', 'Jefe Puro'],
+    'Terminer le chapitre 2 de la campagne en hardcore': ['Finish chapter 2 of the campaign in hardcore', 'Terminar el capítulo 2 de la campaña en hardcore'],
+    'Vétéran des Trois Collines': ['Three Hills Veteran', 'Veterano de las Tres Colinas'],
+    'Pas une égratignure': ['Not a Scratch', 'Ni un rasguño'],
+    'Battre Gégé sans être touché': ['Beat Gégé without getting hit', 'Vencer a Gégé sin recibir un golpe'],
+    'Danse avec le gorille': ['Dances with Gorillas', 'Bailando con el gorila'],
+    'Réussir 5 esquives parfaites dans un même combat contre Gégé': ['Land 5 perfect dodges in a single fight against Gégé', 'Lograr 5 esquivas perfectas en un mismo combate contra Gégé'],
+    'Danseur de ring': ['Ring Dancer', 'Bailarín del ring'],
+    'Hôpital fermé': ['Hospital Closed', 'Hospital cerrado'],
+    'Réussir « Terminus » sans qu\'un Infirmier ne soigne personne': ['Clear “Terminus” without a Nurse healing anyone', 'Superar «Terminal» sin que un Enfermero cure a nadie'],
+    'Chef de service': ['Head of Department', 'Jefe de servicio']
 };

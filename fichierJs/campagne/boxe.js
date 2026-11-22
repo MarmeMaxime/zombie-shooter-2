@@ -30,7 +30,7 @@ const Boxe = (() => {
             b: { pv: 100, etat: 'garde', t: 0, duree: 0, cool: 0, alterne: 0, rage: 0, debutEsq: -9, frappe: false },
             g: { pv: reglages.pv, pvMax: reglages.pv, etat: 'attente', t: 0, duree: 0, serie: 0, rate: false, parfait: false,
                 feinte: false, phase: 1, combo: 0, flash: 0, bloques: 0, cri: '', criT: 0, rugir: false },
-            textes: [], eclats: [], ferveur: 0.3, prec: { tir: true, esq: true },
+            textes: [], eclats: [], ferveur: 0.3, prec: { tir: true, esq: true }, parfaits: 0,
             foule: creer_foule()
         };
         maj_hud_rage();
@@ -245,6 +245,7 @@ const Boxe = (() => {
                 if (b.etat === 'esquive') {
                     g.rate = true;
                     g.parfait = c.t - b.debutEsq <= r.parfait;   // esquive lancée au tout dernier moment
+                    if (g.parfait) c.parfaits++;                    // (succès « Danse avec le gorille »)
                     texte(g.parfait ? T('PARFAIT !') : T('ESQUIVÉ !'), MONDE.largeur / 2 - 150, SOL - 150, g.parfait ? '#7aff9a' : '#c8e8ff', g.parfait ? 16 : 13, 0.8);
                     rage(g.parfait ? 15 : 8);
                     c.ferveur = Math.min(1, c.ferveur + 0.1);
