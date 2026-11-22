@@ -500,16 +500,18 @@ const Campagne = (() => {
     /* ---------- Scène d'intro, dans le camp ---------- */
     let scene = null;
 
-    function intro(id, ensuite) {
+    // lignes : d'autres répliques que celles de l'intro, dans le même décor (l'outro)
+    function intro(id, ensuite, lignes = null) {
         cacher_ecrans();
         afficher(ecrans.menu, false);
         afficher(ecrans.jeu, true);
         $c('scene-campagne').classList.remove('hidden');
+        $c('btn-passer-intro').textContent = T(lignes ? 'Passer ▶' : 'Passer l\'intro ▶');
         $c('btn-passer-intro').classList.remove('hidden');
         Son.jouerAmbiance('menu');   // la musique du camp, même en enchaînant depuis l'écran de fin
         $c('instructeur').classList.add('dans-scene');
         $c('game-container').classList.add('en-scene');   // pas de commandes de jeu pendant l'intro
-        const cfg = SCENES_CAMPAGNE[id];
+        const cfg = lignes ? { ...SCENES_CAMPAGNE[id], lignes } : SCENES_CAMPAGNE[id];
         scene = { id, cfg, debut: performance.now(), ligne: -1, secousse: 0, sirene: 0, ensuite };
         // La jeep qui arrive : on entend son moteur, qui s'arrête quand elle se gare
         if (cfg.jeep) { scene.moteur = Son.moteur(0.8); setTimeout(() => { if (scene && scene.moteur) scene.moteur.arreter(0.6); }, 2300); }
@@ -678,6 +680,19 @@ const Campagne = (() => {
 
     function revenir_ecran() { afficher(ecrans.jeu, false); afficher(ecrans.menu, true); ouvrir(); }
 
+    /* L'outro d'une mission réussie, à revoir depuis l'écran de la campagne : les
+       retrouvailles (« La Débandade »), le débriefing (dans une difficulté déjà réussie,
+       celle choisie de préférence), et l'épilogue si c'est la fin d'un chapitre. */
+    function lignes_outro(mi) {
+        const mode = reussie(mi.id, difficulte_choisie) ? difficulte_choisie : reussie(mi.id, 'normal') ? 'normal' : 'hardcore';
+        const lignes = [...(mi.brutus || [])];
+        if (mi.debrief) lignes.push({ qui: mi.debriefQui || 'sergent', texte: mi.debrief[mode] });
+        if (derniere_du_chapitre(mi) && EPILOGUES[mi.chapitre]) lignes.push(...EPILOGUES[mi.chapitre]);
+        const fin = lignes[lignes.length - 1];
+        lignes[lignes.length - 1] = { ...fin, bouton: fin.bouton || 'Fin ▶' };
+        return lignes;
+    }
+
     function remplir_ecran() {
         const liste = $c('campagne-liste');
         const el = (tag, classe, texte) => { const e = document.createElement(tag); if (classe) e.className = classe; if (texte !== undefined) e.textContent = texte; return e; };
@@ -704,6 +719,12 @@ const Campagne = (() => {
                     revoir.title = T('Revoir l\'intro');
                     revoir.addEventListener('click', () => { Son.bouton(); intro(mi.id, revenir_ecran); });
                     boutons.append(revoir);
+                }
+                if (ouverte && reussieUneFois(mi.id)) {
+                    const outro = el('button', '', '🏁');
+                    outro.title = T('Revoir l\'outro');
+                    outro.addEventListener('click', () => { Son.bouton(); intro(mi.id, revenir_ecran, lignes_outro(mi)); });
+                    boutons.append(outro);
                 }
                 const jouer = el('button', ouverte ? 'campagne-jouer' : '', T('JOUER'));
                 jouer.disabled = !ouverte;
