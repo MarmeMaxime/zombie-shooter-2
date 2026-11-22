@@ -71,6 +71,17 @@ const SUCCES = [
         valeur: () => campagne_reussies(1, ['hardcore']) },
     { id: 'nuit_blanche', nom: 'Nuit blanche', desc: 'Réussir « Couvre-feu » sans perdre une vie', titre: 'Insomniaque', recompense: 250, objectif: 1,
         valeur: () => (SV().campagne.parfaites && SV().campagne.parfaites.c1m2 ? 1 : 0) },
+    // Chapitre 2 : l'histoire de Brutus
+    { id: 'campagne_c2', nom: 'Le Cogneur', desc: 'Terminer le chapitre 2 de la campagne', titre: 'Déménageur', recompense: 400, objectif: 5,
+        valeur: () => campagne_reussies(2, ['normal', 'hardcore']) },
+    { id: 'campagne_c2_hc', nom: 'Chef Cigare', desc: 'Terminer le chapitre 2 de la campagne en hardcore', titre: 'Vétéran des Trois Collines', recompense: 700, objectif: 5,
+        valeur: () => campagne_reussies(2, ['hardcore']) },
+    { id: 'gege_intouchable', nom: 'Pas une égratignure', desc: 'Battre Gégé sans être touché', titre: 'Intouchable', recompense: 300, objectif: 1,
+        valeur: () => ((SV().campagne.exploits || {}).gegeIntouchable ? 1 : 0) },
+    { id: 'esquives_parfaites', nom: 'Danse avec le gorille', desc: 'Réussir 5 esquives parfaites dans un même combat contre Gégé', titre: 'Danseur de ring', recompense: 200, objectif: 5,
+        valeur: () => (SV().campagne.exploits || {}).esquivesParfaites || 0 },
+    { id: 'terminus_sans_soin', nom: 'Hôpital fermé', desc: 'Réussir « Terminus » sans qu\'un Infirmier ne soigne personne', titre: 'Chef de service', recompense: 250, objectif: 1,
+        valeur: () => ((SV().campagne.exploits || {}).terminusSansSoin ? 1 : 0) },
     // Succès secret : caché dans la liste tant qu'on ne l'a pas trouvé
     { id: 'tir_ami', nom: 'Tir ami', desc: 'Trouver la fin secrète de « La Débandade »', titre: 'Gâchette facile', recompense: 150, objectif: 1, secret: true,
         valeur: () => (SV().campagne.secrets && SV().campagne.secrets.tirAmi ? 1 : 0) },
@@ -89,11 +100,11 @@ Langue.traduire_objets(SUCCES, ['nom', 'desc', 'titre']);
    liste s'affiche à la fin. */
 const ORDRE_SUCCES = [
     'premier_sang', 'super_pouvoir', 'premier_footing', 'dispersion', 'centurion', 'geologue', 'survivant',
-    'ouvre_boite', 'campagne_c1', 'carton_rouge', 'tueur_geant', 'fossoyeur', 'polyvalent', 'securite_sociale', 'desinsectisation',
+    'ouvre_boite', 'campagne_c1', 'campagne_c2', 'carton_rouge', 'tueur_geant', 'fossoyeur', 'polyvalent', 'securite_sociale', 'desinsectisation',
     'casseur', 'naissances', 'pas_de_soin', 'fashion', 'torero', 'recruteur', 'machine', 'chasseur_mg',
     'maintien_ordre', 'ultime', 'profanateur', 'pigeon', 'increvable', 'coeur_brise', 'marathon', 'fleau',
     'sparring', 'ko', 'exterminateur', 'elu', 'rentier', 'inarretable', 'naturaliste', 'bestiaire', 'perpetuite',
-    'pouvoir_100', 'nuit_blanche', 'vague_10', 'baleine', 'vague_25', 'campagne_c1_hc', 'veteran_soldat', 'veteran_brute', 'veteran_mira', 'veteran_lassie', 'legende', 'tir_ami'
+    'pouvoir_100', 'nuit_blanche', 'esquives_parfaites', 'terminus_sans_soin', 'vague_10', 'baleine', 'vague_25', 'gege_intouchable', 'campagne_c1_hc', 'campagne_c2_hc', 'veteran_soldat', 'veteran_brute', 'veteran_mira', 'veteran_lassie', 'legende', 'tir_ami'
 ];
 SUCCES.sort((a, b) => {
     const rang = s => { const i = ORDRE_SUCCES.indexOf(s.id); return i < 0 ? ORDRE_SUCCES.length : i; };

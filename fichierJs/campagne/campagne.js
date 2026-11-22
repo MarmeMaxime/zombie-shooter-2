@@ -43,6 +43,7 @@ const Campagne = (() => {
        horde, puis le boss) ; « boxe » remplace toute la partie (boxe.js). */
     let m = null, chrono = 0, tues = 0, fini = false, camion = null, chantier = null, phaseBoss = false, moteurCamion = null;
     let dits = 0, finale = null;   // répliques déjà dites pendant la vague ; arrivée de Brutus (fin de « La Débandade »)
+    let soins = 0;                 // soins des Infirmiers pendant la mission (succès « Hôpital fermé »)
 
     // Camion : sa caisse dans le sprite 128×128 (x 6..122, y 54..120), et l'arrière où les zombies s'agrippent
     const CAISSE = { x: 6, y: 54, l: 116, h: 66 }, ARRIERE = 96;
@@ -57,6 +58,7 @@ const Campagne = (() => {
         chantier = m.chantier ? { avance: 0, arret: false } : null;
         phaseBoss = false;
         dits = 0;
+        soins = 0;
         finale = null;
         if (m.camion) {
             const c = m.camion;
@@ -216,6 +218,23 @@ const Campagne = (() => {
         dire_pendant();
         if (tues < objectif()) return;
         if (m.brutus) lancer_finale(); else terminer(true);
+    }
+
+    // Les exploits d'une mission (succès de la campagne), gardés dans la sauvegarde
+    function exploit(nom, valeur = true) { S().exploits = { ...(S().exploits || {}), [nom]: valeur }; }
+
+    // Fin d'un combat de boxe (boxe.js) : comme la fin d'une vague ; les exploits du combat
+    // (gagné sans être touché, esquives parfaites) sont notés avant
+    function fin_boxe(victoire) {
+        if (!m || fini) return;
+        const combat = typeof Boxe !== 'undefined' ? Boxe.etat() : null;
+        if (combat) {
+            if (combat.parfaits > ((S().exploits || {}).esquivesParfaites || 0)) exploit('esquivesParfaites', combat.parfaits);
+            if (victoire && combat.b.pv >= 100) exploit('gegeIntouchable');
+            Sauvegarde.sauver();
+            if (typeof Succes !== 'undefined') Succes.verifier();
+        }
+        terminer(victoire);
     }
 
     // Ce qu'on entend pendant la vague (à une fraction de l'objectif, ou de la horde avant le boss)
@@ -457,6 +476,7 @@ const Campagne = (() => {
         if (etat.victoire) {
             S().missions[id] = { ...(S().missions[id] || {}), [etat.mode]: true };
             if (!etat.viesPerdues) S().parfaites = { ...(S().parfaites || {}), [id]: true };   // sans perdre une vie
+            if (id === 'c2m3' && !soins) exploit('terminusSansSoin');                          // aucun Infirmier n'a soigné
             if (etat.finChapitre) S().chapitres = { ...(S().chapitres || {}), [mi.chapitre]: true };
             records = noter_record(id);
             Sauvegarde.sauver();
@@ -751,8 +771,10 @@ const Campagne = (() => {
 
     // Objectif des succès de campagne : le nombre de missions du chapitre
     if (typeof SUCCES !== 'undefined') {
-        const n1 = MISSIONS_CAMPAGNE.filter(x => x.chapitre === 1).length;
-        for (const s of SUCCES) if (s.id === 'campagne_c1' || s.id === 'campagne_c1_hc') s.objectif = n1;
+        for (const s of SUCCES) {
+            const ch = /^campagne_c(\d+)/.exec(s.id);
+            if (ch) s.objectif = MISSIONS_CAMPAGNE.filter(x => x.chapitre === Number(ch[1])).length;
+        }
     }
 
     // Boutons (absents du simulateur : on vérifie qu'ils existent)
@@ -776,5 +798,6 @@ const Campagne = (() => {
     return { demarrer, arreter, maj, tue, fin, lancer, ouvrir, etape, dessiner_nuit, dessiner_sol, balle_sur_brutus, miroir: () => Boolean(m && m.miroir),
         decor: () => (!m || !m.decor ? null : m.decor === 'ville' ? decor_ville() : m.decor === 'metro' ? decor_metro() : m.decor === 'arene' ? decor_arene() : null),
         // Fin d'un combat de boxe (boxe.js) : comme la fin d'une vague
-        fin_boxe: victoire => { if (m && !fini) terminer(victoire); } };
+        fin_boxe,
+        soin: () => { soins++; } };
 })();

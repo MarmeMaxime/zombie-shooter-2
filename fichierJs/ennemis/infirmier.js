@@ -33,6 +33,7 @@ TYPES_ZOMBIE.infirmier = {
             z.etape = 0;
             Son.effet('soin');
             if (typeof Succes !== 'undefined') Succes.compter('soins', blesses.length);
+            if (etat.variante === 'campagne' && typeof Campagne !== 'undefined') Campagne.soin();
         },
 
         // Il s'arrête le temps de soigner
