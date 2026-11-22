@@ -189,7 +189,7 @@ const MISSIONS_CAMPAGNE = [
             hardcore: { depart: 1.35, min: 0.8, acceleration: 0.007, groupe: 0.2, max: 6, joggeur: 0.1, tank: 0.12, infirmier: 0.14 }
         },
         debut: [
-            { qui: 'brutus', texte: 'Le tunnel. Ma lampe. Mon carton sous le bras. Et quelque part devant, des roulettes qui grinçaient.', bouton: 'Et alors ?' }
+            { qui: 'brutus', texte: 'Le tunnel. Ma lampe. Et quelque part devant, des roulettes qui grinçaient.', bouton: 'Et alors ?' }
         ],
         pendant: [
             { a: 0.3, qui: 'brutus', texte: 'Station Hôpital-Central. Des blouses blanches partout. Je n\'ai jamais aimé les hôpitaux. Là, encore moins.' },
@@ -197,11 +197,11 @@ const MISSIONS_CAMPAGNE = [
         ],
         debriefQui: 'brutus',
         debrief: {
-            normal: 'Au bout du terminus, le désert. Derrière moi, plus rien qui grinçait. Et le carton n\'avait pas une égratignure.',
+            normal: 'Au bout du terminus, le désert. Et derrière moi, plus rien qui grinçait.',
             hardcore: 'Ils étaient… bon, je ne vais pas dire deux fois plus. Mais beaucoup. Et les infirmiers avaient des renforts.'
         },
         texteFin: {
-            victoire: 'Brutus sort du tunnel, son carton sous le bras. Devant lui : le désert, et l\'ouest.',
+            victoire: 'Brutus sort du tunnel. Devant lui : le désert, et l\'ouest.',
             echec: '« Non, attends. Je me suis trompé de station. » Brutus reprend depuis l\'entrée du tunnel.'
         }
     }
@@ -378,8 +378,6 @@ SCENES_CAMPAGNE.c2m3 = {
         { qui: 'chercheur', texte: 'Sergent, il faut que je retourne au labo. Tout de suite.' },
         { qui: 'sergent', texte: 'Assieds-toi. Personne ne quitte le feu avant la fin de l\'histoire. C\'est le règlement.' },
         { qui: 'soldat', texte: '…' },
-        { qui: 'brutus', texte: 'Et j\'avais toujours mon carton. Je ne l\'ai pas lâché de tout le tunnel.' },
-        { qui: 'sergent', texte: 'Qu\'est-ce qu\'il y a dedans ?' },
-        { qui: 'brutus', texte: 'Plus tard, Chef. Donc : le tunnel. Le noir. Et un bruit de roulettes de brancard.', bouton: 'Raconte !' }
+        { qui: 'brutus', texte: 'Donc : le tunnel. Le noir. Et un bruit de roulettes de brancard.', bouton: 'Raconte !' }
     ]
 };
