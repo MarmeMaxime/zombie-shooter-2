@@ -24,7 +24,7 @@ const MISSIONS_CAMPAGNE = [
         },
         debrief: {
             normal: 'Pas mal, Soldat. Premier jour, et personne n\'est mort. À part eux.',
-            hardcore: 'En hardcore, en plus ? Je retire ce que j\'ai dit sur les forces spéciales. Enfin, une partie.'
+            hardcore: 'Ils couraient plus vite que d\'habitude, et ils étaient enragés. Et tu as tenu. Je retire ce que j\'ai dit sur les forces spéciales. Enfin, une partie.'
         }
     }
 ];
