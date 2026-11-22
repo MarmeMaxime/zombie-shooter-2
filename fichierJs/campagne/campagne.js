@@ -21,6 +21,9 @@
    ========================================================================= */
 
 const Campagne = (() => {
+    // Chaque réplique de la campagne reste à l'écran au moins 1 s avant de pouvoir être passée :
+    // on tire avec Espace, on ne doit pas zapper un texte sans l'avoir vu
+    const LECTURE = 1000;
     const $c = id => document.getElementById(id);
     const S = () => Sauvegarde.donnees.campagne;
     const mission = id => MISSIONS_CAMPAGNE.find(m => m.id === id);
@@ -242,7 +245,7 @@ const Campagne = (() => {
         const pendant = m.pendant || [];
         if (dits < pendant.length && tues >= pendant[dits].a * objectif() && typeof Instructeur !== 'undefined' && document.getElementById('instructeur')) {
             const l = pendant[dits++];
-            Instructeur.parler(T(l.texte), T('Compris !'), null, l.qui);
+            Instructeur.parler(T(l.texte), T('Compris !'), null, l.qui, LECTURE);
         }
     }
 
@@ -375,7 +378,7 @@ const Campagne = (() => {
         etat.finChapitre = Boolean(epilogue);
         const suite = epilogue ? () => dire_epilogue(epilogue, 0, fin) : fin;
         if (texte && typeof Instructeur !== 'undefined' && document.getElementById('instructeur'))
-            Instructeur.parler(T(texte), T(victoire ? 'Mission accomplie !' : (m.echecBouton || 'Compris, sergent…')), suite, m.debriefQui || 'sergent', 1000);   // impossible à passer pendant 1 s
+            Instructeur.parler(T(texte), T(victoire ? 'Mission accomplie !' : (m.echecBouton || 'Compris, sergent…')), suite, m.debriefQui || 'sergent', LECTURE);
         else fin();
     }
 
@@ -383,7 +386,7 @@ const Campagne = (() => {
     function dire_epilogue(lignes, i, ensuite) {
         const l = lignes[i];
         if (!l) return ensuite();
-        Instructeur.parler(T(l.texte, l.vars), T(l.bouton || 'Suite ▶'), () => dire_epilogue(lignes, i + 1, ensuite), l.qui);
+        Instructeur.parler(T(l.texte, l.vars), T(l.bouton || 'Suite ▶'), () => dire_epilogue(lignes, i + 1, ensuite), l.qui, LECTURE);
     }
     const chapitre_fini = n => Boolean(S().chapitres && S().chapitres[n]);
     function derniere_du_chapitre(mi) {
@@ -555,7 +558,7 @@ const Campagne = (() => {
         if (l.action === 'coup') { scene.secousse = performance.now(); Son.effet('impactTerre'); }
         if (l.action === 'sirene') { scene.sirene = performance.now(); sirene(); }
         const qui = l.qui === 'sergent' && scene.cfg.sergent.pyjama ? 'sergentPyjama' : l.qui;
-        Instructeur.parler(T(l.texte), T(l.bouton || 'Suite ▶'), () => dire(i + 1), qui);
+        Instructeur.parler(T(l.texte), T(l.bouton || 'Suite ▶'), () => dire(i + 1), qui, LECTURE);
     }
 
     function terminer_intro() {
