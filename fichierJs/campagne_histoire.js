@@ -207,9 +207,12 @@ const MISSIONS_CAMPAGNE = [
     },
     {
         id: 'c2m4', chapitre: 2, numero: 4, titre: 'Le Ring', perso: 'brute',
-        // On a volé son fusil à Brutus pendant qu'il dormait. Les traces mènent à une
-        // vieille usine : des survivants, et leur roi, Gégé, un ancien collègue qui a muté
-        // en gorille. Tout s'y gagne sur le ring : le fusil, et une carte (le camp du Sergent).
+        // La logique : l'usine est le premier abri à la sortie du métro, les gens du quartier
+        // (dont Gégé, l'ancien collègue de Brutus, qui a muté en gorille) s'y sont arrêtés.
+        // Personne n'y entre armé (le bruit attire les morts) : on a pris son fusil à Brutus
+        // pendant qu'il dormait, et les disputes s'y règlent à mains nues, sur le ring.
+        // La carte : les guetteurs ont capté la radio du camp du Sergent ; Gégé ne peut pas
+        // y aller (des soldats tireraient sur un gorille), alors il la met en jeu.
         // Un combat de boxe (boxe.js) : coups, esquives et contres, sans tir.
         decor: 'arene',
         objectif: { normal: 1, hardcore: 1 },
@@ -219,22 +222,27 @@ const MISSIONS_CAMPAGNE = [
             hardcore: { pv: 700, armer: 0.62, degats: 22, garde: [0.8, 1.6], ouvert: 0.85, parfait: 0.16, jab: 4, contre: 13, super: 45, feintes: 0.25 }
         },
         debut: [
-            { qui: 'gorilleInconnu', texte: 'Tiens, tiens. Le dormeur s\'est réveillé. Il cherche son joujou ?' },
+            // Pourquoi on lui a pris son fusil, et pourquoi on se bat à mains nues : la règle de la maison
+            { qui: 'gorilleInconnu', texte: 'Tiens, le dormeur de la cabane. Tu cherches ton fusil ? Personne n\'entre armé chez moi. On l\'a pris, comme on prend celui de tout le monde.' },
             { qui: 'brutus', texte: 'C\'est mon fusil. Rends-le, et je ne casse rien.' },
-            { qui: 'gorilleInconnu', texte: 'Tu ne me reconnais pas ? Regarde bien. Imagine-moi avec moins de poils.' },
+            { qui: 'gorilleInconnu', texte: 'Ici, on ne tire pas : le bruit attire les morts. Les disputes, on les règle à mains nues. Sur le ring.' },
+            // Les retrouvailles : l'usine est le premier abri à la sortie du métro, toute la ville y est passée
+            { qui: 'gorilleInconnu', texte: '… Tu ne me reconnais vraiment pas ? Imagine-moi avec moins de poils.' },
             { qui: 'brutus', texte: '… Non.' },
             { qui: 'gorilleInconnu', texte: 'Le piano du conservatoire. Quatrième étage. Tu l\'as lâché sur mon pied.' },
             { qui: 'brutus', texte: '… GÉGÉ ?! Qu\'est-ce qui t\'est arrivé ?' },
             { qui: 'gorille', texte: 'J\'ai muté. Toi, tu as juste vieilli.' },
-            { qui: 'gorille', texte: 'Ici, c\'est chez moi. Et chez moi, tout se gagne sur le ring. Ton fusil… et ça.' },
-            { qui: 'gorille', texte: 'Une carte. Un camp militaire, à l\'ouest. Des vivres, des murs, des soldats. Le paradis.' },
-            { qui: 'brutus', texte: 'Et si je perds ?' },
-            { qui: 'gorille', texte: 'Tu restes ici. À porter mes caisses. Comme au bon vieux temps.' },
-            { qui: 'brutus', texte: 'Au bon vieux temps, c\'est toi qui portais. Monte sur le ring, Gégé.', bouton: 'Au combat !' }
+            { qui: 'gorille', texte: 'Tu veux ton fusil ? Gagne-le. Si tu perds, tu restes ici et tu portes mes caisses. Comme au bon vieux temps.' },
+            { qui: 'brutus', texte: 'Au bon vieux temps, c\'est toi qui portais.' },
+            // La carte : Gégé sait où est le camp, mais il ne peut pas y aller
+            { qui: 'gorille', texte: 'Et si tu gagnes, je te donne aussi ça. Mes guetteurs ont capté une radio militaire : un camp, à l\'ouest. Des vivres, des murs, des soldats.' },
+            { qui: 'brutus', texte: 'Et toi, tu n\'y vas pas ?' },
+            { qui: 'gorille', texte: 'Regarde-moi. Des soldats qui voient arriver un gorille, ils ne posent pas de questions : ils tirent.' },
+            { qui: 'brutus', texte: '… Monte sur le ring, Gégé.', bouton: 'Au combat !' }
         ],
         debriefQui: 'brutus',
         debrief: {
-            normal: 'Gégé est tombé comme un piano. Il m\'a rendu mon fusil, et la carte. Un camp, à l\'ouest, avec des vivres et des murs.',
+            normal: 'Gégé est tombé comme un piano. Il a tenu parole : mon fusil, et la carte. Un camp, à l\'ouest, avec des vivres et des murs.',
             hardcore: 'Il cognait plus fort qu\'avant, Gégé. Mais il a gardé son vieux défaut : il prévient toujours avant de frapper.'
         },
         echec: 'Non, attends. Je ne suis pas tombé. J\'ai… glissé. Je reprends.',
@@ -430,8 +438,9 @@ SCENES_CAMPAGNE.c2m4 = {
         { qui: 'sergent', texte: 'On t\'a volé ton fusil. Pendant que tu dormais. Toi.' },
         { qui: 'brutus', texte: 'Je dors profondément, Chef. Tu le sais. Aux Trois Collines, j\'ai dormi pendant un bombardement.' },
         { qui: 'sergent', texte: 'C\'était un orage.' },
-        { qui: 'brutus', texte: 'Bref. Il y avait des traces. De grosses traces. Je les ai suivies jusqu\'à une grande bâtisse, une vieille usine.' },
-        { qui: 'brutus', texte: 'Et dedans, des gens. Des vivants ! Et au milieu, assis sur des caisses comme sur un trône… un gorille.' },
+        { qui: 'brutus', texte: 'Bref. Il y avait des traces dans la poussière. Des pieds… et des mains. Je les ai suivies jusqu\'à une vieille usine, pas loin de la voie.' },
+        { qui: 'brutus', texte: 'Et dedans, des gens. Des vivants ! Tout le quartier avait fui par le métro, comme moi. L\'usine, c\'était le premier abri à la sortie.' },
+        { qui: 'brutus', texte: 'Et au milieu, assis sur des caisses comme sur un trône… un gorille.' },
         { qui: 'chercheur', texte: 'Un gorille ? Un vrai ?' },
         { qui: 'brutus', texte: 'Un homme. Enfin, à moitié. Il avait muté.' },
         { qui: 'chercheur', texte: 'Muté… Et il parlait ? Il se souvenait de qui il était ?' },
