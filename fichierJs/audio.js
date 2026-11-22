@@ -257,36 +257,36 @@ const Son = (() => {
            ou de téléphone, qui ne rendent presque rien sous 150 Hz. */
         grognement: () => {
             const f = 120 + Math.random() * 50;
-            ton(f, 0, 0.6, { type: 'sawtooth', vol: 0.11, f2: f * 0.7, attaque: 0.06 });
-            ton(f * 2, 0, 0.5, { type: 'square', vol: 0.04, f2: f * 1.4, attaque: 0.06 });
-            bruit(0, 0.5, { vol: 0.14, filtre: 700, filtreFin: 350, type: 'bandpass' });
+            ton(f, 0, 0.6, { type: 'sawtooth', vol: 0.024, f2: f * 0.7, attaque: 0.06 });
+            ton(f * 2, 0, 0.5, { type: 'square', vol: 0.008, f2: f * 1.4, attaque: 0.06 });
+            bruit(0, 0.5, { vol: 0.03, filtre: 700, filtreFin: 350, type: 'bandpass' });
         },
         grognementTank: () => {
-            ton(85, 0, 0.85, { type: 'sawtooth', vol: 0.12, f2: 60, attaque: 0.1 });
-            ton(170, 0, 0.7, { type: 'square', vol: 0.05, f2: 120, attaque: 0.1 });
-            bruit(0, 0.8, { vol: 0.15, filtre: 500, filtreFin: 250, type: 'bandpass' });
+            ton(85, 0, 0.85, { type: 'sawtooth', vol: 0.027, f2: 60, attaque: 0.1 });
+            ton(170, 0, 0.7, { type: 'square', vol: 0.011, f2: 120, attaque: 0.1 });
+            bruit(0, 0.8, { vol: 0.033, filtre: 500, filtreFin: 250, type: 'bandpass' });
         },
 
         /* Voix des dialogues : une « syllabe » à chaque mouvement de bouche.
            Le Sergent bougonne, le labo grésille dans son haut-parleur, l'éclaireur parle par radio. */
         voixSergent: () => {
             const f = 150 + Math.random() * 60;
-            ton(f, 0, 0.08, { type: 'square', vol: 0.15, f2: f * 0.85 });
-            bruit(0, 0.05, { vol: 0.08, filtre: 1200 });
+            ton(f, 0, 0.08, { type: 'square', vol: 0.075, f2: f * 0.85 });
+            bruit(0, 0.05, { vol: 0.04, filtre: 1200 });
         },
         voixLabo: () => {
             const f = 320 + Math.random() * 120;
-            ton(f, 0, 0.07, { type: 'square', vol: 0.11, f2: f * 1.1 });
-            bruit(0, 0.07, { vol: 0.06, filtre: 3000, type: 'highpass' });
+            ton(f, 0, 0.07, { type: 'square', vol: 0.055, f2: f * 1.1 });
+            bruit(0, 0.07, { vol: 0.03, filtre: 3000, type: 'highpass' });
         },
         voixRadio: () => {
             const f = 240 + Math.random() * 90;
-            ton(f, 0, 0.08, { type: 'sawtooth', vol: 0.14, f2: f * 0.9 });
-            bruit(0, 0.09, { vol: 0.2, filtre: 1800, type: 'bandpass' });
+            ton(f, 0, 0.08, { type: 'sawtooth', vol: 0.07, f2: f * 0.9 });
+            bruit(0, 0.09, { vol: 0.1, filtre: 1800, type: 'bandpass' });
         },
         radio: () => {   // grésillement au début d'un message radio, puis le bip
-            bruit(0, 0.28, { vol: 0.3, filtre: 2200, filtreFin: 900, type: 'bandpass' });
-            ton(1400, 0.24, 0.08, { vol: 0.15 });
+            bruit(0, 0.28, { vol: 0.15, filtre: 2200, filtreFin: 900, type: 'bandpass' });
+            ton(1400, 0.24, 0.08, { vol: 0.08 });
         },
 
         // Petite fanfare de victoire (fin de mission de campagne)
@@ -296,27 +296,38 @@ const Son = (() => {
         }
     };
 
-    /* Moteur (camion, jeep) : un ronronnement continu, qui tremble un peu.
-       Renvoie de quoi l'arrêter (en douceur). Silencieux si le son est coupé. */
+    /* Moteur (camion, jeep) : un ronronnement en fond, bien sous la musique. Il
+       monte et redescend dans les tours de temps en temps (accélérations, bosses
+       de la piste), le filtre s'ouvre avec lui. Renvoie de quoi l'arrêter en douceur.
+       Silencieux si le son est coupé. */
     function moteur(force = 1) {
         const c = contexte();
         if (!c || !actif) return { arreter() {} };
         const g = c.createGain(), fl = c.createBiquadFilter(), lfo = c.createOscillator(), prof = c.createGain();
-        fl.type = 'lowpass'; fl.frequency.value = 700;
+        fl.type = 'lowpass'; fl.frequency.value = 600;
         g.gain.setValueAtTime(0.0001, c.currentTime);
-        g.gain.exponentialRampToValueAtTime(0.045 * force, c.currentTime + 0.4);   // continu : plus discret que les bruitages
-        lfo.frequency.value = 11; prof.gain.value = 0.015 * force;
+        g.gain.exponentialRampToValueAtTime(0.005 * force, c.currentTime + 0.4);
+        lfo.frequency.value = 11; prof.gain.value = 0.0018 * force;
         lfo.connect(prof).connect(g.gain);
-        const oscs = [[55, 'sawtooth'], [110, 'sawtooth'], [165, 'square']].map(([f, type]) => {
-            const o = c.createOscillator(); o.type = type; o.frequency.value = f; o.connect(fl); o.start(); return o;
+        const BASES = [55, 110, 165];
+        const oscs = BASES.map((f, i) => {
+            const o = c.createOscillator(); o.type = i === 2 ? 'square' : 'sawtooth'; o.frequency.value = f; o.connect(fl); o.start(); return o;
         });
         fl.connect(g).connect(sortieEffets);
         lfo.start();
+        // Les tours changent : une accélération de temps en temps, puis le moteur retombe
+        const regime = setInterval(() => {
+            const r = 0.88 + Math.random() * 0.34, t = c.currentTime;
+            oscs.forEach((o, i) => o.frequency.setTargetAtTime(BASES[i] * r, t, 0.35));
+            lfo.frequency.setTargetAtTime(9 + r * 4, t, 0.35);
+            fl.frequency.setTargetAtTime(450 + r * 300, t, 0.35);
+        }, 900 + Math.random() * 600);
         let fini = false;
         return {
             arreter(duree = 0.5) {
                 if (fini) return;
                 fini = true;
+                clearInterval(regime);
                 g.gain.setTargetAtTime(0.0001, c.currentTime, duree / 3);
                 setTimeout(() => { for (const o of [...oscs, lfo]) o.stop(); g.disconnect(); }, duree * 1000 + 200);
             }

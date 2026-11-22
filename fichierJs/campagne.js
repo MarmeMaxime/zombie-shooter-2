@@ -325,6 +325,7 @@ const Campagne = (() => {
         afficher(ecrans.jeu, true);
         $c('scene-campagne').classList.remove('hidden');
         $c('btn-passer-intro').classList.remove('hidden');
+        Son.jouerAmbiance('menu');   // la musique du camp, même en enchaînant depuis l'écran de fin
         $c('instructeur').classList.add('dans-scene');
         $c('game-container').classList.add('en-scene');   // pas de commandes de jeu pendant l'intro
         const cfg = SCENES_CAMPAGNE[id];
