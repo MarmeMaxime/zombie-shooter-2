@@ -596,7 +596,9 @@ const Campagne = (() => {
     function remplir_ecran() {
         const liste = $c('campagne-liste');
         const el = (tag, classe, texte) => { const e = document.createElement(tag); if (classe) e.className = classe; if (texte !== undefined) e.textContent = texte; return e; };
-        const lignes = [];
+        // La difficulté une seule fois, en haut (les boutons restent courts)
+        const lignes = [el('p', 'campagne-difficulte', T('Difficulté : {d}', { d: T(difficulte_choisie === 'normal' ? 'Normal' : 'Hardcore') }))];
+        let derniere = null;
         for (const ch of CHAPITRES) {
             lignes.push(el('p', 'campagne-chapitre', T('Chapitre {n} — {titre}', { n: ch.numero, titre: T(ch.titre) })));
             for (const mi of MISSIONS_CAMPAGNE.filter(x => x.chapitre === ch.numero)) {
@@ -616,17 +618,19 @@ const Campagne = (() => {
                     revoir.addEventListener('click', () => { Son.bouton(); intro(mi.id, revenir_ecran); });
                     boutons.append(revoir);
                 }
-                const jouer = el('button', ouverte ? 'campagne-jouer' : '', T('JOUER') + ' (' + T(difficulte_choisie === 'normal' ? 'Normal' : 'Hardcore') + ')');
+                const jouer = el('button', ouverte ? 'campagne-jouer' : '', T('JOUER'));
                 jouer.disabled = !ouverte;
                 if (ouverte) jouer.addEventListener('click', () => { Son.bouton(); lancer(mi.id); });
                 // La manette joue la dernière mission débloquée
-                if (ouverte) liste.dataset.derniere = mi.id;
+                if (ouverte) { liste.dataset.derniere = mi.id; derniere = ligne; }
                 boutons.append(jouer);
                 ligne.append(boutons);
                 lignes.push(ligne);
             }
         }
         liste.replaceChildren(...lignes);
+        // La liste défile : on l'ouvre sur la dernière mission débloquée
+        requestAnimationFrame(() => { if (derniere) liste.scrollTop = Math.max(0, derniere.offsetTop - liste.offsetTop - liste.clientHeight + derniere.offsetHeight + 8); });
     }
 
     // Boutons (absents du simulateur : on vérifie qu'ils existent)

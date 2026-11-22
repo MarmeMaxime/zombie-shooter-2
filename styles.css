@@ -718,3 +718,14 @@ span#score.score-ready {
 .campagne-boutons { display: flex; gap: 6px; flex: none; flex-direction: row !important; }
 .campagne-ligne.verrouillee { opacity: 0.55; }
 .campagne-ligne button:disabled { cursor: not-allowed; background: #333; color: #888; border-color: #555; }
+/* Écran de campagne compact : il tient dans la hauteur de l'interface, la liste des missions défile */
+.campagne-card { max-width: 600px; max-height: 384px; display: flex; flex-direction: column; padding: 12px 18px; }
+.campagne-card h2 { margin-bottom: 6px; padding-bottom: 6px; font-size: 1.3rem; }
+#campagne-liste { overflow-y: auto; min-height: 0; flex: 1; margin-bottom: 8px; padding-right: 4px; }
+.campagne-difficulte { color: #aaa; font-size: 0.72rem; text-align: left; margin: 0 0 6px; }
+.campagne-chapitre { margin-bottom: 5px; }
+.campagne-ligne { padding: 5px 8px; margin-bottom: 5px; }
+.campagne-ligne strong { font-size: 0.82rem; }
+.campagne-ligne small { font-size: 0.66rem; }
+.campagne-ligne button { padding: 5px 10px; font-size: 0.75rem; }
+#btn-close-campagne { flex: none; padding: 8px; }
