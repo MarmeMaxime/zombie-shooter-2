@@ -1,4 +1,4 @@
-# Zombie Shooter 2 — version 1.3.1
+# Zombie Shooter 2 — version 1.4
 
 Jeu de tir en pixel art dans le navigateur : les zombies arrivent par la droite,
 tu les retiens le plus longtemps possible. Deux difficultés (Normal et Hardcore),
@@ -25,23 +25,23 @@ Au lancement d'un combat, on choisit le mode :
   4. « La Brèche » : couvrir la réparation du mur (premiers Joggeurs).
   5. « Coup de foudre » : une horde, puis la Mastodonte, échantillon du labo qui a muté.
 
-  Chapitre 2, « Le Cogneur » : « La Débandade », à l'ouest (l'écran est en miroir),
-  une horde qui fuit quelque chose… et la rencontre avec Brutus. Puis « Déménagement
-  express » : au coin du feu, Brutus raconte comment il est arrivé, et on joue son
-  histoire avec lui, en ville, le jour où tout a commencé. Puis « Terminus » : il quitte
-  la ville par le métro, dans le noir, et croise les Infirmiers de l'hôpital. Puis
-  « Le Ring » : on lui a volé son fusil, et il doit le regagner à la boxe contre Gégé,
-  un ancien collègue qui a muté en gorille. Un vrai combat, sans tir : Tir pour frapper,
-  Haut ou Bas pour esquiver quand Gégé prévient (« ! »), une esquive au dernier moment
-  le laisse ouvert pour un contre, et ★ lance l'uppercut quand la rage est pleine.
-  (`outils/simulation_boxe.js` fait jouer un bot pour régler la difficulté.)
-  Enfin « La Longue Marche » : des mois dans le désert vers l'ouest, les monstres croisés
-  en route, puis le Fossoyeur. Le lendemain, Brutus voit le mur du camp : la boucle se
-  referme sur « La Débandade », et l'épilogue clôt le chapitre au coin du feu.
+  Chapitre 2, « Le Cogneur » : l'arrivée de Brutus, puis son histoire, qu'il raconte
+  au coin du feu et qu'on joue avec lui :
+  1. « La Débandade » : à l'ouest (l'écran est en miroir), une horde qui fuit
+     quelque chose… et la rencontre avec Brutus. Une fin secrète s'y cache.
+  2. « Déménagement express » : en ville, le jour où tout a commencé.
+  3. « Terminus » : la fuite par le métro, dans le noir (premiers Infirmiers).
+  4. « Le Ring » : un combat de boxe contre Gégé, un ancien collègue qui a muté en
+     gorille, pour regagner son fusil. Tir pour frapper, Haut ou Bas pour esquiver
+     quand Gégé prévient (« ! ») ; une esquive au dernier moment le laisse ouvert pour
+     un contre, et ★ lance l'uppercut quand la rage est pleine.
+  5. « La Longue Marche » : des mois dans le désert, puis le Fossoyeur. Le lendemain,
+     Brutus voit le mur du camp : la boucle se referme sur « La Débandade ».
 
-  Chaque mission garde son meilleur temps et ses vies restantes ; le chapitre se
-  termine sur un épilogue. Le camp s'affiche derrière le menu et grandit avec la
-  campagne (palissade et tour de guet après « La Brèche »).
+  Chaque mission garde son meilleur temps et ses vies restantes ; on peut revoir son
+  intro et, une fois réussie, son outro. Chaque chapitre se termine sur un épilogue.
+  Le camp s'affiche derrière le menu et grandit avec la campagne (palissade et tour
+  de guet après « La Brèche », la tente de Brutus après « La Débandade »).
 
 À la toute première partie, le Sergent propose un **entraînement** (on peut le
 refaire à tout moment depuis l'aide-mémoire « ? »).
@@ -68,7 +68,7 @@ On commence avec le Soldat ; chaque personnage suivant se débloque en réussiss
 | Perso | Arme | Pouvoir spécial |
 |---|---|---|
 | Soldat | Fusil : longue portée, une cible | Rafale : tir automatique pendant 3 s |
-| Brutus | Fusil à pompe : 5 plombs en éventail | Onde de choc : repousse et étourdit |
+| Brutus | Fusil à pompe : 5 plombs en éventail | Onde de choc : la terre se fend sur tout l'écran, chaque zombie perd un PV et reste étourdi |
 | Mira | Lance-grenades : dégâts de zone | Tapis de bombes : 6 obus |
 | Lassie | Fusil électrique : la foudre saute sur 3 zombies | Orage : frappe tous les zombies à l'écran |
 
