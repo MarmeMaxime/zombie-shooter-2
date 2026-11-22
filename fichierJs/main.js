@@ -48,7 +48,10 @@ function dessiner() {
         ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
-    ctx.setTransform(MONDE.echelle, 0, 0, MONDE.echelle, 0, MONDE.decalageY);
+    // Mission « à l'ouest » : on dessine le monde en miroir (le jeu, lui, ne change pas)
+    const miroir = etat.variante === 'campagne' && typeof Campagne !== 'undefined' && Campagne.miroir();
+    if (miroir) ctx.setTransform(-MONDE.echelle, 0, 0, MONDE.echelle, canvas.width, MONDE.decalageY);
+    else ctx.setTransform(MONDE.echelle, 0, 0, MONDE.echelle, 0, MONDE.decalageY);
 
     ctx.imageSmoothingEnabled = false;    // tout est en pixel art : net, sans flou
     ctx.drawImage(fond, 0, 0, MONDE.largeur, MONDE.hauteur);

@@ -25,6 +25,9 @@ Au lancement d'un combat, on choisit le mode :
   4. « La Brèche » : couvrir la réparation du mur (premiers Joggeurs).
   5. « Coup de foudre » : une horde, puis la Mastodonte, échantillon du labo qui a muté.
 
+  Chapitre 2, « Le Cogneur » : « La Débandade », à l'ouest (l'écran est en miroir),
+  une horde qui fuit quelque chose… et la rencontre avec Brutus.
+
   Chaque mission garde son meilleur temps et ses vies restantes ; le chapitre se
   termine sur un épilogue. Le camp s'affiche derrière le menu et grandit avec la
   campagne (palissade et tour de guet après « La Brèche »).

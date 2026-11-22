@@ -274,6 +274,11 @@ const Son = (() => {
             ton(f, 0, 0.08, { type: 'square', vol: 0.075, f2: f * 0.85 });
             bruit(0, 0.05, { vol: 0.04, filtre: 1200 });
         },
+        voixBrutus: () => {   // plus grave et plus enjoué que le Sergent
+            const f = 110 + Math.random() * 70;
+            ton(f, 0, 0.1, { type: 'sawtooth', vol: 0.06, f2: f * 1.15 });
+            bruit(0, 0.05, { vol: 0.035, filtre: 900 });
+        },
         voixLabo: () => {
             const f = 320 + Math.random() * 120;
             ton(f, 0, 0.07, { type: 'square', vol: 0.055, f2: f * 1.1 });

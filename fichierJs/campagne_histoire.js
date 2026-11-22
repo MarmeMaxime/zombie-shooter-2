@@ -9,7 +9,8 @@
    dans SCENES_CAMPAGNE, et ses textes dans traductions.js.
    ========================================================================= */
 const CHAPITRES = [
-    { numero: 1, titre: 'La Recrue' }
+    { numero: 1, titre: 'La Recrue' },
+    { numero: 2, titre: 'Le Cogneur' }
 ];
 
 /* apparition : intervalle entre deux zombies (de « depart » à « min » secondes,
@@ -96,6 +97,35 @@ const MISSIONS_CAMPAGNE = [
             hardcore: 'Une horde enragée et une mutante amoureuse, et tu es encore là. Si un jour quelqu\'un m\'aime comme elle t\'aimait, je déserte.'
         },
         echec: 'Elle est passée. Elle te cherche dans le camp. Elle renverse les tentes une par une en t\'appelant… à sa façon.'
+    },
+    {
+        id: 'c2m1', chapitre: 2, numero: 1, titre: 'La Débandade', perso: 'soldat',
+        // À l'ouest : l'écran est en miroir (le camp à droite, la horde arrive par la gauche).
+        // La horde fuit quelque chose (elle court plus vite) ; à la fin, c'était Brutus.
+        miroir: true,
+        objectif: { normal: 45, hardcore: 65 },
+        apparition: {
+            normal: { depart: 1.45, min: 1.0, acceleration: 0.006, groupe: 0.12, joggeur: 0.12, tank: 0.08, panique: 1.15 },
+            hardcore: { depart: 1.25, min: 0.88, acceleration: 0.006, groupe: 0.16, joggeur: 0.17, tank: 0.11, panique: 1.2 }
+        },
+        // Ce qu'on entend pendant la vague (à une fraction de l'objectif)
+        pendant: [
+            { a: 0.4, qui: 'radio', texte: 'Il y a quelque chose derrière eux. Gros. Très gros. Et ça… ça les cogne ?' },
+            { a: 0.75, qui: 'sergent', texte: 'Plus que quelques-uns. Et garde une balle pour la grosse chose, au cas où.' }
+        ],
+        // À la fin de la vague : Brutus sort de la poussière en cognant les derniers, puis les retrouvailles
+        brutus: [
+            { qui: 'sergent', texte: 'Soldat, baisse ton arme ! … Enfin, garde-la levée. Mais vise ailleurs.' },
+            { qui: 'brutus', texte: 'Salut, la compagnie ! C\'est vous, le camp ? J\'ai ramené des invités. Désolé pour le désordre.' },
+            { qui: 'sergent', texte: '… Non. Pas lui. Tout sauf lui.' },
+            { qui: 'brutus', texte: 'CHEF CIGARE ! Ça alors ! Toujours vivant ? Et toujours ce cigare ?' },
+            { qui: 'sergent', texte: 'Ne m\'appelle pas comme ça.' },
+            { qui: 'soldat', texte: '…' }
+        ],
+        debrief: {
+            normal: 'Bon. On a un nouveau pensionnaire. Je sens que mes nuits calmes, c\'est terminé.',
+            hardcore: 'Une horde en panique, et le pire, c\'était encore celui qui la poussait. Bienvenue au camp, Brutus. Hélas.'
+        }
     }
 ];
 
@@ -193,6 +223,21 @@ const SCENES_CAMPAGNE = {
             { qui: 'sergent', texte: 'Peu importe. Tu fais le ménage dans la horde, et quand la grosse arrive, tu lui expliques que ce n\'est pas réciproque. Avec ton fusil.', action: 'sirene', bouton: 'À mon poste !' }
         ]
     }
+};
+
+SCENES_CAMPAGNE.c2m1 = {
+    sergent: { x: CAMP.sergent.x, y: CAMP.sergent.y },
+    soldat: { x: 182, y: 204 },
+    attente: 900,
+    lignes: [
+        { qui: 'radio', texte: 'Éclaireur au camp. Le mouvement à l\'ouest… c\'est une horde. Elle vient droit sur nous.' },
+        { qui: 'sergent', texte: 'À l\'ouest. Évidemment. Pour une fois qu\'il ne se passait rien à l\'ouest.' },
+        { qui: 'sergent', texte: 'Retourne-toi, Soldat. Cette fois, ils arrivent de l\'autre côté. Et le mur, de ce côté-là, est plus bas que mon moral.' },
+        { qui: 'radio', texte: 'Sergent… ils courent. Ils ne regardent même pas le camp. On dirait qu\'ils fuient quelque chose.' },
+        { qui: 'sergent', texte: 'Fuir ? Qu\'est-ce qui peut faire peur à un zombie ?' },
+        { qui: 'soldat', texte: '…' },
+        { qui: 'sergent', texte: 'C\'est bien ce que je pensais : toi non plus, tu n\'en sais rien. En position !', action: 'sirene', bouton: 'À mon poste !' }
+    ]
 };
 
 /* Épilogues : joués après le débriefing de la dernière mission d'un chapitre,

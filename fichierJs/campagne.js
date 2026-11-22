@@ -34,6 +34,7 @@ const Campagne = (() => {
        « camion » (un camion à escorter jusqu'au camp) ou « chantier » (tenir
        pendant une réparation, qui s'arrête quand un zombie est trop près). */
     let m = null, chrono = 0, tues = 0, fini = false, camion = null, chantier = null, phaseBoss = false, moteurCamion = null;
+    let dits = 0, finale = null;   // répliques déjà dites pendant la vague ; arrivée de Brutus (fin de « La Débandade »)
 
     // Camion : sa caisse dans le sprite 128×128 (x 6..122, y 54..120), et l'arrière où les zombies s'agrippent
     const CAISSE = { x: 6, y: 54, l: 116, h: 66 }, ARRIERE = 96;
@@ -47,6 +48,8 @@ const Campagne = (() => {
         camion = null;
         chantier = m.chantier ? { avance: 0, arret: false } : null;
         phaseBoss = false;
+        dits = 0;
+        finale = null;
         if (m.camion) {
             const c = m.camion;
             camion = { x: MONDE.largeur + 30, y: c.y, pv: c.pv[etat.mode], pvMax: c.pv[etat.mode], vitesse: (MONDE.largeur + 170) / c.duree[etat.mode], depart: c.depart, detruit: false };
@@ -102,6 +105,7 @@ const Campagne = (() => {
     // Appelée à chaque image à la place des apparitions du mode classique (zombie.js)
     function maj(dt) {
         if (!m || fini) return;
+        if (finale) return maj_finale(dt);   // la vague est finie : Brutus arrive, plus personne n'apparaît
         if (camion) maj_camion(dt);
         if (chantier) maj_chantier(dt);
         // Elle a traversé l'écran sans tomber : elle est dans le camp
@@ -122,6 +126,7 @@ const Campagne = (() => {
         const r = Math.random();
         const type = r < (a.tank || 0) ? 'tank' : r < (a.tank || 0) + (a.joggeur || 0) ? 'joggeur' : 'normal';
         const z = creer_zombie(type, MONDE.largeur, MONDE.hauteur);
+        if (a.panique) z.vitesse *= a.panique;   // ils fuient quelque chose : ils courent plus vite
         if (!camion) return;
         // Jamais directement sur le camion (quand il entre par la droite) : on le fait apparaître au-dessus
         const by = camion.y + CAISSE.y;
@@ -185,9 +190,59 @@ const Campagne = (() => {
             }
             return;
         }
+        if (finale) return;
         tues++;
         maj_hud_mission();
-        if (tues >= objectif()) terminer(true);
+        // Ce qu'on entend pendant la vague
+        const pendant = m.pendant || [];
+        if (dits < pendant.length && tues >= pendant[dits].a * objectif() && typeof Instructeur !== 'undefined' && document.getElementById('instructeur')) {
+            const l = pendant[dits++];
+            Instructeur.parler(T(l.texte), T('Compris !'), null, l.qui);
+        }
+        if (tues < objectif()) return;
+        if (m.brutus) lancer_finale(); else terminer(true);
+    }
+
+    /* Fin de « La Débandade » : Brutus sort de la poussière, du côté d'où venait
+       la horde, et cogne les derniers zombies au passage. Quand il arrive près du
+       Soldat (ou qu'il n'y a plus personne devant lui), les retrouvailles. */
+    function lancer_finale() {
+        finale = { x: MONDE.largeur + 30, y: Math.max(CONFIG.margeHaut, Math.min(MONDE.hauteur - CONFIG.margeBas, joueur.y)), image: 0, chrono: 0, coup: 0, parle: false };
+        $c('hud-mission').classList.add('hidden');
+        bandeau(T('QUELQUE CHOSE ARRIVE…'));
+        Son.effet('grognementTank');
+    }
+    function maj_finale(dt) {
+        const f = finale;
+        if (f.parle) return;
+        f.x -= 70 * MONDE.echelleX * dt;
+        f.chrono += dt;
+        if (f.chrono > 0.16) { f.chrono = 0; f.image = (f.image + 1) % 4; }
+        f.coup = Math.max(0, f.coup - dt);
+        // Il cogne ceux qu'il rattrape
+        for (const z of zombies.slice()) if (z.x > f.x - 40 && z.x < f.x + 40 && !est_boss(z.type)) {
+            toucher_zombie(z, 99);
+            f.coup = 0.2;
+            Son.effet('impactTerre');
+            secouer_ecran(1);
+        }
+        const arrive = f.x < MONDE.largeur * 0.5 || (zombies.length === 0 && f.x < MONDE.largeur * 0.8);
+        if (!arrive) return;
+        f.parle = true;
+        zombies.length = 0;
+        if (typeof Instructeur !== 'undefined' && document.getElementById('instructeur')) dire_epilogue(m.brutus, 0, () => terminer(true));
+        else terminer(true);
+    }
+    // Brutus, tourné vers le Soldat (le dessin est retourné), qui marche ou qui cogne
+    function dessiner_brutus(ctx) {
+        if (!finale) return;
+        const sprites = Loot.sprites('brute');
+        const img = finale.coup > 0 ? sprites.tir : finale.parle ? sprites.arret : sprites.marche[finale.image];
+        ctx.save();
+        ctx.translate(Math.round(finale.x) + 64, Math.round(finale.y));
+        ctx.scale(-1, 1);
+        ctx.drawImage(img, 0, 0, 64, 64);
+        ctx.restore();
     }
 
     // Fin de mission : les zombies restants s'enfuient (victoire), le Sergent fait le point
@@ -224,6 +279,7 @@ const Campagne = (() => {
 
     // Le camion et sa barre de vie (dessinés sous les zombies)
     function dessiner_sol(ctx) {
+        dessiner_brutus(ctx);
         if (!camion || camion.detruit) return;
         const x = Math.round(camion.x), y = Math.round(camion.y);
         ctx.drawImage(OBJETS_CAMP.camion, x, y + (Math.floor(etat.temps * 8) % 2));   // le moteur fait vibrer la caisse
@@ -540,5 +596,5 @@ const Campagne = (() => {
         });
     }
 
-    return { demarrer, arreter, maj, tue, fin, lancer, ouvrir, etape, dessiner_nuit, dessiner_sol };
+    return { demarrer, arreter, maj, tue, fin, lancer, ouvrir, etape, dessiner_nuit, dessiner_sol, miroir: () => Boolean(m && m.miroir) };
 })();
