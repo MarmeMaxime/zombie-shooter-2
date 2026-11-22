@@ -26,8 +26,8 @@ const Instructeur = (() => {
         brutus: { nom: 'Brutus', image: () => Loot.sprites('brute').arret, cadre: [5, 0, 22, 22] },
         chercheur: { nom: 'Labo', image: ouvert => SPRITES_CHERCHEUR[ouvert ? 1 : 0], cadre: [20, 2, 24, 24] },   // sorti du labo, dans l'ombre
         // Gégé, le gorille (« Le Ring ») : un inconnu, jusqu'à ce que Brutus le reconnaisse
-        gorilleInconnu: { nom: '???', image: ouvert => (ouvert ? SPRITES_BOXE.gorille.parle : SPRITES_BOXE.gorille.garde[0]), cadre: [14, 10, 38, 38] },
-        gorille: { nom: 'Gégé', image: ouvert => (ouvert ? SPRITES_BOXE.gorille.parle : SPRITES_BOXE.gorille.garde[0]), cadre: [14, 10, 38, 38] }
+        gorilleInconnu: { nom: '???', image: ouvert => SPRITES_BOXE.gorille.portrait[ouvert ? 1 : 0], cadre: [8, 9, 30, 30] },
+        gorille: { nom: 'Gégé', image: ouvert => SPRITES_BOXE.gorille.portrait[ouvert ? 1 : 0], cadre: [8, 9, 30, 30] }
     };
     let orateur = 'sergent';
 

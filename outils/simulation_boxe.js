@@ -17,7 +17,8 @@ const ctx = {
     Son: { effet() {}, vibrer() {} },
     T: (s, v) => (v ? s.replace(/\{(\w+)\}/g, (_, k) => v[k]) : s),
     secouer_ecran() {},
-    Campagne: { fin_boxe: v => { fin = v; } }
+    Campagne: { fin_boxe: v => { fin = v; } },
+    SPRITES_BOXE: { foule: { gens: [{}], dos: [{}] } }   // la foule n'a pas besoin d'images ici
 };
 vm.createContext(ctx);
 const histoire = fs.readFileSync(path.join(racine, 'campagne_histoire.js'), 'utf8');

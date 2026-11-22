@@ -49,17 +49,17 @@ const Boxe = (() => {
     }
 
     /* ---------- La foule ---------- */
+    // Trois rangées de spectateurs derrière le ring (plus grands en se rapprochant),
+    // et le premier rang devant, vu de dos (boxe_sprites.js)
     function creer_foule() {
-        const gens = [];
-        const W = MONDE.largeur;
-        const teintes = ['#c68a5e', '#e0b08a', '#8a5a3a', '#d8a07a', '#5a3a2a'];
-        const habits = ['#8a3a2a', '#3a5a8a', '#5e6e34', '#6a6a72', '#a88a3a', '#4a3a5a', '#2a4a4a', '#8a6a4a'];
-        for (let rang = 0; rang < 3; rang++) for (let x = -6 + rang * 9; x < W + 10; x += 20 + Math.random() * 8) {
-            if (rang === 2 && Math.abs(x - W / 2) < 40) continue;
-            gens.push({ x, y: 150 + rang * 16, peau: teintes[Math.floor(Math.random() * teintes.length)], habit: habits[Math.floor(Math.random() * habits.length)], phase: Math.random() * 6, h: 18 + Math.random() * 6 });
-        }
-        // Premier rang, devant le ring : on les voit de dos, dans l'ombre
-        for (let x = 8; x < W; x += 34 + Math.random() * 14) gens.push({ x, y: 384, peau: '#2a2220', habit: '#141214', phase: Math.random() * 6, h: 26, dos: true });
+        const gens = [], W = MONDE.largeur, F = SPRITES_BOXE.foule;
+        [[1.35, 168], [1.5, 184], [1.65, 202]].forEach(([ech, y], rang) => {
+            for (let x = -10 + rang * 11; x < W + 20; x += 24 * ech * 0.62 + Math.random() * 6) {
+                if (rang === 2 && Math.abs(x - W / 2) < 30) continue;
+                gens.push({ x, y, ech, sprite: F.gens[Math.floor(Math.random() * F.gens.length)], phase: Math.random() * 6 });
+            }
+        });
+        for (let x = 10; x < W; x += 46 + Math.random() * 16) gens.push({ x, y: 412, ech: 2.25, sprite: { bas: F.dos[Math.floor(Math.random() * F.dos.length)] }, phase: Math.random() * 6, dos: true });
         return gens;
     }
 
@@ -68,16 +68,10 @@ const Boxe = (() => {
         for (const p of c.foule) {
             if (Boolean(p.dos) !== devant) continue;
             const saut = Math.max(0, Math.sin(t * (4 + f * 6) + p.phase)) * (1 + f * 4);
-            const y = Math.round(p.y - saut);
-            ctx.fillStyle = p.habit; ctx.fillRect(Math.round(p.x) - 6, y - p.h + 8, 12, p.h);
-            ctx.fillStyle = p.peau; ctx.fillRect(Math.round(p.x) - 4, y - p.h, 8, 8);
-            if (!p.dos) { ctx.fillStyle = '#1a1210'; ctx.fillRect(Math.round(p.x) - 4, y - p.h, 8, 2); }
             // Les bras levés quand ça chauffe
-            if (f > 0.45 && Math.sin(t * 3 + p.phase * 2) > 0.1) {
-                ctx.fillStyle = p.habit;
-                ctx.fillRect(Math.round(p.x) - 9, y - p.h - 6, 3, 12); ctx.fillRect(Math.round(p.x) + 6, y - p.h - 6, 3, 12);
-                ctx.fillStyle = p.peau; ctx.fillRect(Math.round(p.x) - 9, y - p.h - 8, 3, 3); ctx.fillRect(Math.round(p.x) + 6, y - p.h - 8, 3, 3);
-            }
+            const leve = !p.dos && f > 0.45 && Math.sin(t * 3 + p.phase * 2) > 0.1;
+            const img = leve ? p.sprite.haut : p.sprite.bas, l = 24 * p.ech;
+            ctx.drawImage(img, Math.round(p.x - l / 2), Math.round(p.y - l - saut), Math.round(l), Math.round(l));
         }
     }
 
@@ -372,7 +366,7 @@ const Boxe = (() => {
 
         // Gégé (derrière Brutus) : il avance quand il frappe, recule quand il est touché
         const dxg = g.etat === 'frappe' ? -16 : g.etat === 'armer' ? 6 : g.etat === 'ouvert' ? -10 : g.flash > 0 ? 8 : 0;
-        poser(ctx, image_g(), cx - 60 + (g.etat === 'ko' ? 20 : dxg), SOL - 92 * ECH + 4, 96 * ECH);
+        poser(ctx, image_g(), cx - 60 + (g.etat === 'ko' ? 20 : dxg), SOL - GORILLE_PIEDS * ECH_B, GORILLE_TOILE * ECH_B);   // mêmes pixels que Brutus
         // Brutus : il recule quand il esquive ou qu'il est sonné
         const dxb = b.etat === 'esquive' ? -14 : b.etat === 'sonne' ? -18 * (1 - b.t / 0.5) : (b.etat === 'jab' || b.etat === 'direct') ? 6 : b.etat === 'uppercut' ? 10 : 0;
         // (son vrai sprite : les pieds sur la dernière ligne, le corps vers la gauche de l'image)
