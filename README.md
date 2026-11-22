@@ -1,4 +1,4 @@
-# Zombie Shooter 2 — version 1.3.1
+# Zombie Shooter 2 — version 1.4
 
 Jeu de tir en pixel art dans le navigateur : les zombies arrivent par la droite,
 tu les retiens le plus longtemps possible. Deux difficultés (Normal et Hardcore),
@@ -25,9 +25,23 @@ Au lancement d'un combat, on choisit le mode :
   4. « La Brèche » : couvrir la réparation du mur (premiers Joggeurs).
   5. « Coup de foudre » : une horde, puis la Mastodonte, échantillon du labo qui a muté.
 
-  Chaque mission garde son meilleur temps et ses vies restantes ; le chapitre se
-  termine sur un épilogue. Le camp s'affiche derrière le menu et grandit avec la
-  campagne (palissade et tour de guet après « La Brèche »).
+  Chapitre 2, « Le Cogneur » : l'arrivée de Brutus, puis son histoire, qu'il raconte
+  au coin du feu et qu'on joue avec lui :
+  1. « La Débandade » : à l'ouest (l'écran est en miroir), une horde qui fuit
+     quelque chose… et la rencontre avec Brutus. Une fin secrète s'y cache.
+  2. « Déménagement express » : en ville, le jour où tout a commencé.
+  3. « Terminus » : la fuite par le métro, dans le noir (premiers Infirmiers).
+  4. « Le Ring » : un combat de boxe contre Gégé, un ancien collègue qui a muté en
+     gorille, pour regagner son fusil. Tir pour frapper, Haut ou Bas pour esquiver
+     quand Gégé prévient (« ! ») ; une esquive au dernier moment le laisse ouvert pour
+     un contre, et ★ lance l'uppercut quand la rage est pleine.
+  5. « La Longue Marche » : des mois dans le désert, puis le Fossoyeur. Le lendemain,
+     Brutus voit le mur du camp : la boucle se referme sur « La Débandade ».
+
+  Chaque mission garde son meilleur temps et ses vies restantes ; on peut revoir son
+  intro et, une fois réussie, son outro. Chaque chapitre se termine sur un épilogue.
+  Le camp s'affiche derrière le menu et grandit avec la campagne (palissade et tour
+  de guet après « La Brèche », la tente de Brutus après « La Débandade »).
 
 À la toute première partie, le Sergent propose un **entraînement** (on peut le
 refaire à tout moment depuis l'aide-mémoire « ? »).
@@ -54,7 +68,7 @@ On commence avec le Soldat ; chaque personnage suivant se débloque en réussiss
 | Perso | Arme | Pouvoir spécial |
 |---|---|---|
 | Soldat | Fusil : longue portée, une cible | Rafale : tir automatique pendant 3 s |
-| Brutus | Fusil à pompe : 5 plombs en éventail | Onde de choc : repousse et étourdit |
+| Brutus | Fusil à pompe : 5 plombs en éventail | Onde de choc : la terre se fend sur tout l'écran, chaque zombie perd un PV et reste étourdi |
 | Mira | Lance-grenades : dégâts de zone | Tapis de bombes : 6 obus |
 | Lassie | Fusil électrique : la foudre saute sur 3 zombies | Orage : frappe tous les zombies à l'écran |
 
@@ -83,12 +97,26 @@ Chaque monstre rencontré rejoint le **bestiaire 📖**, avec sa fiche.
 ## Dossiers
 
 - `index.html`, `styles.css` : la page du jeu.
-- `fichierJs/` : tout le code du jeu.
-- `assets/persos/<perso>/` : les images d'un perso (`arret`, `tir`, `marche1` à `marche4`).
-- `assets/skins/<perso>/<tenue>/` : les mêmes images pour chaque tenue.
-- `assets/monstres/<monstre>/` : les images de marche des monstres dessinés à la main
-  (les autres sont générés par le code, dans `fichierJs/*_sprite.js`).
+- `fichierJs/` : tout le code du jeu, rangé par sujet :
+  - `moteur/` : la boucle de jeu, le joueur, le tir, les zombies, les pouvoirs, le son, la manette, le mode Vagues ;
+  - `ennemis/` : le comportement de chaque créature spéciale (Joggeur, Fossoyeur…) ;
+  - `campagne/` : le moteur de la campagne, son histoire, le combat de boxe, l'entraînement ;
+  - `decors/` : les décors dessinés à la largeur de l'écran (désert, camp, ville, métro…) ;
+  - `interface/` : menus, options, bestiaire, succès, missions, lootbox, écran titre ;
+  - `donnees/` : réglages, sauvegarde, traductions ;
+  - `sprites/` : le chargement des PNG d'`assets/`.
+- `assets/persos/<perso>/` : les images d'un perso (`arret`, `tir`, `marche1` à `marche4`) ;
+  `assets/persos/brutus/boxe/` : Brutus boxeur (« Le Ring ») ; `assets/persos/soldat/soldat-sans-casque/`.
+- `assets/skins/<perso>/<tenue>/` : les mêmes images pour chaque tenue (et `boxe/` pour Brutus).
+- `assets/monstres/<monstre>/` : les images des monstres, une par étape d'animation
+  (`marche1`…, `course1`…, `charge1`…).
+- `assets/campagne/` : un dossier par personnage de l'histoire (le Sergent, le labo,
+  la radio de l'éclaireur, la personne du labo, Gégé), avec son portrait de dialogue
+  (`portrait-…`), plus les objets du camp et la foule de la bâtisse.
 - `assets/son/` : sons et playlist du mode hardcore.
-- `outils/` : scripts de génération des sprites (PowerShell) et simulateur
-  d'équilibrage (`node outils/simulation.js`). Voir `outils/README.md`.
+- `outils/` : scripts de génération des sprites et simulateurs d'équilibrage
+  (`node outils/simulation.js`, `node outils/simulation_boxe.js`). Voir `outils/README.md`.
+  Les sprites dessinés en code ont leur générateur dans `outils/sprites/` : pour les
+  réécrire en PNG, lancer `node outils/exporter_sprites.js` puis ouvrir
+  `outils/sprites/exporter.html` depuis le serveur du jeu.
 - `ancien/` : fichiers que le jeu n'utilise plus, gardés pour mémoire.

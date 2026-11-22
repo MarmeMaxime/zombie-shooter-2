@@ -15,7 +15,37 @@ pixel par pixel. À lancer dans cet ordre, depuis la racine du projet :
 ```
 
 Pour une nouvelle tenue : ajouter une ligne `Recolor ...` dans `generer_tenues.ps1`,
-puis la déclarer dans `LOOT.skins` (`fichierJs/lootbox.js`).
+puis la déclarer dans `LOOT.skins` (`fichierJs/interface/lootbox.js`).
+
+```powershell
+.\outils\generer_soldat_sans_casque.ps1             # le Soldat sans casque (assets/persos/soldat/soldat-sans-casque/)
+```
+
+## Sprites dessinés en code (`outils/sprites/`)
+
+Les créatures (Mastodonte, Joggeur, Anti-émeute, Pondeuse et larves, Infirmier,
+Boxeur, Fossoyeur et tombes, zombie attaché de l'entraînement), la campagne
+(Sergent, portraits, labo, objets du camp, personne du labo) et le combat de
+boxe (Gégé, la foule, Brutus boxeur dans chaque tenue) sont dessinés par du code
+en pixel art (`pixel_art.js` et un générateur par sujet). Le jeu, lui, charge
+leurs PNG dans `assets/`. Pour les réécrire après avoir modifié un générateur :
+
+```powershell
+node outils\exporter_sprites.js      # reçoit les images et les écrit dans assets/
+```
+
+puis ouvrir `http://localhost:8766/outils/sprites/exporter.html` (le jeu servi
+comme d'habitude) et cliquer sur « Exporter ». La liste des fichiers produits est
+dans `outils/sprites/liste.js`. Deux exports de suite donnent les mêmes fichiers.
+
+## Combat de boxe (Node.js)
+
+```powershell
+node outils\simulation_boxe.js normal 40 0.08 0.15
+```
+
+Un bot joue Brutus contre Gégé : difficulté, nombre de combats, imprécision de
+l'esquive (en secondes), part des coups qu'il ne voit pas venir.
 
 ## Simulation d'équilibrage (Node.js)
 
