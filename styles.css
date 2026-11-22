@@ -749,3 +749,11 @@ span#score.score-ready {
 
 /* Combat de boxe (boxe.js) : pas de score, de vies ni d'achat de vie, les barres du ring les remplacent */
 #game-container.en-boxe #info, #game-container.en-boxe #btn-touch-buy { display: none !important; }
+
+/* Plusieurs caisses d'un coup (lootbox.js) : tout le butin en petites cases */
+#btn-ouvrir-5:disabled, #btn-ouvrir-10:disabled { opacity: 0.4; cursor: default; }
+.loot-lot { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; margin-top: 6px; }
+.loot-lot .loot-case { flex: 0 0 40px; height: 40px; border-width: 2px; }
+.loot-lot .loot-case img { width: 34px; height: 34px; }
+.loot-lot .loot-emoji { font-size: 1.3rem; }
+.loot-lot .loot-doublon { opacity: 0.55; }

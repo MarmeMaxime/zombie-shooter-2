@@ -84,8 +84,9 @@ Chaque monstre rencontré rejoint le **bestiaire 📖**, avec sa fiche.
 ## Contenu
 
 - Caisses de butin (parodie assumée, monnaie du jeu uniquement) : 20 tenues,
-  3 skins universels, déchets.
-- 15 défis par personnage, 51 succès avec titres.
+  3 skins universels, déchets. 100 💀 la caisse, à ouvrir une par une, par 5 ou par 10 ;
+  un légendaire (ou mieux) est garanti au bout de 100 caisses sans, sans compteur affiché.
+- 15 défis par personnage, 57 succès avec titres.
 - Bilan à la fin de chaque partie : victimes par espèce, records, défis et
   succès obtenus.
 - Musiques du menu, du mode normal et de l'entraînement générées par le jeu

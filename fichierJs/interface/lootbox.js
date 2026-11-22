@@ -4,10 +4,11 @@
    gagnée en jouant (les crânes). Aucun argent réel, jamais.
    ========================================================================= */
 const LOOT = {
-    prix: 50,                   // crânes par caisse
+    prix: 100,                  // crânes par caisse
+    lots: [5, 10],              // on peut aussi en ouvrir 5 ou 10 d'un coup
     pointsParCrane: 10,         // 1 crâne gagné tous les 10 points de score
     compensationDoublon: 10,    // crânes rendus pour un skin déjà possédé
-    garantie: 30,               // légendaire (ou mieux) garanti au bout de N caisses sans
+    garantie: 100,              // légendaire (ou mieux) garanti au bout de N caisses sans (compteur caché au joueur)
 
     raretes: [
         { id: 'commun', nom: 'Commun', couleur: '#9a9a9a', poids: 62 },
@@ -160,7 +161,7 @@ const Loot = (() => {
         skinsDe: perso => L().possedes.filter(id => typeof id === 'string' && id.startsWith(perso + ':'))
             .map(id => id.split(':')[1]).filter(connu),
         dechets: () => Object.fromEntries(Object.entries(L().dechets).filter(([id]) => LOOT.dechets[id])),
-        stats: () => ({ ouvertes: L().ouvertes, avantGarantie: LOOT.garantie - L().depuisLegendaire })
+        stats: () => ({ ouvertes: L().ouvertes })
     };
 })();
 
@@ -359,8 +360,10 @@ const LootUI = (() => {
         $l('solde-menu').textContent = s;
         $l('solde-loot').textContent = s;
         const st = Loot.stats();
-        $l('loot-stats').textContent = T('Caisses ouvertes : {n} · Légendaire garanti dans {g} caisse(s) (on vous aime)', { n: st.ouvertes, g: st.avantGarantie });
+        // (la garantie d'un légendaire existe, mais on ne montre pas où on en est)
+        $l('loot-stats').textContent = T('Caisses ouvertes : {n}', { n: st.ouvertes });
         $l('btn-ouvrir').disabled = enCours || s < LOOT.prix;
+        for (const n of LOOT.lots) $l('btn-ouvrir-' + n).disabled = enCours || s < LOOT.prix * n;
     }
 
     function afficher_resultat(res) {
@@ -381,8 +384,12 @@ const LootUI = (() => {
             detail.textContent = o.texte;
         }
         zone.append(titre, detail);
+        reveler(o);
+        Succes.apres_caisse(o);
+    }
 
-        // Le cadre prend la couleur de la rareté, la case gagnante s'illumine
+    // Le cadre prend la couleur de la rareté, la case gagnante s'illumine, le son et les effets suivent
+    function reveler(o) {
         const fenetre = $l('loot-fenetre');
         fenetre.style.setProperty('--couleur-loot', o.rarete.couleur);
         fenetre.classList.remove('loot-revele');
@@ -390,10 +397,34 @@ const LootUI = (() => {
         fenetre.classList.add('loot-revele');
         const gagnante = $l('loot-bande').children[INDEX_GAGNANT];
         if (gagnante) gagnante.classList.add('loot-gagnante');
-
         SonLoot.revelation(o.rarete.id);
         EffetsLoot.revelation(o.rarete);
-        Succes.apres_caisse(o);
+    }
+
+    // Plusieurs caisses d'un coup : un résumé par rareté, puis tout le butin en petites cases
+    const ORDRE_RARETES = ['mythique', 'legendaire', 'epique', 'rare', 'commun'];
+    function afficher_lot(lot, meilleur) {
+        const zone = $l('loot-resultat');
+        zone.replaceChildren();
+        zone.style.color = meilleur.objet.rarete.couleur;
+        const titre = document.createElement('strong');
+        const parRarete = ORDRE_RARETES.map(id => [Loot.rarete(id), lot.filter(r => r.objet.rarete.id === id).length]).filter(([, n]) => n);
+        titre.textContent = parRarete.map(([r, n]) => `${r.nom} ×${n}`).join(' · ');
+        const nouveaux = lot.filter(r => r.objet.type === 'skin' && !r.doublon).length;
+        const doublons = lot.filter(r => r.doublon).length;
+        const detail = document.createElement('span');
+        detail.textContent = T('{n} nouveau(x) skin(s) · {d} doublon(s), remboursé(s) {c} 💀', { n: nouveaux, d: doublons, c: doublons * LOOT.compensationDoublon });
+        const grille = document.createElement('div');
+        grille.className = 'loot-lot';
+        for (const r of [...lot].sort((a, b) => ORDRE_RARETES.indexOf(a.objet.rarete.id) - ORDRE_RARETES.indexOf(b.objet.rarete.id))) {
+            const c = case_roulette(r.objet);
+            c.title = `${r.objet.rarete.nom} : ${r.objet.nom}${r.doublon ? ' (' + T('doublon') + ')' : ''}`;
+            if (r.doublon) c.classList.add('loot-doublon');
+            grille.appendChild(c);
+        }
+        zone.append(titre, detail, grille);
+        reveler(meilleur.objet);
+        for (const r of lot) Succes.apres_caisse(r.objet);
     }
 
     // Cliquetis à chaque case qui passe sous le curseur
@@ -413,10 +444,13 @@ const LootUI = (() => {
         requestAnimationFrame(boucle_tick);
     }
 
-    function ouvrir_caisse() {
-        if (enCours) return;
-        const res = Loot.ouvrir();
-        if (!res) return;
+    function ouvrir_caisse(nombre = 1) {
+        if (enCours || Loot.solde() < LOOT.prix * nombre) return;
+        const lot = [];
+        for (let k = 0; k < nombre; k++) { const r = Loot.ouvrir(); if (r) lot.push(r); }
+        if (!lot.length) return;
+        // La roulette s'arrête sur le plus bel objet du lot
+        const res = lot.reduce((a, b) => (ORDRE_RARETES.indexOf(b.objet.rarete.id) < ORDRE_RARETES.indexOf(a.objet.rarete.id) ? b : a));
         enCours = true;
         maj_soldes();
         $l('loot-resultat').replaceChildren();
@@ -451,7 +485,7 @@ const LootUI = (() => {
 
         setTimeout(() => {
             try {
-                afficher_resultat(res);
+                if (lot.length > 1) afficher_lot(lot, res); else afficher_resultat(res);
                 // La musique de la boutique revient une fois la fanfare passée
                 setTimeout(() => {
                     if (!enCours && !$l('loot-overlay').classList.contains('hidden')) SonLoot.boutique();
@@ -514,7 +548,8 @@ const LootUI = (() => {
         Son.reprendreMusique();
         Sauvegarde.point_de_restauration(T('Après les caisses'));
     });
-    $l('btn-ouvrir').addEventListener('click', ouvrir_caisse);
+    $l('btn-ouvrir').addEventListener('click', () => ouvrir_caisse(1));
+    for (const n of LOOT.lots) $l('btn-ouvrir-' + n).addEventListener('click', () => ouvrir_caisse(n));
     $l('btn-vestiaire').addEventListener('click', () => { remplir_vestiaire(); $l('vestiaire-overlay').classList.remove('hidden'); });
     $l('btn-close-vestiaire').addEventListener('click', () => $l('vestiaire-overlay').classList.add('hidden'));
     $l('btn-payer').addEventListener('click', () => {
