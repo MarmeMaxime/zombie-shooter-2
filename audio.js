@@ -540,76 +540,156 @@ const Son = (() => {
 
     /* ---------- Musique du mode normal (générée, en boucle) ----------
        La recette de l'ancienne musique du mode normal : 133 BPM, pédale sur la
-       qui frissonne vers sol# et si♭, puis une basse qui rampe chromatiquement
-       (do, do#, ré) sous une ligne en la mineur, avec des éclairs de la majeur
-       (do#). Batterie qui pousse, cordes en contretemps, thème aux cuivres,
-       « braams ». Intensité constante : on est en plein combat.
-       48 mesures (≈ 87 s) : arrivée, assaut, thème, accalmie qui remonte. */
+       qui frissonne vers sol# et si♭, basse qui rampe chromatiquement (do, do#,
+       ré) sous une ligne en la mineur, éclairs de la majeur (do#).
+       Pour ne pas lasser pendant une longue partie : 7 parties qui changent de
+       basse, de batterie et parfois de tonalité, deux thèmes, un contre-chant,
+       des breaks variés en fin de phrase. Et chaque nouveau tour de boucle
+       change d'orchestration (thème aux violons, ostinato en plus…).
+       88 mesures (≈ 2 min 40). */
     const N_DOUBLE = 60 / 133 / 4;
-    const N_PEDALE = [33, 33, 32, 33, 33, 33, 34, 33];             // la, avec sol# et si♭ qui frissonnent
-    const N_RAMPE = [36, 36, 37, 37, 38, 38, 37, 37];              // do, do#, ré, do# : la basse qui rampe
-    const N_RAMPE2 = [36, 37, 38, 39, 38, 37, 36, 35];             // variante qui monte plus haut
-    // Thème aux cuivres : une note par demi-mesure, sur 8 mesures
-    const N_THEME = [69, 72, 76, 77, 76, 72, 71, 69, 69, 72, 76, 79, 77, 76, 72, 76];
-    const NORMAL = { nom: 'normal', double: N_DOUBLE, mesures: 48, volume: 0.18, reverb: 0.4, jouer: jouer_normal };
+    // basse : motif de basse ; batterie : motif de batterie ; transpo : demi-tons
+    const N_PARTIES = [
+        { nom: 'arrivee', mesures: 8, basse: 'pedale', batterie: 'leger', transpo: 0 },
+        { nom: 'assaut', mesures: 16, basse: 'rampe', batterie: 'rock', transpo: 0 },
+        { nom: 'theme', mesures: 16, basse: 'rampe2', batterie: 'rock2', transpo: 0, theme: 'A' },
+        { nom: 'cassure', mesures: 8, basse: 'tenue', batterie: 'demi', transpo: 0, theme: 'B' },
+        { nom: 'poursuite', mesures: 16, basse: 'galop', batterie: 'double', transpo: 1 },
+        { nom: 'reprise', mesures: 16, basse: 'rampe', batterie: 'toms', transpo: 3, theme: 'A', contrechant: true },
+        { nom: 'retombee', mesures: 8, basse: 'pedale', batterie: 'leger', transpo: 0 }
+    ];
+    const N_DEBUTS = [];
+    N_PARTIES.reduce((debut, p) => (N_DEBUTS.push(debut), debut + p.mesures), 0);
+    const N_MESURES = N_PARTIES.reduce((n, p) => n + p.mesures, 0);
+    const N_BASSES = {
+        pedale: m => Array(8).fill([33, 33, 32, 33, 33, 33, 34, 33][m % 8]),   // la, avec sol# et si♭ qui frissonnent
+        rampe: () => [36, 36, 37, 37, 38, 38, 37, 37],                         // do, do#, ré, do# : la basse qui rampe
+        rampe2: m => m % 4 < 2 ? [36, 36, 37, 37, 38, 38, 37, 37] : [36, 37, 38, 39, 38, 37, 36, 35],
+        tenue: m => Array(8).fill([33, 29, 26, 28][Math.floor(m / 2) % 4]),  // la, fa, ré, mi : longues notes
+        galop: m => (m % 2 ? [33, 45, 33, 34, 33, 45, 32, 33] : [33, 45, 33, 45, 33, 45, 34, 32])
+    };
+    // Motifs de batterie sur 16 doubles croches : grosse caisse, caisse claire, charleston (1 = croche, 2 = double)
+    const N_BATTERIES = {
+        leger: { kick: [0], snare: [], hat: 1 },
+        rock: { kick: [0, 8], snare: [4, 12], hat: 1 },
+        rock2: { kick: [0, 6, 8, 10], snare: [4, 12], hat: 1 },
+        demi: { kick: [0], snare: [8], hat: 0 },
+        double: { kick: [0, 4, 8, 12], snare: [4, 12, 14], hat: 2 },
+        toms: { kick: [0, 10], snare: [4, 12], hat: 1, toms: [3, 6, 7, 14] }
+    };
+    // Thèmes : une note par demi-mesure, sur 8 mesures (null = silence)
+    const N_THEMES = {
+        A: [69, 72, 76, 77, 76, 72, 71, 69, 69, 72, 76, 79, 77, 76, 72, 76],
+        B: [76, null, 74, 72, 71, null, 72, 69, 68, null, 69, 71, 72, 71, 69, null]
+    };
+    const NORMAL = { nom: 'normal', double: N_DOUBLE, mesures: N_MESURES, volume: 0.18, reverb: 0.4, jouer: jouer_normal, tour: 0 };
+
+    // Accord tenu de la mesure (avant transposition)
+    function accord_normal(partie, mesure) {
+        if (partie.basse === 'pedale') return mesure % 2 ? [57, 60, 64] : [57, 61, 64];   // la mineur / la majeur qui hésitent
+        if (partie.basse === 'tenue') return [[57, 60, 64], [57, 60, 65], [57, 62, 65], [56, 59, 64]][Math.floor(mesure / 2) % 4];
+        return Math.floor(mesure / 2) % 2 ? [57, 60, 65] : [57, 60, 64];                    // la mineur / fa
+    }
 
     function jouer_normal(i, t) {
         const o = { sortie: piste.bus, absolu: true };
+        if (i === 0) NORMAL.tour++;
+        const tourPair = NORMAL.tour % 2 === 0;
         const mesure = Math.floor(i / 16), pos = i % 16, mesureDuree = N_DOUBLE * 16;
-        // Parties : 0 arrivée (8 mesures), 1 assaut (16), 2 thème (16), 3 accalmie qui remonte (8)
-        const partie = mesure < 8 ? 0 : mesure < 24 ? 1 : mesure < 40 ? 2 : 3;
-        const debutPartie = [0, 8, 24, 40][partie], dansPartie = mesure - debutPartie;
-        const pedale = partie === 0 || partie === 3;
-        // Accord tenu : la majeur / la mineur qui hésitent sur la pédale, puis la mineur et fa
-        const nappe = pedale ? (mesure % 2 ? [57, 60, 64] : [57, 61, 64]) : (Math.floor(mesure / 2) % 2 ? [57, 60, 65] : [57, 60, 64]);
+        let k = N_DEBUTS.length - 1;
+        while (N_DEBUTS[k] > mesure) k--;
+        const partie = N_PARTIES[k], dans = mesure - N_DEBUTS[k], T = partie.transpo;
+        const derniere = dans === partie.mesures - 1;
+        const nappe = accord_normal(partie, mesure).map(n => n + T);
 
-        // Basse en croches
-        if (pos % 2 === 0) {
-            const k = pos / 2;
-            const n = pedale ? N_PEDALE[mesure % 8] : (partie === 2 && mesure % 4 >= 2 ? N_RAMPE2 : N_RAMPE)[k];
-            const accent = k % 4 === 0;
+        // Crash au début de chaque partie (sauf la toute première)
+        if (pos === 0 && dans === 0 && k > 0) bruit(t, 1.4, { vol: 0.05, filtre: 6000, filtreFin: 3000, type: 'highpass', ...o });
+
+        // Basse
+        const motif = N_BASSES[partie.basse](mesure);
+        if (partie.basse === 'galop') {
+            // Galop : deux doubles croches + une croche, en boucle
+            if (pos % 4 !== 1) {
+                const n = motif[Math.floor(pos / 2)] + T;
+                voix(hz(n), t, N_DOUBLE * 0.9, { vol: pos % 4 === 0 ? 0.08 : 0.055, filtre: 700, attaque: 0.005, sortie: 0.05, desaccord: [-7, 7] });
+            }
+        } else if (partie.basse === 'tenue') {
+            if (pos === 0) voix(hz(motif[0] + T), t, mesureDuree * 0.98, { vol: 0.05, filtre: 300, attaque: 0.15, sortie: 0.4, desaccord: [-6, 0, 6] });
+        } else if (pos % 2 === 0) {
+            const n = motif[pos / 2] + T, accent = pos % 8 === 0;
             voix(hz(n), t, N_DOUBLE * 1.7, { vol: accent ? 0.07 : 0.05, filtre: accent ? 650 : 450, attaque: 0.008, sortie: 0.07, desaccord: [-7, 7] });
-            if (!pedale) voix(hz(n + 12), t, N_DOUBLE * 1.5, { vol: 0.02, type: 'square', filtre: 900, attaque: 0.008, sortie: 0.06, desaccord: [0] });
+            if (partie.basse !== 'pedale') voix(hz(n + 12), t, N_DOUBLE * 1.5, { vol: 0.02, type: 'square', filtre: 900, attaque: 0.008, sortie: 0.06, desaccord: [0] });
         }
-        // Nappe sombre et la aigu tenu
+
+        // Nappe sombre ; la aigu tenu pendant les parties de combat
         if (pos === 0) {
-            for (const n of nappe) voix(hz(n), t, mesureDuree * 0.98, { vol: 0.011, filtre: 900, attaque: 0.25, sortie: 0.4, vibrato: 6 });
-            if (!pedale) voix(hz(81), t, mesureDuree * 0.98, { vol: 0.006, filtre: 2600, attaque: 0.3, sortie: 0.4, desaccord: [-10, 10], vibrato: 12 });
+            const vol = partie.basse === 'tenue' ? 0.012 : 0.011;
+            for (const n of nappe) voix(hz(n), t, mesureDuree * 0.98, { vol, filtre: partie.basse === 'tenue' ? 1300 : 900, attaque: 0.25, sortie: 0.4, vibrato: 6 });
+            if (partie.basse !== 'pedale' && partie.basse !== 'tenue') voix(hz(81 + T), t, mesureDuree * 0.98, { vol: 0.006, filtre: 2600, attaque: 0.3, sortie: 0.4, desaccord: [-10, 10], vibrato: 12 });
         }
 
-        // Batterie : grosse caisse, caisse claire lourde, charleston
-        const plein = partie === 1 || partie === 2 || (partie === 3 && dansPartie >= 4);
-        const kick = plein ? (pos === 0 || pos === 8 || (partie === 2 && (pos === 6 || pos === 10))) : (pos === 0 && (partie === 3 || dansPartie >= 2));
-        if (kick) { ton(70, t, 0.35, { vol: 0.32, f2: 40, ...o }); bruit(t, 0.03, { vol: 0.04, filtre: 900, ...o }); }
-        if (plein && (pos === 4 || pos === 12)) {
-            bruit(t, 0.2, { vol: 0.13, filtre: 1900, filtreFin: 900, type: 'bandpass', ...o });
-            ton(185, t, 0.12, { type: 'triangle', vol: 0.08, f2: 140, ...o });
+        // Batterie (allégée au début de l'arrivée ; break à la fin de certaines phrases)
+        const bat = N_BATTERIES[partie.batterie];
+        const finPhrase = dans % 4 === 3, typeBreak = Math.floor(mesure / 4) % 3;
+        const arret = finPhrase && typeBreak === 2 && pos >= 12 && partie.batterie !== 'leger';   // silence net avant la reprise
+        const debutLeger = partie.batterie === 'leger' && dans < 2 && k === 0;
+        if (!arret && !debutLeger) {
+            if (bat.kick.includes(pos)) { ton(70, t, 0.35, { vol: 0.32, f2: 40, ...o }); bruit(t, 0.03, { vol: 0.04, filtre: 900, ...o }); }
+            if (bat.snare.includes(pos)) {
+                const fantome = pos === 14;
+                bruit(t, 0.2, { vol: fantome ? 0.05 : 0.13, filtre: 1900, filtreFin: 900, type: 'bandpass', ...o });
+                if (!fantome) ton(185, t, 0.12, { type: 'triangle', vol: 0.08, f2: 140, ...o });
+            }
+            const pasHat = bat.hat === 2 ? 1 : bat.hat === 1 ? 2 : 4;
+            if (pos % pasHat === 0 && (partie.batterie !== 'leger' || dans >= 4))
+                bruit(t, pos % 8 === 6 && bat.hat === 1 ? 0.12 : 0.035, { vol: pos % 4 === 2 ? 0.022 : 0.013, filtre: 7500, type: 'highpass', ...o });
+            if (bat.toms && bat.toms.includes(pos)) taiko(t, 0.55, pos === 14);
         }
-        if ((plein || dansPartie >= 4) && pos % 2 === 0)
-            bruit(t, 0.035, { vol: pos % 4 === 2 ? 0.024 : 0.014, filtre: 7500, type: 'highpass', ...o });
-        // Toms qui roulent à la fin de chaque groupe de 4 mesures
-        if (plein && mesure % 4 === 3 && pos >= 12) taiko(t, 0.6 + (pos - 12) * 0.1, pos === 15);
+        // Breaks de fin de phrase, qui changent : toms qui dévalent, roulement de caisse claire, ou arrêt net
+        if (finPhrase && pos >= 12 && partie.batterie !== 'leger' && partie.batterie !== 'demi') {
+            if (typeBreak === 0) taiko(t, 0.6 + (pos - 12) * 0.1, pos === 15);
+            else if (typeBreak === 1) for (const d of [0, N_DOUBLE / 2]) bruit(t + d, 0.06, { vol: 0.05 + (pos - 12) * 0.015, filtre: 2200, filtreFin: 1200, type: 'bandpass', ...o });
+        }
 
-        // Cordes en contretemps (assaut et thème) : deux notes de l'accord, piquées
-        if (!pedale && pos % 4 === 2)
+        // Cordes en contretemps (assaut, thème, reprise)
+        if ((partie.basse === 'rampe' || partie.basse === 'rampe2') && pos % 4 === 2)
             for (const n of [nappe[1] + 12, nappe[2] + 12]) voix(hz(n), t, N_DOUBLE * 0.8, { vol: 0.014, filtre: 2200, attaque: 0.006, sortie: 0.05, desaccord: [-6, 6] });
-
-        // Thème aux cuivres (partie 2), une note par demi-mesure, deux fois
-        if (partie === 2 && pos % 8 === 0) {
-            const n = N_THEME[(dansPartie % 8) * 2 + pos / 8];
-            voix(hz(n), t, N_DOUBLE * 7.4, { vol: 0.03, filtre: 1500, attaque: 0.05, sortie: 0.15, desaccord: [-7, 0, 7] });
-            voix(hz(n - 12), t, N_DOUBLE * 7.4, { vol: 0.02, filtre: 900, attaque: 0.05, sortie: 0.15, desaccord: [-5, 5] });
+        // Ostinato de cordes en doubles croches : la poursuite, et l'assaut un tour sur deux
+        if (partie.nom === 'poursuite' || (partie.nom === 'assaut' && !tourPair && dans >= 8)) {
+            const n = [nappe[0], nappe[1], nappe[2], nappe[1]][pos % 4] + 12;
+            voix(hz(n), t, N_DOUBLE * 0.7, { vol: pos % 4 === 0 ? 0.02 : 0.014, filtre: 2000, attaque: 0.005, sortie: 0.05, desaccord: [-7, 7] });
         }
-        // « Braam » au début de l'assaut et toutes les 4 mesures du thème
-        if (pos === 0 && ((partie === 1 && dansPartie === 0) || (partie === 2 && dansPartie % 4 === 0))) {
-            for (const n of [45, 52, 57]) voix(hz(n), t, mesureDuree * 0.9, { vol: 0.04, filtre: 180, filtreFin: 1500, attaque: 0.06, sortie: 0.6, desaccord: [-14, -5, 5, 14] });
+
+        // Thèmes : A aux cuivres (aux violons, une octave au-dessus, un tour sur deux), B aux violoncelles
+        if (partie.theme && pos % 8 === 0) {
+            const n = N_THEMES[partie.theme][(dans % 8) * 2 + pos / 8];
+            if (n !== null) {
+                const note = n + T;
+                if (partie.theme === 'B') voix(hz(note - 12), t, N_DOUBLE * 7.6, { vol: 0.035, filtre: 1100, attaque: 0.12, sortie: 0.3, desaccord: [-8, 0, 8], vibrato: 10 });
+                else if (tourPair) {
+                    voix(hz(note), t, N_DOUBLE * 7.4, { vol: 0.03, filtre: 1500, attaque: 0.05, sortie: 0.15, desaccord: [-7, 0, 7] });
+                    voix(hz(note - 12), t, N_DOUBLE * 7.4, { vol: 0.02, filtre: 900, attaque: 0.05, sortie: 0.15, desaccord: [-5, 5] });
+                } else voix(hz(note + 12), t, N_DOUBLE * 7.4, { vol: 0.022, filtre: 3000, attaque: 0.08, sortie: 0.2, desaccord: [-9, 0, 9], vibrato: 14 });
+            }
+        }
+        // Contre-chant (reprise) : réponse en croches entre les notes du thème
+        if (partie.contrechant && pos % 2 === 0 && pos >= 8) {
+            const n = [nappe[2], nappe[1], nappe[0], nappe[1]][(pos - 8) / 2 % 4] + 12;
+            voix(hz(n), t, N_DOUBLE * 1.6, { vol: 0.012, filtre: 2500, attaque: 0.01, sortie: 0.08, desaccord: [-6, 6] });
+        }
+        // Cassure : quelques notes de piano au loin
+        if (partie.nom === 'cassure' && pos % 4 === 0 && (pos / 4 + mesure) % 3 === 0) piano(hz(nappe[(pos / 4) % 3] + 12), t, 0.03);
+
+        // « Braam » au début des parties de combat et toutes les 4 mesures des thèmes
+        if (pos === 0 && ((dans === 0 && partie.basse !== 'pedale' && partie.basse !== 'tenue') || (partie.theme === 'A' && dans % 4 === 0))) {
+            for (const n of [45, 52, 57]) voix(hz(n + T), t, mesureDuree * 0.9, { vol: 0.04, filtre: 180, filtreFin: 1500, attaque: 0.06, sortie: 0.6, desaccord: [-14, -5, 5, 14] });
             ton(46, t, 1.3, { vol: 0.3, f2: 28, ...o });
             bruit(t, 1, { vol: 0.04, filtre: 3000, filtreFin: 200, ...o });
         }
-        // Roulement de caisse claire avant l'assaut et avant la reprise
-        if ((mesure === 7 || mesure === 47) && pos >= 8) {
-            const k = (pos - 8) / 8;
-            for (const d of [0, N_DOUBLE / 2]) bruit(t + d, 0.06, { vol: 0.03 + 0.07 * k, filtre: 2200, filtreFin: 1200, type: 'bandpass', ...o });
+        // Montée avant chaque nouvelle partie : roulement de caisse claire qui grossit
+        if (derniere && pos >= 8) {
+            const r = (pos - 8) / 8;
+            for (const d of [0, N_DOUBLE / 2]) bruit(t + d, 0.06, { vol: 0.03 + 0.07 * r, filtre: 2200, filtreFin: 1200, type: 'bandpass', ...o });
         }
     }
 
