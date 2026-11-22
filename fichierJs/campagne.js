@@ -218,7 +218,7 @@ const Campagne = (() => {
         f.criT = Math.max(0, f.criT - dt);
         f.secoue = Math.max(0, f.secoue - dt);
         if (f.parle) return;
-        f.x -= 70 * MONDE.echelleX * dt;
+        f.x -= (f.averti ? 35 : 70) * MONDE.echelleX * dt;   // touché une fois, il avance prudemment
         f.chrono += dt;
         if (f.chrono > 0.16) { f.chrono = 0; f.image = (f.image + 1) % 4; }
         f.coup = Math.max(0, f.coup - dt);
@@ -229,7 +229,8 @@ const Campagne = (() => {
             Son.effet('impactTerre');
             secouer_ecran(1);
         }
-        const arrive = f.x < MONDE.largeur * 0.5 || (zombies.length === 0 && f.x < MONDE.largeur * 0.8);
+        // Il marche toujours jusqu'au milieu : ça laisse quelques secondes pour le voir arriver… et pour le tir ami
+        const arrive = f.x < MONDE.largeur * 0.5;
         if (!arrive) return;
         f.parle = true;
         zombies.length = 0;
