@@ -150,11 +150,12 @@ const MISSIONS_CAMPAGNE = [
         id: 'c2m2', chapitre: 2, numero: 2, titre: 'Déménagement express', perso: 'brute',
         // L'histoire de Brutus, racontée au coin du feu : on la joue avec lui, en ville,
         // le jour où tout a commencé. Des foules entières : son fusil à pompe est fait pour ça.
+        // La mariée qui « courait bien », c'est une Joggeuse ; les Videuses aussi sont sorties.
         ville: true,
-        objectif: { normal: 55, hardcore: 100 },
+        objectif: { normal: 90, hardcore: 140 },
         apparition: {
-            normal: { depart: 1.25, min: 0.78, acceleration: 0.008, groupe: 0.3 },
-            hardcore: { depart: 0.9, min: 0.46, acceleration: 0.01, groupe: 0.45, joggeur: 0.2, tank: 0.08 }
+            normal: { depart: 1.25, min: 0.78, acceleration: 0.006, groupe: 0.28, joggeur: 0.12, tank: 0.1 },
+            hardcore: { depart: 0.95, min: 0.5, acceleration: 0.008, groupe: 0.42, joggeur: 0.2, tank: 0.14 }
         },
         // C'est Brutus qui raconte : il ouvre la mission, la commente et la conclut
         debut: [
