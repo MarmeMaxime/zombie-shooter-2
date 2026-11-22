@@ -14,16 +14,30 @@ const Instructeur = (() => {
     const boite = $i('instructeur'), texte = $i('instructeur-texte'), boutons = $i('instructeur-boutons');
     let parleJusque = 0, animation = null, suite = null, aFige = false;
 
+    /* Qui parle : le Sergent (par défaut), la personne du labo (on ne voit que
+       la porte du labo, son voyant clignote) ou le Soldat (son visage, tiré de
+       son sprite avec la tenue équipée ; il ne dit jamais rien). */
+    const ORATEURS = {
+        sergent: { nom: 'Sergent', image: ouvert => SPRITES_INSTRUCTEUR[ouvert ? 1 : 0] },
+        labo: { nom: 'Labo', image: ouvert => PORTE_LABO.portrait[ouvert ? 1 : 0] },
+        soldat: { nom: 'Soldat', image: () => Loot.sprites('soldat').arret, cadre: [3, 0, 22, 22] }
+    };
+    let orateur = 'sergent';
+
     // Visage dessiné dans un canvas (bouche ouverte ou fermée)
-    function visage(canvas, ouvert) {
-        const g = canvas.getContext('2d');
+    function visage(canvas, ouvert, qui = 'sergent') {
+        const g = canvas.getContext('2d'), o = ORATEURS[qui] || ORATEURS.sergent;
         g.imageSmoothingEnabled = false;
         g.clearRect(0, 0, canvas.width, canvas.height);
-        g.drawImage(SPRITES_INSTRUCTEUR[ouvert ? 1 : 0], 0, 0, canvas.width, canvas.height);
+        if (o.cadre) g.drawImage(o.image(ouvert), ...o.cadre, 0, 0, canvas.width, canvas.height);
+        else g.drawImage(o.image(ouvert), 0, 0, canvas.width, canvas.height);
     }
 
-    // Le sergent parle : la partie se fige jusqu'à ce qu'on accepte (ensuite() est alors appelée)
-    function parler(message, bouton, ensuite) {
+    // Le sergent parle : la partie se fige jusqu'à ce qu'on accepte (ensuite() est alors appelée).
+    // qui : l'orateur (voir ORATEURS) ; par défaut le Sergent.
+    function parler(message, bouton, ensuite, qui = 'sergent') {
+        orateur = qui;
+        $i('instructeur-nom').textContent = T(ORATEURS[qui].nom);
         aFige = etat.enCours && !etat.pause;
         if (aFige) mettre_en_pause(true, false);   // pause sans l'écran « PAUSE »
         suite = ensuite || null;
@@ -39,7 +53,7 @@ const Instructeur = (() => {
         let ouvert = false;
         animation = setInterval(() => {
             ouvert = performance.now() < parleJusque && !ouvert;
-            visage($i('instructeur-visage'), ouvert);
+            visage($i('instructeur-visage'), ouvert, orateur);
             if (performance.now() >= parleJusque) clearInterval(animation);
         }, 130);
     }
@@ -71,7 +85,7 @@ const Instructeur = (() => {
 
     visage($i('instructeur-visage'), false);
     visage($i('proposition-visage'), false);
-    return { parler, valider, cacher, ouvert, visage };
+    return { parler, valider, cacher, ouvert, visage, parleEncore: () => performance.now() < parleJusque, orateur: () => orateur };
 })();
 
 // Nom d'une commande pour les consignes : la touche choisie, ou le bouton tactile

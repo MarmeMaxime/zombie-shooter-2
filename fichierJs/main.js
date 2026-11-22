@@ -202,8 +202,8 @@ function arreter_boucle() {
 /* ---------- Début / fin de partie ---------- */
 // tuto = true : entraînement (tutoriel.js), connu dès le départ pour que la toute
 // première image montre déjà le camp et que la marche démarre directement
-// variante : 'classique' (infini) ou 'vagues' (vagues.js)
-function init_game(mode, perso, tuto = false, variante = 'classique') {
+// variante : 'classique' (infini), 'vagues' (vagues.js) ou 'campagne' (campagne.js, avec l'id de la mission)
+function init_game(mode, perso, tuto = false, variante = 'classique', mission = null) {
     arreter_boucle(); // garantit qu'une seule boucle tourne à la fois
 
     Object.assign(etat, {
@@ -215,6 +215,8 @@ function init_game(mode, perso, tuto = false, variante = 'classique') {
         gagnes: 0,
         tuto,                // entraînement (tutoriel.js)
         variante: tuto ? 'classique' : variante,
+        mission: variante === 'campagne' ? mission : null,
+        victoire: false,
         vague: 0,
         vies: CONFIG.viesDepart,
         temps: 0,
@@ -225,7 +227,7 @@ function init_game(mode, perso, tuto = false, variante = 'classique') {
         missions: [],
         succes: [],
         // record du perso, pour cette difficulté et ce mode (copie d'avant la partie)
-        recordAvant: { ...Records.lire(perso, mode, tuto ? 'classique' : variante) }
+        recordAvant: variante === 'campagne' && !tuto ? {} : { ...Records.lire(perso, mode, tuto ? 'classique' : variante) }
     });
     maj_hud();
 
@@ -241,6 +243,7 @@ function init_game(mode, perso, tuto = false, variante = 'classique') {
     Son.jouerAmbiance(tuto ? 'entrainement' : mode);
 
     if (typeof Vagues !== 'undefined') { Vagues.arreter(); if (etat.variante === 'vagues') Vagues.demarrer(); }
+    if (typeof Campagne !== 'undefined') { Campagne.arreter(); if (etat.variante === 'campagne') Campagne.demarrer(); }
     redimensionner();   // le canvas vient de s'afficher : on prend la taille de l'écran
     dernierInstant = performance.now();
     idAnimation = requestAnimationFrame(boucle);
@@ -249,6 +252,7 @@ function init_game(mode, perso, tuto = false, variante = 'classique') {
 function quitter_partie() {
     arreter_boucle();
     if (typeof Vagues !== 'undefined') Vagues.arreter();
+    if (typeof Campagne !== 'undefined') Campagne.arreter();
     if (typeof Tutoriel !== 'undefined') Tutoriel.arreter();
     if (typeof Instructeur !== 'undefined') Instructeur.cacher();
     relacher_commandes();
@@ -266,8 +270,23 @@ function game_over() {
     Sauvegarde.point_de_restauration(T('Fin de partie ({perso}, score {s})', { perso: CONFIG.personnages[etat.perso].nom, s: etat.score }));
 
     remplir_bilan();
+    habiller_fin();
     ui.gameOver.classList.remove('hidden');
     ouvertureFin = performance.now();
+}
+
+// Titre et texte de l'écran de fin : ceux d'origine (gardés au premier affichage,
+// donc déjà traduits), ou ceux d'une mission de campagne
+let FIN_ORIGINE = null;
+function habiller_fin() {
+    const carte = document.querySelector && document.querySelector('#game-over-overlay .mission-card');
+    if (!carte) return;
+    FIN_ORIGINE ??= { titre: carte.querySelector('h2').innerHTML, texte: carte.querySelector('.game-over-text').innerHTML };
+    carte.querySelector('h2').innerHTML = FIN_ORIGINE.titre;
+    carte.querySelector('.game-over-text').innerHTML = FIN_ORIGINE.texte;
+    carte.classList.remove('victoire');
+    document.getElementById('btn-retry').firstChild.textContent = T('RÉESSAYER') + ' ';
+    if (etat.variante === 'campagne' && typeof Campagne !== 'undefined') Campagne.fin();
 }
 
 /* ---------- Bilan de la partie (écran de fin) ---------- */
@@ -276,7 +295,7 @@ function remplir_bilan() {
     const el = (tag, classe, texte) => { const e = document.createElement(tag); if (classe) e.className = classe; if (texte !== undefined) e.textContent = texte; return e; };
 
     // Records du perso battus (seulement s'il y avait déjà un record à battre)
-    const avant = etat.recordAvant, apres = Records.lire(etat.perso, etat.mode, etat.variante), records = [];
+    const avant = etat.recordAvant, apres = etat.variante === 'campagne' ? {} : Records.lire(etat.perso, etat.mode, etat.variante), records = [];
     if (avant.vague > 0 && apres.vague > avant.vague) records.push(T('vague (avant : {n})', { n: avant.vague }));
     if (avant.temps > 0 && apres.temps > avant.temps) records.push(T('temps (avant : {n} s)', { n: avant.temps }));
     if (avant.score > 0 && apres.score > avant.score) records.push(T('score (avant : {n})', { n: avant.score }));
@@ -306,7 +325,7 @@ function remplir_bilan() {
     $b('bilan-succes').textContent = liste(T('🏆 Succès débloqués'), etat.succes);
 }
 
-document.getElementById('btn-retry').addEventListener('click', () => init_game(etat.mode, etat.perso, false, etat.variante));
+document.getElementById('btn-retry').addEventListener('click', () => init_game(etat.mode, etat.perso, false, etat.variante, etat.mission));
 
 // Raccourcis de l'écran de fin : Entrée pour réessayer, Échap pour le menu. Une courte
 // attente évite qu'une touche encore enfoncée au moment de mourir ne relance tout de suite.

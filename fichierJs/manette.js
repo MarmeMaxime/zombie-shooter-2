@@ -15,7 +15,7 @@ const Manette = (() => {
     const ECRANS = [
         ['vestiaire-overlay', 'btn-close-vestiaire'], ['loot-overlay', 'btn-close-loot'], ['perso-overlay', 'btn-close-perso'],
         ['missions-overlay', 'btn-close-missions'], ['bestiaire-overlay', 'btn-close-bestiaire'], ['succes-overlay', 'btn-close-succes'],
-        ['save-overlay', 'btn-close-save'], ['tutorial-overlay', 'btn-close-tuto'], ['options-overlay', 'btn-close-options'], ['tuto-proposition', 'btn-proposition-non'], ['choix-variante', 'btn-close-variante']
+        ['save-overlay', 'btn-close-save'], ['tutorial-overlay', 'btn-close-tuto'], ['options-overlay', 'btn-close-options'], ['tuto-proposition', 'btn-proposition-non'], ['choix-variante', 'btn-close-variante'], ['campagne-overlay', 'btn-close-campagne']
     ];
     const visible = id => { const e = document.getElementById(id); return e && !e.classList.contains('hidden'); };
     const cliquer = id => document.getElementById(id).click();
@@ -69,7 +69,8 @@ const Manette = (() => {
         }
         const ouvert = ECRANS.find(([ecran]) => visible(ecran));
         if (ouvert) { if (appui('b')) cliquer(ouvert[1]); return; }
-        if (visible('choix-variante')) { if (appui('a')) cliquer('btn-classique'); else if (appui('x') || appui('y')) cliquer('btn-vagues'); return; }
+        if (visible('choix-variante')) { if (appui('a')) cliquer('btn-classique'); else if (appui('x')) cliquer('btn-vagues'); else if (appui('y')) cliquer('btn-campagne'); return; }
+        if (visible('campagne-overlay')) { const j = document.querySelector('.campagne-jouer'); if (appui('a') && j) j.click(); return; }
         if (visible('main-menu') && (appui('a') || appui('start'))) cliquer('btn-start');
     }
 

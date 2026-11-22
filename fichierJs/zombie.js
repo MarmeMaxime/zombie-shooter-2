@@ -206,6 +206,7 @@ function toucher_zombie(z, degats = 1, tir) {
         Son.effet('bossMort');
     }
     if (typeof Succes !== 'undefined' && !etat.tuto) Succes.zombie_tue(z.type);
+    if (etat.variante === 'campagne' && typeof Campagne !== 'undefined') Campagne.tue(z);
 }
 
 /* ---------- Mise à jour ---------- */
@@ -213,6 +214,7 @@ function update_zombies(dt, largeurCanvas, hauteurCanvas, tempsJeu) {
     // Pendant le combat de boss, seuls ses invocations arrivent
     // Entraînement : seuls les zombies placés par le sergent
     if (etat.variante === 'vagues' && !etat.tuto) Vagues.maj(dt);   // mode Vagues : la vague décide
+    else if (etat.variante === 'campagne' && !etat.tuto) Campagne.maj(dt);   // mission de campagne : la mission décide
     else if (!boss && !etat.tuto) gerer_apparitions(dt, largeurCanvas, hauteurCanvas, tempsJeu);
     if (!etat.tuto) gerer_boss(dt, largeurCanvas, hauteurCanvas, tempsJeu);
     update_crachats(dt);

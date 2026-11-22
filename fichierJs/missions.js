@@ -28,7 +28,7 @@ const Records = {
     },
     // Garde le meilleur de chaque valeur pour la partie en cours (pas pendant l'entraînement)
     maj(valeurs) {
-        if (etat.tuto) return;
+        if (etat.tuto || etat.variante === 'campagne') return;
         const r = Records.lire(etat.perso, etat.mode, etat.variante);
         for (const [cle, v] of Object.entries(valeurs)) r[cle] = Math.max(r[cle] || 0, v);
     }

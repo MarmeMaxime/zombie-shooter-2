@@ -1,8 +1,9 @@
 /* =========================================================================
    ÉCRAN TITRE ET FOND ANIMÉ DU MENU
-   Derrière le titre et les menus, une petite démo tourne : des zombies
-   avancent dans le décor et le personnage choisi (avec son skin) les abat.
-   Elle s'arrête pendant les parties pour ne rien coûter.
+   Derrière le titre et les menus : le camp (camp_decor.js), qui grandit avec
+   la campagne, le Sergent devant le labo, le feu de camp. Devant le mur de
+   sacs de sable, le personnage choisi (avec son skin) abat les zombies qui
+   arrivent. Tout s'arrête pendant les parties pour ne rien coûter.
    ========================================================================= */
 (() => {
     const toile = document.getElementById('fond-anime');
@@ -12,6 +13,9 @@
     let zombiesDemo = [], ballesDemo = [], mortsDemo = [];
     let chronoApparition = 0, chronoTir = 1, dernier = performance.now();
     const perso = { y: 200, animTir: 0 };
+    // Décalage du camp : sur un écran étroit, il glisse à gauche pour laisser voir le combat
+    const decalage = () => Math.min(0, Math.round(L * 0.42 - CAMP.bord));
+    const xPerso = () => CAMP.bord + decalage() + 14;
 
     function redimensionner() {
         const dpr = window.devicePixelRatio || 1;
@@ -42,7 +46,7 @@
             z.tempsImage += dt;
             if (z.tempsImage >= type.config.dureeImage) { z.tempsImage = 0; z.etape = (z.etape + 1) % type.images.length; }
         }
-        zombiesDemo = zombiesDemo.filter(z => z.x > -80);
+        zombiesDemo = zombiesDemo.filter(z => z.x > xPerso() + 20);   // arrivés au mur : ils disparaissent
 
         // Le personnage vise le zombie le plus proche et tire
         const cible = zombiesDemo.filter(z => z.x < L * 0.85).sort((a, b) => a.x - b.x)[0];
@@ -52,7 +56,7 @@
         if (cible && chronoTir <= 0 && Math.abs(cible.y - perso.y) < 10) {
             chronoTir = 0.7;
             perso.animTir = 0.25;
-            ballesDemo.push({ x: 60 + CONFIG.canon.x, y: perso.y + CONFIG.canon.y });
+            ballesDemo.push({ x: xPerso() + CONFIG.canon.x, y: perso.y + CONFIG.canon.y });
         }
 
         for (const b of ballesDemo) {
@@ -72,9 +76,15 @@
     }
 
     function dessiner() {
-        c.setTransform(1, 0, 0, 1, 0, 0);
-        c.imageSmoothingEnabled = false;   // même décor en pixel art que les parties (combat_decor.js)
-        c.drawImage(decor_combat(L, H), 0, 0, toile.width, toile.height);
+        // Le camp et le désert, dans le même pixel art que les parties
+        const dx = decalage(), etapeCamp = typeof Campagne !== 'undefined' ? Campagne.etape() : 0;
+        c.setTransform(echelle, 0, 0, echelle, dx * echelle, 0);
+        c.imageSmoothingEnabled = false;
+        c.drawImage(decor_camp(L - dx, H, etapeCamp), 0, 0);
+        const t = performance.now() / 1000;
+        dessiner_feu(c, t);
+        c.drawImage(OBJETS_CAMP.jeep, CAMP.jeep.x, CAMP.jeep.y);
+        c.drawImage(SPRITES_SERGENT[0], CAMP.sergent.x, CAMP.sergent.y);
         c.setTransform(echelle, 0, 0, echelle, 0, 0);
         c.imageSmoothingEnabled = false;
 
@@ -98,20 +108,21 @@
         const filtre = Loot.filtre(idPerso, performance.now() / 1000);
         c.save();
         if (filtre) c.filter = filtre;
-        c.drawImage(perso.animTir > 0 ? sprites.tir : sprites.arret, 60, perso.y, 64, 64);
+        c.drawImage(perso.animTir > 0 ? sprites.tir : sprites.arret, xPerso(), perso.y, 64, 64);
         c.restore();
     }
 
     function boucle(instant) {
+        requestAnimationFrame(boucle);   // en premier : une image ratée n'arrête pas l'animation
         const dt = Math.min(0.05, (instant - dernier) / 1000);
         dernier = instant;
         // Pendant une partie, le fond est caché : on ne calcule rien
         if (!etat.enCours && !document.hidden) {
             if (toile.width !== Math.round(toile.clientWidth * (window.devicePixelRatio || 1))) redimensionner();
+            if (!toile.width || !toile.height) return;   // fenêtre réduite ou cachée : rien à dessiner
             mettre_a_jour(dt);
             dessiner();
         }
-        requestAnimationFrame(boucle);
     }
 
     redimensionner();
