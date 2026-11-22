@@ -1,7 +1,7 @@
 /* =========================================================================
    LE JOGGEUR
    Sa charge : marche -> cri (« ! ») -> sprint -> essoufflé -> marche.
-   Réglages : CONFIG.joggeur ; sprite : joggeur_sprite.js.
+   Réglages : CONFIG.joggeur ; sprite : assets/monstres/joggeur/.
    ========================================================================= */
 /* ---------- Charge du Joggeur ----------
    marche -> (aligné avec le joueur) cri -> course -> essoufflé -> marche */

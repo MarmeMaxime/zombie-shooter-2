@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Export des sprites</title>
+    <style>
+        body { font: 15px/1.5 monospace; background: #1a1a1e; color: #e8e4dc; padding: 16px; }
+        button { font: inherit; padding: 8px 16px; cursor: pointer; }
+        pre { white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>Export des sprites en PNG</h1>
+    <p>Les sprites dessinés en code (les générateurs de ce dossier) sont écrits en PNG dans
+       <code>assets/</code>, là où le jeu les charge.</p>
+    <ol>
+        <li>Lancer <code>node outils/exporter_sprites.js</code> (il écrit les fichiers).</li>
+        <li>Ouvrir cette page depuis le serveur du jeu (<code>http://localhost:8766/outils/sprites/exporter.html</code>).</li>
+        <li>Cliquer sur « Exporter ».</li>
+    </ol>
+    <button id="exporter">Exporter</button>
+    <pre id="journal"></pre>
+
+    <!-- Les générateurs (pixel art construit en code) -->
+    <script src="pixel_art.js"></script>
+    <script src="instructeur_sprite.js"></script>
+    <script src="attache_sprite.js"></script>
+    <script src="campagne_sprites.js"></script>
+    <script src="boxe_sprites.js"></script>
+    <script src="boss_sprite.js"></script>
+    <script src="joggeur_sprite.js"></script>
+    <script src="emeute_sprite.js"></script>
+    <script src="pondeuse_sprite.js"></script>
+    <script src="infirmier_sprite.js"></script>
+    <script src="boxeur_sprite.js"></script>
+    <script src="fossoyeur_sprite.js"></script>
+    <script src="liste.js"></script>
+    <script>
+        document.getElementById('exporter').addEventListener('click', async () => {
+            const journal = document.getElementById('journal');
+            journal.textContent = 'Export en cours…';
+            try { journal.textContent = (await exporter_sprites()) + ' images écrites dans assets/.'; }
+            catch (e) { journal.textContent = 'Erreur : ' + e.message + '\nLe serveur d\'export tourne-t-il (node outils/exporter_sprites.js) ?'; }
+        });
+    </script>
+</body>
+</html>

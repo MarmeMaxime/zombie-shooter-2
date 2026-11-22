@@ -1,7 +1,7 @@
 param([string]$assets = "$PSScriptRoot\..\assets")
 # The Soldier without the helmet: built from the Soldier's finished sprites
 # (persos\soldat\*.png), so it keeps the same pixel-art style. ASCII only (PowerShell 5.1).
-# Output: persos\soldat-sans-casque\arret/tir/marche1..4.png (not used by the game yet).
+# Output: persos\soldat\soldat-sans-casque\arret/tir/marche1..4.png (not used by the game yet).
 #  1. the helmet, goggles and balaclava are removed, down to the brown scarf
 #     (row 10 when standing, row 8 when walking: the head is anchored on it)
 #  2. a hand-drawn head is stamped in their place: auburn hair (light band on top,
@@ -38,7 +38,7 @@ $TETE = @(
 )
 $ECHARPE = '4C3D2E'; $CAGOULE = '14121D'
 
-$src = "$assets\persos\soldat"; $dst = "$assets\persos\soldat-sans-casque"
+$src = "$assets\persos\soldat"; $dst = "$assets\persos\soldat\soldat-sans-casque"
 New-Item -ItemType Directory -Force $dst | Out-Null
 foreach ($fr in @('arret', 'tir', 'marche1', 'marche2', 'marche3', 'marche4')) {
     $s = [System.Drawing.Bitmap]::FromFile("$src\$fr.png")

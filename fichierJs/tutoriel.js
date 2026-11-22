@@ -1,5 +1,5 @@
 /* =========================================================================
-   TUTORIEL : le Sergent (portrait : instructeur_sprite.js)
+   TUTORIEL : le Sergent (portrait : assets/campagne/portraits/)
    - Instructeur : quand il parle, la partie se fige et son message s'affiche
      au milieu de l'écran ; on l'accepte (bouton, Entrée, Espace ou A à la
      manette), puis on joue. Il disparaît pendant qu'on joue.
@@ -110,15 +110,14 @@ function commande(action) {
     return `[${Touches.libelle(action)}]`;
 }
 
-/* ---------- Le zombie attaché (cible de l'étape 2, voir attache_sprite.js) ----------
+/* ---------- Le zombie attaché (cible de l'étape 2, images dans assets/monstres/zombie-attache/) ----------
    Il se débat au poteau ; abattu, son corps tombe et le poteau reste debout. */
 let poteaux = [];
 TYPES_ZOMBIE.attache = {
     config: { invoque: true, taille: 64, points: 10, pv: 1, vitesseMin: 0, vitesseAleatoire: 0, dureeImage: 0.16 },
     // Le zombie de base dans une seule pose (debout, bras le long du corps) : il ne peut
     // que tirer un peu sur ses liens [décalage du torse, de la tête], et tendre la tête pour mordre
-    images: [[0, 0], [-1, -1], [-1, -2], [-1, -1], [0, 0], [1, 1], [0, 0], [0, -2]]
-        .map(([torse, tete]) => SPRITES_ATTACHE.lier(TYPES_ZOMBIE.normal.images[2], torse, tete)),
+    images: SPRITES_ATTACHE.attache,
     imagesMort: TYPES_ZOMBIE.normal.images,   // il tombe comme un zombie normal
     comportement: { mort(z) { poteaux.push({ x: z.x, y: z.y }); } }
 };

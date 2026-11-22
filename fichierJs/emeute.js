@@ -4,7 +4,7 @@
    plombs ou une grenade = un tir ; voir toucher_zombie) ; la foudre s'arrête
    sur lui (voir foudroyer).
    1er tir : le bouclier se fend ; 2e : il se brise et le zombie fonce ;
-   3e : mort. Réglages : CONFIG.emeute ; sprite : emeute_sprite.js.
+   3e : mort. Réglages : CONFIG.emeute ; sprite : assets/monstres/emeute/.
    ========================================================================= */
 let eclats = [];   // étincelles d'impact et boucliers qui tombent
 

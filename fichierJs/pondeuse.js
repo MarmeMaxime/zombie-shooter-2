@@ -3,7 +3,7 @@
    Très lente, 1 PV. Au premier tir, elle éclate et libère des larves rapides sur sa
    ligne et les lignes voisines : tuée de loin, on a le temps de les abattre ;
    tuée au contact, elles arrivent tout de suite sur le joueur.
-   Réglages : CONFIG.pondeuse, CONFIG.larve ; sprites : pondeuse_sprite.js.
+   Réglages : CONFIG.pondeuse, CONFIG.larve ; sprites : assets/monstres/pondeuse/ et larve/.
    ========================================================================= */
 let eclaboussures = [];   // flaques et gouttes jaunâtres quand elle éclate
 

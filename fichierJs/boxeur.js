@@ -6,7 +6,7 @@
    Tirer une fois pour le faire bouger, puis l'abattre. Les armes « larges » (plombs en
    éventail, explosions, foudre qui saute d'un zombie à l'autre) le gênent
    bien plus que le fusil, et un tir très rapide peut l'atteindre en plein pas.
-   Réglages : CONFIG.boxeur ; sprite : boxeur_sprite.js.
+   Réglages : CONFIG.boxeur ; sprite : assets/monstres/boxeur/.
    ========================================================================= */
 TYPES_ZOMBIE.boxeur = {
     config: CONFIG.boxeur,

@@ -6,7 +6,7 @@
    - Tombes : il creuse des tombes au milieu du terrain ; un zombie en sort
      au bout de quelques secondes, sauf si on détruit la tombe avant.
    - Colère : s'il est encore debout au bout d'un moment, il avance.
-   Réglages : CONFIG.fossoyeur, CONFIG.tombe ; sprites : fossoyeur_sprite.js.
+   Réglages : CONFIG.fossoyeur, CONFIG.tombe ; sprites : assets/monstres/fossoyeur/ et tombe/.
    ========================================================================= */
 let pelletees = [];   // mottes de terre en vol : { x0, y0, x, y, chrono, duree }
 

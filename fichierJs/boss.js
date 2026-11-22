@@ -2,10 +2,10 @@
    BOSS : apparition toutes les 3 minutes, en alternance le Mastodonte et le
    Fossoyeur (fossoyeur.js), barre de vie en haut de l'écran.
    LE MASTODONTE : crachats d'acide, invocations.
-   Réglages : CONFIG.boss ; sprite : boss_sprite.js ; il fait partie de la liste
+   Réglages : CONFIG.boss ; sprite : assets/monstres/mastodonte/ ; il fait partie de la liste
    « zombies » (zombie.js) pour les tirs et les collisions.
    ========================================================================= */
-// Sprite en pixel art (boss_sprite.js) : 8 images de marche + 8 de charge (gueule ouverte)
+// Sprite (assets/monstres/mastodonte/) : 8 images de marche + 8 de charge (gueule ouverte)
 TYPES_ZOMBIE.boss = {
     config: CONFIG.boss,
     images: SPRITES_BOSS.marche,

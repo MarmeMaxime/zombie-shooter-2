@@ -98,11 +98,17 @@ Chaque monstre rencontré rejoint le **bestiaire 📖**, avec sa fiche.
 
 - `index.html`, `styles.css` : la page du jeu.
 - `fichierJs/` : tout le code du jeu.
-- `assets/persos/<perso>/` : les images d'un perso (`arret`, `tir`, `marche1` à `marche4`).
-- `assets/skins/<perso>/<tenue>/` : les mêmes images pour chaque tenue.
-- `assets/monstres/<monstre>/` : les images de marche des monstres dessinés à la main
-  (les autres sont générés par le code, dans `fichierJs/*_sprite.js`).
+- `assets/persos/<perso>/` : les images d'un perso (`arret`, `tir`, `marche1` à `marche4`) ;
+  `assets/persos/brutus/boxe/` : Brutus boxeur (« Le Ring ») ; `assets/persos/soldat/soldat-sans-casque/`.
+- `assets/skins/<perso>/<tenue>/` : les mêmes images pour chaque tenue (et `boxe/` pour Brutus).
+- `assets/monstres/<monstre>/` : les images des monstres, une par étape d'animation
+  (`marche1`…, `course1`…, `charge1`…).
+- `assets/campagne/` : le Sergent, ses portraits, le labo, les objets du camp, la
+  personne du labo, Gégé et la foule de la bâtisse.
 - `assets/son/` : sons et playlist du mode hardcore.
-- `outils/` : scripts de génération des sprites (PowerShell) et simulateur
-  d'équilibrage (`node outils/simulation.js`). Voir `outils/README.md`.
+- `outils/` : scripts de génération des sprites et simulateurs d'équilibrage
+  (`node outils/simulation.js`, `node outils/simulation_boxe.js`). Voir `outils/README.md`.
+  Les sprites dessinés en code ont leur générateur dans `outils/sprites/` : pour les
+  réécrire en PNG, lancer `node outils/exporter_sprites.js` puis ouvrir
+  `outils/sprites/exporter.html` depuis le serveur du jeu.
 - `ancien/` : fichiers que le jeu n'utilise plus, gardés pour mémoire.

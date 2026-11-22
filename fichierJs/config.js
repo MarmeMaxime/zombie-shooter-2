@@ -175,7 +175,7 @@ const CONFIG = {
         vitesseMin: { normal: 75, hardcore: 95 },
         vitesseAleatoire: 20,
         vitesseSprint: { normal: 300, hardcore: 360 },
-        dureeImage: 0.08,          // 12 images par pas (joggeur_sprite.js)
+        dureeImage: 0.08,          // 12 images par pas (assets/monstres/joggeur/)
         intervalle: 12,
         premiereApparition: 25,
         alignement: 16,            // écart vertical max avec le joueur pour déclencher la charge
@@ -196,7 +196,7 @@ const CONFIG = {
         vitesseMin: { normal: 42, hardcore: 46 },
         vitesseAleatoire: 10,
         vitesseSansBouclier: { normal: 95, hardcore: 115 },
-        dureeImage: 0.1,           // 12 images par pas (emeute_sprite.js)
+        dureeImage: 0.1,           // 12 images par pas (assets/monstres/emeute/)
         intervalle: { normal: 18, hardcore: 40 },   // en hardcore il bouche une ligne : plus rare
         premiereApparition: { normal: 40, hardcore: 180 }
     },
@@ -209,7 +209,7 @@ const CONFIG = {
         pv: 1,
         vitesseMin: { normal: 26, hardcore: 32 },   // très lente : on a le temps de la tuer de loin
         vitesseAleatoire: 6,
-        dureeImage: 0.14,          // 12 images par pas (pondeuse_sprite.js)
+        dureeImage: 0.14,          // 12 images par pas (assets/monstres/pondeuse/)
         intervalle: { normal: 17, hardcore: 25 },
         premiereApparition: { normal: 60, hardcore: 90 },
         larves: 3,
@@ -234,7 +234,7 @@ const CONFIG = {
         pv: 2,
         vitesseMin: { normal: 32, hardcore: 38 },
         vitesseAleatoire: 6,
-        dureeImage: 0.12,          // 12 images par pas (infirmier_sprite.js)
+        dureeImage: 0.12,          // 12 images par pas (assets/monstres/infirmier/)
         intervalle: { normal: 24, hardcore: 30 },
         premiereApparition: { normal: 90, hardcore: 120 },
         delaiSoin: 3,              // secondes entre deux soins
@@ -252,7 +252,7 @@ const CONFIG = {
         pv: 1,
         vitesseMin: 70,
         vitesseAleatoire: 15,
-        dureeImage: 0.07,          // 12 images par pas (boxeur_sprite.js)
+        dureeImage: 0.07,          // 12 images par pas (assets/monstres/boxeur/)
         intervalle: 28,
         premiereApparition: 150,
         alerte: 190,               // distance à laquelle il voit arriver un tir
@@ -273,7 +273,7 @@ const CONFIG = {
         pvMax: 34,
         vitesseMin: 26,
         vitesseAleatoire: 0,
-        dureeImage: 0.16,          // 8 images par pas (fossoyeur_sprite.js)
+        dureeImage: 0.16,          // 8 images par pas (assets/monstres/fossoyeur/)
         xArret: 0.55,              // il s'arrête ici (fraction de la largeur) : à portée du fusil à pompe
         suivi: 30,                 // vitesse à laquelle il suit la ligne du joueur
         delaiPelletee: 3.2,
@@ -306,7 +306,7 @@ const CONFIG = {
         pvParBoss: 4,
         pvMax: 36,
         vitesse: 20,
-        dureeImage: 0.15,         // 8 images par pas (boss_sprite.js)
+        dureeImage: 0.15,         // 8 images par pas (assets/monstres/mastodonte/)
         points: 500,
         // Équilibré par simulation : les 3 persos battent tous les boss sur 45 min
         delaiCrachat: 3.5,        // crache de l'acide sur la ligne du joueur

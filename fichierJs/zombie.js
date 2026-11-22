@@ -24,12 +24,12 @@ const TYPES_ZOMBIE = {
         config: CONFIG.magicalgirl,
         images: imagesNumerotees('magicalgirl', 12)
     },
-    // Sprite dessiné dans joggeur_sprite.js (marche, course, essoufflé)
+    // Sprite : assets/monstres/joggeur/ (marche, course, essoufflé)
     joggeur: {
         config: CONFIG.joggeur,
         images: SPRITES_JOGGEUR.marche
     },
-    // Sprite dessiné dans emeute_sprite.js (bouclier levé, puis brisé)
+    // Sprite : assets/monstres/emeute/ (bouclier levé, puis brisé)
     emeute: {
         config: CONFIG.emeute,
         images: SPRITES_EMEUTE.garde

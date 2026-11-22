@@ -125,7 +125,9 @@ const decor_camp = (() => {
     }
 
     return (largeur = MONDE.largeur, hauteur = MONDE.hauteur, etape = 0) => {
-        const W = Math.round(largeur), cle = W + 'x' + hauteur + ':' + etape;
+        // (refait une fois les images du camp chargées : le menu le dessine dès le départ)
+        const pret = [OBJETS_CAMP.tente, OBJETS_CAMP.tenteCommandement, OBJETS_CAMP.tenteBrutus, PORTE_LABO.camp].every(i => i.complete && i.naturalWidth);
+        const W = Math.round(largeur), cle = W + 'x' + hauteur + ':' + etape + (pret ? '' : ':chargement');
         if (!caches.has(cle)) {
             if (caches.size > 4) caches.clear();
             caches.set(cle, construire(W, hauteur, etape));

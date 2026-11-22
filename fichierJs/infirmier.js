@@ -4,7 +4,7 @@
    zombies blessés autour de lui, il s'arrête, lève sa seringue et leur rend
    des PV (jamais au-delà de leur maximum, jamais au boss). Il ne se soigne
    pas lui-même : l'abattre en premier évite de devoir tout recommencer.
-   Réglages : CONFIG.infirmier ; sprite : infirmier_sprite.js.
+   Réglages : CONFIG.infirmier ; sprite : assets/monstres/infirmier/.
    ========================================================================= */
 let soins = [];   // ondes vertes et croix qui montent au-dessus des zombies soignés
 
