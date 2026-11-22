@@ -35,24 +35,28 @@ const LOOT = {
         soldat_jungle: { nom: 'Jungle', rarete: 'rare', perso: 'soldat' },
         soldat_apparat: { nom: 'Tenue d\'apparat', rarete: 'epique', perso: 'soldat' },
         soldat_cyber: { nom: 'Cyber-soldat', rarete: 'legendaire', perso: 'soldat' },
+        soldat_prototype: { nom: 'Prototype du labo', rarete: 'unique', perso: 'soldat', aura: '#3cf0ff' },
 
         brute_marcel: { nom: 'Marcel blanc', rarete: 'commun', perso: 'brute' },
         brute_fonce: { nom: 'Brutus Black Edition', rarete: 'rare', perso: 'brute' },
         brute_hawai: { nom: 'Vacances à Hawaï', rarete: 'epique', perso: 'brute' },
         brute_noel: { nom: 'Père Noël en colère', rarete: 'epique', perso: 'brute' },
         brute_catch: { nom: 'Légende du catch', rarete: 'legendaire', perso: 'brute' },
+        brute_veteran: { nom: 'Vétéran des Trois Collines', rarete: 'unique', perso: 'brute' },
 
         mira_rousse: { nom: 'Rousse incendiaire', rarete: 'commun', perso: 'grenadier' },
         mira_treillis: { nom: 'Treillis', rarete: 'rare', perso: 'grenadier' },
         mira_gothique: { nom: 'Gothique', rarete: 'epique', perso: 'grenadier' },
         mira_plage: { nom: 'Tenue de plage', rarete: 'epique', perso: 'grenadier' },
         mira_cyber: { nom: 'Néon Runner', rarete: 'legendaire', perso: 'grenadier' },
+        mira_teto: { nom: 'Kasane Teto', rarete: 'unique', perso: 'grenadier', paillettes: true },
 
         lassie_arctique: { nom: 'Renarde arctique', rarete: 'commun', perso: 'lassie' },
         lassie_kitsune: { nom: 'Kitsune', rarete: 'rare', perso: 'lassie' },
         lassie_tempete: { nom: 'Œil de la tempête', rarete: 'rare', perso: 'lassie' },
         lassie_pinup: { nom: 'Pin-up', rarete: 'epique', perso: 'lassie' },
         lassie_kyubi: { nom: 'Kyūbi aux neuf queues', rarete: 'legendaire', perso: 'lassie' },
+        lassie_celeste: { nom: 'Renarde céleste', rarete: 'unique', perso: 'lassie', etoiles: ['2A3272', '1A1E4A', '3A44A0', '202662', '6A7AD8'] },
 
         or: { nom: 'Or massif', rarete: 'legendaire', filtre: 'sepia(1) saturate(5) brightness(1.1)' },
         fantome: { nom: 'Fantôme', rarete: 'legendaire', filtre: 'grayscale(1) brightness(1.8) opacity(0.55)' },
@@ -157,9 +161,10 @@ const Loot = (() => {
         sauver();
     }
 
-    // Filtre à appliquer au sprite du perso (t en secondes, pour l'arc-en-ciel animé)
+    // Filtre à appliquer au sprite du perso (t en secondes, pour l'arc-en-ciel animé et l'aura qui pulse)
     function filtre(perso, t = 0) {
         const skin = LOOT.skins[L().equipes[perso]];
+        if (skin && skin.aura) return `drop-shadow(0 0 ${(3 + 2 * Math.sin(t * 4)).toFixed(1)}px ${skin.aura})`;
         if (!skin || skin.perso) return '';
         if (skin.anime) return `hue-rotate(${Math.round((t * 120) % 360)}deg) saturate(1.8)`;
         return skin.filtre || '';
@@ -179,6 +184,8 @@ const Loot = (() => {
         ouvrir, gagner, equiper, filtre, tirer_objet, rarete, sprites, sprites_skin, poids_effectifs,
         solde: () => L().cranes,
         equipe: perso => (connu(L().equipes[perso]) ? L().equipes[perso] : null),
+        // La définition du skin équipé (pour ses effets : aura, paillettes, étoiles), ou null
+        skin_equipe: perso => (connu(L().equipes[perso]) ? LOOT.skins[L().equipes[perso]] : null),
         skinsDe: perso => L().possedes.filter(id => typeof id === 'string' && id.startsWith(perso + ':'))
             .map(id => id.split(':')[1]).filter(connu),
         dechets: () => Object.fromEntries(Object.entries(L().dechets).filter(([id]) => LOOT.dechets[id])),

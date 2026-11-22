@@ -44,7 +44,7 @@ const TRADUCTIONS = {
     'Rousse incendiaire': ['Fiery redhead', 'Pelirroja incendiaria'], 'Treillis': ['Fatigues', 'Uniforme de faena'], 'Gothique': ['Goth', 'Gótica'],
     'Tenue de plage': ['Beachwear', 'Ropa de playa'], 'Néon Runner': ['Neon Runner', 'Neón Runner'],
     'Renarde arctique': ['Arctic fox', 'Zorra ártica'], 'Kitsune': ['Kitsune', 'Kitsune'], 'Œil de la tempête': ['Eye of the storm', 'Ojo de la tormenta'],
-    'Pin-up': ['Pin-up', 'Pin-up'], 'Kyūbi aux neuf queues': ['Nine-tailed Kyūbi', 'Kyūbi de nueve colas'],
+    'Pin-up': ['Pin-up', 'Pin-up'], 'Kyūbi aux neuf queues': ['Nine-tailed Kyūbi', 'Kyūbi de nueve colas'], 'Prototype du labo': ['Lab prototype', 'Prototipo del laboratorio'], 'Vétéran des Trois Collines': ['Veteran of the Three Hills', 'Veterano de las Tres Colinas'], 'Kasane Teto': ['Kasane Teto', 'Kasane Teto'], 'Renarde céleste': ['Celestial fox', 'Zorra celeste'],
     'Or massif': ['Solid gold', 'Oro macizo'], 'Fantôme': ['Ghost', 'Fantasma'], 'Arc-en-ciel RGB': ['RGB rainbow', 'Arcoíris RGB'],
     'Rien': ['Nothing', 'Nada'], 'Merci de votre soutien.': ['Thank you for your support.', 'Gracias por tu apoyo.'],
     'Un caillou': ['A pebble', 'Una piedra'], 'Il ne fait rien. Il est juste là.': ['It does nothing. It\'s just there.', 'No hace nada. Solo está ahí.'],

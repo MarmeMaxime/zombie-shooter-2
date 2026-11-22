@@ -141,6 +141,51 @@ function draw_joueur(ctx) {
     ctx.drawImage(img, 0, nh * HANCHE_JOUEUR, nw, nh * (1 - HANCHE_JOUEUR), x, y + t * HANCHE_JOUEUR, t, t * (1 - HANCHE_JOUEUR));
     ctx.drawImage(img, 0, 0, nw, nh * HANCHE_JOUEUR, x, y + busteY, t, t * HANCHE_JOUEUR);
     ctx.restore();
+    const skin = Loot.skin_equipe(joueur.perso);
+    if (skin && skin.etoiles && !clignote) draw_etoiles(ctx, img, skin.etoiles, x, y, t, busteY, temps);
+}
+
+// Skin « Renarde céleste » : des étoiles qui scintillent dans le pelage.
+// Les pixels du pelage sont repérés une fois par image (par leur couleur) ; si le navigateur
+// refuse de lire l'image (jeu ouvert sans serveur), on garde seulement les étoiles fixes du sprite.
+const PELAGE = new Map();
+function pixels_pelage(img, couleurs) {
+    if (PELAGE.has(img)) return PELAGE.get(img);
+    if (!img.complete || !img.naturalWidth) return null;
+    let liste = [];
+    try {
+        const c = document.createElement('canvas');
+        c.width = img.naturalWidth; c.height = img.naturalHeight;
+        const g = c.getContext('2d');
+        g.drawImage(img, 0, 0);
+        const d = g.getImageData(0, 0, c.width, c.height).data;
+        const voulues = new Set(couleurs.map(h => parseInt(h, 16)));
+        for (let i = 0; i < d.length; i += 4) {
+            if (d[i + 3] > 200 && voulues.has((d[i] << 16) | (d[i + 1] << 8) | d[i + 2])) liste.push([(i / 4) % c.width, Math.floor(i / 4 / c.width)]);
+        }
+    } catch (e) { liste = []; }
+    const res = { liste, nw: img.naturalWidth, nh: img.naturalHeight };
+    PELAGE.set(img, res);
+    return res;
+}
+function draw_etoiles(ctx, img, couleurs, x, y, t, busteY, temps) {
+    const p = pixels_pelage(img, couleurs);
+    if (!p || !p.liste.length) return;
+    const sx = t / p.nw, sy = t / p.nh;
+    ctx.save();
+    // 6 étoiles à la fois, chacune vit 0,8 s à une place tirée au sort (de façon stable)
+    for (let k = 0; k < 6; k++) {
+        const cycle = temps / 0.8 + k / 6, n = Math.floor(cycle), vie = cycle - n;
+        const h = Math.abs(Math.sin((n * 7 + k * 13) * 12.9898) * 43758.5453) % 1;
+        const [px, py] = p.liste[Math.floor(h * p.liste.length)];
+        const ex = x + (px + 0.5) * sx, ey = y + (py + 0.5) * sy + (py < p.nh * HANCHE_JOUEUR ? busteY : 0);
+        const a = Math.sin(vie * Math.PI), r = sx * (0.6 + 1.4 * a);
+        ctx.globalAlpha = a;
+        ctx.fillStyle = k % 3 ? '#ffffff' : '#ffe14d';
+        ctx.fillRect(ex - sx / 2, ey - r, sx, r * 2);
+        ctx.fillRect(ex - r, ey - sx / 2, r * 2, sx);
+    }
+    ctx.restore();
 }
 
 /* =========================================================================
