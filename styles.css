@@ -669,3 +669,22 @@ span#score.score-ready {
 .mission-barre { display: block; height: 4px; margin-top: 3px; background: #333; border-radius: 2px; overflow: hidden; }
 .mission-barre span { display: block; height: 100%; background: linear-gradient(90deg, #3a8dff, #6fd0ff); }
 .mission-ligne.ok .mission-barre span { background: #3cc83c; }
+
+/* Écran de fin : deux colonnes (résumé à gauche, bilan à droite), boutons
+   côte à côte. Tient dans les 400 px de haut de l'interface, quel que soit
+   le format de l'écran ; si jamais ça déborde, la carte défile. */
+#game-over-overlay { justify-content: safe center; overflow-y: auto; }
+.mission-card.game-over {
+  max-width: 740px; width: 94%; padding: 12px 20px; margin: 6px 0;
+  max-height: 384px; overflow-y: auto;
+  display: grid; grid-template-columns: 1fr 1fr; column-gap: 18px;
+  grid-template-areas: "titre titre" "texte bilan" "stats bilan" "boutons boutons";
+  grid-template-rows: auto auto 1fr auto;
+}
+.mission-card.game-over h2 { grid-area: titre; font-size: 1.3rem; margin-bottom: 10px; padding-bottom: 6px; }
+.mission-card.game-over .game-over-text { grid-area: texte; font-size: 0.95rem; line-height: 1.35; margin-bottom: 10px; }
+.mission-card.game-over .stats-box { grid-area: stats; padding: 10px; margin: 0; align-self: start; }
+.mission-card.game-over .stat-time { font-size: 1.2rem; }
+.mission-card.game-over .bilan { grid-area: bilan; margin: 0; max-height: 230px; }
+.mission-card.game-over .game-over-buttons { grid-area: boutons; flex-direction: row; gap: 12px; margin-top: 12px; }
+.mission-card.game-over .game-over-buttons button { flex: 1; width: auto; }
