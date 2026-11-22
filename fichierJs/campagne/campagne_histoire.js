@@ -214,7 +214,7 @@ const MISSIONS_CAMPAGNE = [
             hardcore: 'Ils étaient… bon, je ne vais pas dire deux fois plus. Mais beaucoup. Et les infirmiers avaient des renforts.'
         },
         texteFin: {
-            victoire: 'Brutus sort du tunnel. Devant lui : le désert, et l\'ouest.',
+            victoire: 'Brutus sort du tunnel. Devant lui : le désert, et l\'est.',
             echec: '« Non, attends. Je me suis trompé de station. » Brutus reprend depuis l\'entrée du tunnel.'
         }
     },
@@ -248,27 +248,27 @@ const MISSIONS_CAMPAGNE = [
             { qui: 'gorille', texte: 'Tu veux ton fusil ? Gagne-le. Si tu perds, tu restes ici et tu portes mes caisses. Comme au bon vieux temps.' },
             { qui: 'brutus', texte: 'Au bon vieux temps, c\'est toi qui portais.' },
             // La carte : Gégé sait où est le camp, mais il ne peut pas y aller
-            { qui: 'gorille', texte: 'Et si tu gagnes, je te donne aussi ça. Mes guetteurs ont capté une radio militaire : un camp, à l\'ouest. Des vivres, des murs, des soldats.' },
+            { qui: 'gorille', texte: 'Et si tu gagnes, je te donne aussi ça. Mes guetteurs ont capté une radio militaire : un camp, à l\'est. Des vivres, des murs, des soldats.' },
             { qui: 'brutus', texte: 'Et toi, tu n\'y vas pas ?' },
             { qui: 'gorille', texte: 'Regarde-moi. Des soldats qui voient arriver un gorille, ils ne posent pas de questions : ils tirent.' },
             { qui: 'brutus', texte: '… Monte sur le ring, Gégé.', bouton: 'Au combat !' }
         ],
         debriefQui: 'brutus',
         debrief: {
-            normal: 'Gégé est tombé comme un piano. Il a tenu parole : mon fusil, et la carte. Un camp, à l\'ouest, avec des vivres et des murs.',
+            normal: 'Gégé est tombé comme un piano. Il a tenu parole : mon fusil, et la carte. Un camp, à l\'est, avec des vivres et des murs.',
             hardcore: 'Il cognait plus fort qu\'avant, Gégé. Mais il a gardé son vieux défaut : il prévient toujours avant de frapper.'
         },
         echec: 'Non, attends. Je ne suis pas tombé. J\'ai… glissé. Je reprends.',
         echecBouton: 'Revanche !',
         texteFin: {
-            victoire: 'Brutus récupère son fusil et la carte d\'un camp militaire. Direction : l\'ouest.',
+            victoire: 'Brutus récupère son fusil et la carte d\'un camp militaire. Direction : l\'est.',
             echec: 'Brutus jure qu\'il a glissé. Il reprend le combat depuis le début.'
         }
     },
     {
         id: 'c2m5', chapitre: 2, numero: 5, titre: 'La Longue Marche', perso: 'brute',
         // La logique : Gégé avait la direction du camp (la radio), pas sa position. Brutus a
-        // marché vers l'ouest pendant des mois, de nuit, en croisant tout ce qui traîne dans
+        // marché vers l'est pendant des mois, de nuit, en croisant tout ce qui traîne dans
         // le désert (les monstres du mode normal, sauf l'Anti-émeute gardé pour plus tard),
         // jusqu'au village du Fossoyeur, sur sa
         // route. Le lendemain, il voit le mur du camp : c'est le début de « La Débandade ».
@@ -518,8 +518,8 @@ SCENES_CAMPAGNE.c2m5 = {
         { qui: 'sergent', texte: 'Ton fusil, une carte… Et de l\'usine jusqu\'ici, tu as mis combien de temps ?' },
         { qui: 'brutus', texte: 'Des mois, Chef.' },
         { qui: 'sergent', texte: 'Des mois. Avec une carte.' },
-        { qui: 'brutus', texte: 'Les guetteurs de Gégé avaient capté votre radio, pas votre adresse. Sur la carte, il y avait une flèche. « Ouest ». C\'est tout.' },
-        { qui: 'brutus', texte: 'Alors j\'ai marché vers l\'ouest. De nuit, à cause du soleil. J\'ai bu dans les citernes des fermes. Et il y avait du monde sur la route.' },
+        { qui: 'brutus', texte: 'Les guetteurs de Gégé avaient capté votre radio, pas votre adresse. Sur la carte, il y avait une flèche. « Est ». C\'est tout.' },
+        { qui: 'brutus', texte: 'Alors j\'ai marché vers l\'est. De nuit, à cause du soleil. J\'ai bu dans les citernes des fermes. Et il y avait du monde sur la route.' },
         { qui: 'chercheur', texte: 'Du monde ?' },
         { qui: 'brutus', texte: 'Tout ce que vous connaissez. Les coureurs, les videuses, les infirmiers… et les femmes enceintes qui éclatent.' },
         { qui: 'sergent', texte: 'Le désert entier, en somme. Et tu les as tous gardés pour toi.' },
