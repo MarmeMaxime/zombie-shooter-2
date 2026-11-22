@@ -76,6 +76,8 @@ Chaque monstre rencontré rejoint le **bestiaire 📖**, avec sa fiche.
   succès obtenus.
 - Musiques du menu, du mode normal et de l'entraînement générées par le jeu
   (Web Audio) ; le mode hardcore garde sa playlist.
+- Bruitages générés eux aussi : voix des dialogues, radio de l'éclaireur, moteurs,
+  grognements de zombies, fanfare de victoire, toujours sous la musique.
 - Sauvegarde versionnée avec historique et export / import.
 
 ## Dossiers
