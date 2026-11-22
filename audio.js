@@ -8,9 +8,6 @@ const Son = (() => {
     const PISTES = {
         menu: { src: './assets/son/menu_theme.mp3', volume: 0.1 },
         normal: { src: './assets/son/background_sound.mp3', volume: 0.1 },
-        // L'entraînement reprend la musique du mode normal, en plus posé :
-        // un peu plus lente (même tonalité) et un peu plus douce
-        entrainement: { src: './assets/son/background_sound.mp3', volume: 0.08, vitesse: 0.9 },
         hardcore: [
             './assets/son/hardcore_gamer_music.mp3',
             './assets/son/hardcore_gamer2.mp3',
@@ -62,6 +59,13 @@ const Son = (() => {
 
     function jouerAmbiance(nom) {
         ambiance = nom;
+        arreter_piste();
+        // L'entraînement a sa propre musique, générée (plus bas), dans le style des autres
+        if (nom === 'entrainement') {
+            musique.pause();
+            if (actif) demarrer_piste();
+            return;
+        }
         if (nom === 'hardcore') {
             indexHardcore = Math.floor(Math.random() * PISTES.hardcore.length);
             chargerPiste(PISTES.hardcore[indexHardcore], VOLUME_HARDCORE, false);
@@ -74,10 +78,12 @@ const Son = (() => {
     function arreterMusique() {
         ambiance = null;
         musique.pause();
+        arreter_piste();
     }
 
-    const jouer = () => lire(musique);
-    const couper = () => musique.pause();
+    // Musique de l'ambiance en cours : le lecteur MP3, ou la piste générée de l'entraînement
+    function jouer() { if (ambiance === 'entrainement') demarrer_piste(); else lire(musique); }
+    function couper() { musique.pause(); arreter_piste(); }
 
     function setActif(valeur) {
         actif = valeur;
@@ -261,6 +267,172 @@ const Son = (() => {
         Sauvegarde.sauver();
     }
 
+    /* ---------- Musique de l'entraînement (générée, en boucle) ----------
+       Même famille que les musiques du menu et du mode normal : sombre et
+       cinématique, en la mineur harmonique (le sol# qui grince), 104 BPM.
+       Bourdon grave, tambours façon taiko, nappes sombres, ostinato de cordes,
+       « braams » de cuivres graves, et quelques roulements de caisse claire
+       militaires pour rappeler qu'on est au camp. 32 mesures (≈ 74 s) en
+       4 parties : installation, montée, pic, respiration.
+       Les notes sont programmées un peu à l'avance (Web Audio) : la musique ne
+       dépend pas des images du jeu et continue quand le sergent fige la partie. */
+    const TEMPO = 104, DOUBLE = 60 / TEMPO / 4;     // durée d'une double croche
+    const hz = n => 440 * Math.pow(2, (n - 69) / 12); // numéro MIDI -> fréquence
+    // Accords (notes MIDI) : la mineur harmonique, l'accord de mi majeur (sol#) en tension
+    const ACCORDS = {
+        Am: { basse: 33, nappe: [57, 60, 64], arpege: [69, 72, 76, 72] },
+        F: { basse: 29, nappe: [57, 60, 65], arpege: [69, 72, 77, 72] },
+        Dm: { basse: 38, nappe: [57, 62, 65], arpege: [69, 74, 77, 74] },
+        E: { basse: 28, nappe: [56, 59, 64], arpege: [68, 71, 76, 71] },
+        G: { basse: 31, nappe: [55, 59, 62], arpege: [67, 71, 74, 71] },
+        Bb: { basse: 34, nappe: [58, 62, 65], arpege: [70, 74, 77, 74] }
+    };
+    const GRILLE = [
+        'Am', 'Am', 'F', 'E', 'Am', 'Am', 'Dm', 'E',       // installation
+        'Am', 'Am', 'F', 'E', 'Am', 'Dm', 'Bb', 'E',       // montée
+        'F', 'G', 'Am', 'E', 'F', 'G', 'E', 'E',           // pic
+        'Am', 'Am', 'F', 'F', 'Dm', 'Dm', 'E', 'E'         // respiration
+    ];
+    // Motifs de tambours sur 16 doubles croches (1 = coup fort, 0.5 = coup léger)
+    const TAIKO = [1, 0, 0, 0.5, 0, 0, 1, 0, 1, 0, 0, 0.5, 0, 0.5, 1, 0];
+    const TAIKO_PIC = [1, 0, 0.5, 0.5, 1, 0, 1, 0, 1, 0, 0.5, 0.5, 1, 0.5, 1, 0.5];
+    let piste = null;
+
+    // Réverbération de grande salle : réponse impulsionnelle de bruit qui s'éteint
+    function salle(c) {
+        const duree = 3, n = Math.floor(c.sampleRate * duree);
+        const ir = c.createBuffer(2, n, c.sampleRate);
+        for (let canal = 0; canal < 2; canal++) {
+            const d = ir.getChannelData(canal);
+            for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 2.5);
+        }
+        const conv = c.createConvolver();
+        conv.buffer = ir;
+        return conv;
+    }
+
+    function demarrer_piste() {
+        if (piste || !actif) return;
+        const c = contexte(); if (!c) return;
+        // Son direct + beaucoup de réverbération, vers le volume « musique »
+        const bus = c.createGain();
+        bus.gain.value = 0.16;          // même volume perçu que les MP3 du menu et du mode normal
+        const reverb = salle(c), mouille = c.createGain();
+        mouille.gain.value = 0.55;
+        bus.connect(sortieMusique);
+        bus.connect(reverb).connect(mouille).connect(sortieMusique);
+        piste = { bus, prochain: c.currentTime + 0.1, pas: 0, minuterie: setInterval(programmer_piste, 50) };
+        programmer_piste();
+    }
+    function arreter_piste() {
+        if (!piste) return;
+        clearInterval(piste.minuterie);
+        const bus = piste.bus, c = contexte();
+        if (c) { bus.gain.setTargetAtTime(0, c.currentTime, 0.15); setTimeout(() => bus.disconnect(), 2000); }
+        piste = null;
+    }
+    function programmer_piste() {
+        const c = contexte(); if (!c || !piste) return;
+        while (piste.prochain < c.currentTime + 0.3) {
+            jouer_double(piste.pas, piste.prochain);
+            piste.prochain += DOUBLE;
+            piste.pas = (piste.pas + 1) % (GRILLE.length * 16);
+        }
+    }
+
+    /* Une voix : oscillateurs désaccordés, filtre passe-bas qui peut s'ouvrir
+       (balayage), enveloppe douce, vibrato léger éventuel. */
+    function voix(f, t, duree, { vol, type = 'sawtooth', filtre = 900, filtreFin = null, attaque = 0.05, sortie = 0.3, desaccord = [-8, 8], vibrato = 0 }) {
+        const c = contexte();
+        const g = c.createGain();
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(vol, t + attaque);
+        g.gain.setValueAtTime(vol, t + Math.max(attaque, duree - sortie));
+        g.gain.exponentialRampToValueAtTime(0.0001, t + duree + sortie);
+        const fl = c.createBiquadFilter();
+        fl.type = 'lowpass';
+        fl.Q.value = 0.8;
+        fl.frequency.setValueAtTime(filtre, t);
+        if (filtreFin) fl.frequency.exponentialRampToValueAtTime(filtreFin, t + duree);
+        fl.connect(g).connect(piste.bus);
+        let profondeur = null;
+        if (vibrato) {
+            const lfo = c.createOscillator();
+            lfo.frequency.value = 5;
+            profondeur = c.createGain();
+            profondeur.gain.setValueAtTime(0, t);
+            profondeur.gain.linearRampToValueAtTime(vibrato, t + Math.min(0.5, duree * 0.6));
+            lfo.connect(profondeur);
+            lfo.start(t); lfo.stop(t + duree + sortie + 0.05);
+        }
+        for (const cents of desaccord) {
+            const o = c.createOscillator();
+            o.type = type;
+            o.frequency.value = f;
+            o.detune.value = cents;
+            if (profondeur) profondeur.connect(o.detune);
+            o.connect(fl);
+            o.start(t); o.stop(t + duree + sortie + 0.05);
+        }
+    }
+
+    // Tambour grave façon taiko : coup de hauteur qui chute + claquement de peau
+    function taiko(t, force, grave = false) {
+        const o = { sortie: piste.bus, absolu: true };
+        ton(grave ? 62 : 92, t, grave ? 0.9 : 0.5, { vol: 0.34 * force, f2: grave ? 34 : 48, ...o });
+        bruit(t, 0.12, { vol: 0.09 * force, filtre: 700, filtreFin: 200, ...o });
+    }
+
+    function jouer_double(i, t) {
+        const o = { sortie: piste.bus, absolu: true };
+        const mesure = Math.floor(i / 16), pos = i % 16, partie = Math.floor(mesure / 8), dansPartie = mesure % 8;
+        const accord = ACCORDS[GRILLE[mesure]], mesureDuree = DOUBLE * 16;
+
+        // Bourdon grave et nappe sombre : posés au début de chaque mesure
+        if (pos === 0) {
+            voix(hz(accord.basse), t, mesureDuree * 0.98, { vol: 0.07, filtre: 260, attaque: 0.2, sortie: 0.5, desaccord: [-6, 0, 6] });
+            voix(hz(accord.basse + 12), t, mesureDuree * 0.98, { vol: 0.03, type: 'square', filtre: 400, attaque: 0.3, sortie: 0.5, desaccord: [0] });
+            for (const n of accord.nappe) voix(hz(n), t, mesureDuree * 0.98, { vol: partie === 3 ? 0.02 : 0.016, filtre: 750, attaque: 0.6, sortie: 0.7, vibrato: 6 });
+        }
+
+        // « Braam » : gros accord de cuivres graves qui s'ouvre (début de la montée et du pic)
+        if (pos === 0 && (partie === 1 || partie === 2) && dansPartie % 4 === 0) {
+            for (const n of [accord.basse + 12, accord.basse + 19, accord.basse + 24])
+                voix(hz(n), t, mesureDuree * 0.9, { vol: 0.045, filtre: 180, filtreFin: 1600, attaque: 0.08, sortie: 0.9, desaccord: [-14, -5, 5, 14] });
+            ton(48, t, 1.6, { vol: 0.32, f2: 28, ...o });                                  // impact sub
+            bruit(t, 1.2, { vol: 0.05, filtre: 3000, filtreFin: 200, ...o });
+        }
+
+        // Tambours : discrets à l'installation, pleins à la montée, serrés au pic, rares à la respiration
+        const motif = partie === 2 ? TAIKO_PIC : TAIKO;
+        const force = motif[pos];
+        if (force) {
+            if (partie === 0 && dansPartie >= 2) { if (pos === 0 || pos === 8) taiko(t, 0.7, true); else if (dansPartie >= 4) taiko(t, force * 0.5); }
+            else if (partie === 1 || partie === 2) taiko(t, force, pos === 0 || pos === 8);
+            else if (partie === 3 && pos === 0) taiko(t, 0.6, true);
+        }
+        // Frottement métallique aigu (comme la texture dense des autres musiques)
+        if (partie !== 3 && pos % 2 === 0 && (partie > 0 || dansPartie >= 4))
+            bruit(t, 0.04, { vol: pos % 4 === 0 ? 0.012 : 0.02, filtre: 7000, type: 'highpass', ...o });
+
+        // Ostinato de cordes en doubles croches (montée et pic), en arpège de l'accord
+        if (partie === 1 || partie === 2 || (partie === 0 && dansPartie >= 6)) {
+            const n = accord.arpege[pos % 4] + (partie === 2 ? 12 : 0) - 12;
+            voix(hz(n), t, DOUBLE * 0.7, { vol: pos % 4 === 0 ? 0.026 : 0.018, filtre: 1800, attaque: 0.01, sortie: 0.06, desaccord: [-7, 7] });
+        }
+        // Thème lent, aux violoncelles puis aux violons : une note par demi-mesure
+        if ((partie === 2 || partie === 3) && pos % 8 === 0) {
+            const n = accord.nappe[(dansPartie + pos / 8) % 3] + (partie === 2 ? 12 : 0);
+            voix(hz(n), t, DOUBLE * 7.5, { vol: 0.03, filtre: 2200, attaque: 0.15, sortie: 0.4, desaccord: [-9, 0, 9], vibrato: 14 });
+        }
+
+        // Roulement de caisse claire militaire à la fin de chaque partie (crescendo)
+        if (dansPartie === 7 && pos >= 8) {
+            const k = (pos - 8) / 8;
+            for (const d of [0, DOUBLE / 2]) bruit(t + d, 0.07, { vol: 0.03 + 0.07 * k, filtre: 2300, filtreFin: 1200, type: 'bandpass', ...o });
+        }
+    }
+
     /* Vibrations : téléphone (navigator.vibrate, Android) et manette (vibreurs).
        force de 0 à 1, duree en millisecondes. Désactivables dans le panneau du son. */
     function vibrer(force, duree) {
@@ -298,6 +470,7 @@ const Son = (() => {
         setActif,
         suspendreMusique,
         reprendreMusique,
+        pisteActive: () => Boolean(piste),   // la musique de l'entraînement joue-t-elle ?
         estActif: () => actif,
         contexte,   // contexte Web Audio partagé (aussi utilisé par les sons de lootbox)
         ton,
