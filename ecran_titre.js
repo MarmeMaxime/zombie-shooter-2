@@ -73,8 +73,8 @@
 
     function dessiner() {
         c.setTransform(1, 0, 0, 1, 0, 0);
-        c.imageSmoothingEnabled = true;
-        c.drawImage(img_fond, 0, 0, toile.width, toile.height);
+        c.imageSmoothingEnabled = false;   // même décor en pixel art que les parties (combat_decor.js)
+        c.drawImage(decor_combat(L, H), 0, 0, toile.width, toile.height);
         c.setTransform(echelle, 0, 0, echelle, 0, 0);
         c.imageSmoothingEnabled = false;
 

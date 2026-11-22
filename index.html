@@ -20,13 +20,13 @@
           <p class="titre-sur">ILS ARRIVENT…</p>
           <h1 class="titre-geant" data-langue-fixe>ZOMBIE<br>SHOOTER <span>2</span></h1>
           <p class="titre-slogan">Survivez. Ouvrez des caisses. Regrettez.</p>
-          <p class="titre-version">version 1.1</p>
+          <p class="titre-version">version 1.2</p>
           <p class="titre-invite">▶ Appuie sur une touche ou touche l'écran ◀</p>
         </div>
       </div>
 
       <div id="main-menu">
-        <h1 data-langue-fixe>Zombie Shooter 2 <small class="version">1.1</small></h1>
+        <h1 data-langue-fixe>Zombie Shooter 2 <small class="version">1.2</small></h1>
         <p id="titre-joueur"></p>
         
         <div class="difficulty-selector">
@@ -95,6 +95,38 @@
         </div>
       </div>
 
+      <div id="choix-variante" class="hidden">
+        <div class="mission-card">
+          <h2>MODE DE JEU</h2>
+          <div class="choix-variantes">
+            <button id="btn-classique"><strong>♾ CLASSIQUE</strong><small>Les zombies arrivent sans fin, de plus en plus nombreux.</small></button>
+            <button id="btn-vagues"><strong>🌊 VAGUES</strong><small>Une vague à la fois, une boutique entre chaque vague, un boss toutes les 5 vagues.</small></button>
+          </div>
+          <button id="btn-close-variante">RETOUR</button>
+        </div>
+      </div>
+
+      <div id="boutique-overlay" class="hidden">
+        <div class="mission-card loot-card boutique-card">
+          <h2 id="boutique-titre">VAGUE TERMINÉE</h2>
+          <p class="boutique-solde">Points : <span id="boutique-points">0</span></p>
+          <div id="boutique-liste"></div>
+          <button id="btn-vague-suivante">VAGUE SUIVANTE ▶</button>
+        </div>
+      </div>
+
+      <div id="tuto-proposition" class="hidden">
+        <div class="mission-card">
+          <canvas id="proposition-visage" width="120" height="120"></canvas>
+          <h2>Sergent</h2>
+          <p class="game-over-text">Première fois ici, recrue ? Deux minutes d'entraînement, ça t'évitera de mourir bêtement. Enfin, moins bêtement.</p>
+          <div class="game-over-buttons">
+            <button id="btn-proposition-oui">🎯 Entraînement</button>
+            <button id="btn-proposition-non">Jouer directement</button>
+          </div>
+        </div>
+      </div>
+
       <div id="bestiaire-overlay" class="hidden">
         <div class="mission-card loot-card">
           <h2>BESTIAIRE</h2>
@@ -137,7 +169,8 @@
           <span>Score : <span id="score">0</span></span>
           <span>Vies : <span id="vies">3</span></span>
           <span>Temps : <span id="temps">0</span></span>
-          <span><span>Vie</span> (<span data-touche="vie">V</span>) : <span id="prix-vie">100</span></span>
+          <span id="hud-prix-vie"><span>Vie</span> (<span data-touche="vie">V</span>) : <span id="prix-vie">100</span></span>
+          <span id="hud-vague" class="hidden"><span>Vague</span> <span id="vague-num">1</span> · 🧟 <span id="vague-reste">0</span></span>
           <span><span id="pouvoir-hud">★ 0%</span><span class="touche-pc"> (<span data-touche="pouvoir">E</span>)</span></span>
         </div>
         
@@ -158,6 +191,19 @@
           <span id="boss-nom">LE MASTODONTE</span>
           <div class="boss-jauge"><div id="boss-vie"></div></div>
         </div>
+
+        <!-- Le Sergent : consignes de l'entraînement et conseils (tutoriel.js) -->
+        <button id="btn-passer-tuto" class="hidden">Passer l'entraînement ⏭</button>
+        <div id="instructeur" class="hidden">
+          <canvas id="instructeur-visage" width="80" height="80"></canvas>
+          <div class="instructeur-bulle">
+            <strong>Sergent</strong>
+            <p id="instructeur-texte"></p>
+            <div id="instructeur-boutons"></div>
+          </div>
+        </div>
+
+        <p id="bandeau-vague" class="hidden"></p>
 
         <canvas id="jeu" width="800" height="400"></canvas>
       </div>
@@ -191,6 +237,7 @@
             <p class="stat-cranes">
               +<span id="final-cranes">0</span> 💀 pour les caisses
             </p>
+            <p id="bilan-vague"></p>
             <p id="bilan-records"></p>
           </div>
 
@@ -202,8 +249,8 @@
           </div>
 
           <div class="game-over-buttons">
-            <button id="btn-retry">RÉESSAYER</button>
-            <button id="btn-return-menu">RETOUR MENU</button>
+            <button id="btn-retry">RÉESSAYER <small class="touche-pc raccourci">Entrée</small></button>
+            <button id="btn-return-menu">RETOUR MENU <small class="touche-pc raccourci">Échap</small></button>
           </div>
         </div>
       </div>
@@ -248,6 +295,7 @@
             Tes points rapportent des 💀 pour ouvrir des caisses.
           </p>
 
+          <button id="btn-entrainement">🎯 ENTRAÎNEMENT</button>
           <button id="btn-close-tuto">À L'ATTAQUE !</button>
         </div>
       </div>
@@ -264,6 +312,7 @@
             <label>🎵 Musique <input type="range" id="vol-musique" min="0" max="100" step="5"></label>
             <label>💥 Effets <input type="range" id="vol-effets" min="0" max="100" step="5"></label>
             <button id="btn-vibrations">Vibrations : activées</button>
+            <button id="btn-conseils">Conseils du sergent : activés</button>
           </div>
           <h3>Touches</h3>
           <p class="options-aide">Clique sur une action, puis appuie sur la nouvelle touche.</p>
@@ -285,6 +334,10 @@
     <script src="./options.js"></script>
     <!-- Sprites générés en pixel art (avant les scripts qui les utilisent) -->
     <script src="./pixel_art.js"></script>
+    <script src="./instructeur_sprite.js"></script>
+    <script src="./attache_sprite.js"></script>
+    <script src="./entrainement_decor.js"></script>
+    <script src="./combat_decor.js"></script>
     <script src="./boss_sprite.js"></script>
     <script src="./joggeur_sprite.js"></script>
     <script src="./emeute_sprite.js"></script>
@@ -311,6 +364,8 @@
     <script src="./bestiaire.js"></script>
     <script src="./menu.js"></script>
     <script src="./ecran_titre.js"></script>
+    <script src="./tutoriel.js"></script>
+    <script src="./vagues.js"></script>
     <script src="./manette.js"></script>
     <script>Langue.traduire_page(); Touches.maj_affichages();</script>
 

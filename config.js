@@ -42,6 +42,25 @@ const CONFIG = {
             description: 'La foudre frappe chaque zombie à l\'écran une fois.' }
     },
 
+    /* Mode Vagues (vagues.js) : composition des vagues et boutique.
+       speciaux : espèce -> [première vague, nombre en plus par vague, maximum]. */
+    vagues: {
+        pause: 2.5,                // secondes avant le premier monstre (bandeau « VAGUE n »)
+        viesDepart: 5,             // les points servent aussi à la boutique : plus de vies au départ
+        bossToutesLes: 5,
+        normaux: { base: 8, parVague: 3 },
+        speciaux: {
+            tank: [2, 0.5, 6], joggeur: [3, 0.4, 5], emeute: [4, 0.35, 4], pondeuse: [5, 0.35, 4],
+            infirmier: [6, 0.25, 3], magicalgirl: [3, 0.4, 5], boxeur: [7, 0.3, 4]
+        },
+        intervalle: { depart: 1.6, min: 0.55, parVague: 0.07 },   // secondes entre deux monstres
+        boutique: {
+            cadence: { prix: 80, hausse: 1.7, max: 5, effet: 0.9 },
+            vitesse: { prix: 60, hausse: 1.6, max: 4, effet: 1.08 },
+            pouvoir: { prix: 70, hausse: 1.7, max: 4, effet: 0.85 }
+        }
+    },
+
     /* Déblocage des personnages, dans cet ordre : chacun se débloque en
        terminant « missions » missions avec le précédent (missions.js).
        Un perso absent de la liste est disponible d'emblée. */

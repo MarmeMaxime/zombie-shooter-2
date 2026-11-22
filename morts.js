@@ -51,7 +51,8 @@ function ajouter_cadavre(z) {
         couleur: couleurs[Math.floor(Math.random() * couleurs.length)]
     }));
     // Images de marche (celles de la course pour un joggeur en plein sprint)
-    const images = z.joggeur && z.joggeur.etat === 'course' ? SPRITES_JOGGEUR.course
+    const images = TYPES_ZOMBIE[z.type].imagesMort ? TYPES_ZOMBIE[z.type].imagesMort   // corps propre à la chute (zombie attaché)
+        : z.joggeur && z.joggeur.etat === 'course' ? SPRITES_JOGGEUR.course
         : z.emeute ? images_emeute(z) : images_zombie(z);
     cadavres.push({
         style, images, etape: z.etape % images.length, x: z.x, y: z.y, taille: z.taille,

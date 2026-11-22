@@ -90,6 +90,7 @@ const Options = (() => {
         $o('btn-options').classList.toggle('muet', muet);
         $o('btn-son-actif').textContent = Son.estActif() ? T('Son : activé') : T('Son : coupé');
         $o('btn-vibrations').textContent = Son.vibrations() ? T('Vibrations : activées') : T('Vibrations : coupées');
+        $o('btn-conseils').textContent = Sauvegarde.donnees.options.conseils ? T('Conseils du sergent : activés') : T('Conseils du sergent : coupés');
         for (const quoi in curseurs) curseurs[quoi].value = Math.round(Son.volume(quoi) * 100);
     }
 
@@ -142,6 +143,12 @@ const Options = (() => {
     $o('btn-close-options').addEventListener('click', fermer);
     $o('btn-touches-defaut').addEventListener('click', () => { attente = null; Touches.par_defaut(); });
     $o('btn-son-actif').addEventListener('click', () => { Son.setActif(!Son.estActif()); maj_son(); });
+    $o('btn-conseils').addEventListener('click', () => {
+        const o = Sauvegarde.donnees.options;
+        o.conseils = !o.conseils;
+        Sauvegarde.sauver();
+        maj_son();
+    });
     $o('btn-vibrations').addEventListener('click', () => { Son.setVibrations(!Son.vibrations()); maj_son(); Son.vibrer(0.5, 120); });
     for (const [quoi, curseur] of Object.entries(curseurs)) {
         curseur.addEventListener('input', () => { Son.setVolume(quoi, curseur.value / 100); maj_son(); });

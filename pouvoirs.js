@@ -17,7 +17,9 @@ const pouvoir = {
 };
 
 const cfg_pouvoir = () => CONFIG.pouvoirs[pouvoir.id];
-const pouvoir_pret = () => pouvoir.charge >= cfg_pouvoir().kills;
+// Victimes nécessaires pour remplir la jauge (moins avec la boutique des vagues)
+const kills_requis = () => Math.max(5, Math.round(cfg_pouvoir().kills * (pouvoir.reduction || 1)));
+const pouvoir_pret = () => pouvoir.charge >= kills_requis();
 
 function reset_pouvoir(perso) {
     Object.assign(pouvoir, { id: CONFIG.personnages[perso].pouvoir, charge: 0, rafale: 0, obus: [], ondes: [], eclair: 0 });
@@ -27,8 +29,11 @@ function reset_pouvoir(perso) {
 // Appelée par toucher_zombie à chaque zombie tué (y compris par un pouvoir)
 function pouvoir_zombie_tue() {
     const avant = pouvoir_pret();
-    pouvoir.charge = Math.min(cfg_pouvoir().kills, pouvoir.charge + 1);
-    if (!avant && pouvoir_pret()) Son.effet('pouvoirPret');
+    pouvoir.charge = Math.min(kills_requis(), pouvoir.charge + 1);
+    if (!avant && pouvoir_pret()) {
+        Son.effet('pouvoirPret');
+        if (typeof Conseils !== 'undefined') Conseils.pouvoir_pret();
+    }
     maj_hud_pouvoir();
 }
 
@@ -38,8 +43,8 @@ function activer_pouvoir() {
     maj_hud_pouvoir();
     POUVOIRS[pouvoir.id](cfg_pouvoir());
     Son.vibrer(0.6, 120);
-    if (typeof Succes !== 'undefined') Succes.compter('pouvoirs');
-    if (typeof statsPerso !== 'undefined') statsPerso(etat.perso).pouvoirs++;   // missions « utiliser N fois »
+    if (typeof Succes !== 'undefined' && !etat.tuto) Succes.compter('pouvoirs');
+    if (typeof statsPerso !== 'undefined' && !etat.tuto) statsPerso(etat.perso).pouvoirs++;   // missions « utiliser N fois »
 }
 
 const centre_zombie = z => ({ x: z.x + z.taille / 2, y: z.y + z.taille / 2 });
@@ -175,12 +180,12 @@ const bouton_pouvoir = document.getElementById('btn-pouvoir');
 const texte_pouvoir = document.getElementById('pouvoir-hud');
 
 function maj_hud_pouvoir() {
-    const p = Math.min(1, pouvoir.charge / cfg_pouvoir().kills);
+    const p = Math.min(1, pouvoir.charge / kills_requis());
     bouton_pouvoir.style.setProperty('--charge', (p * 100).toFixed(0) + '%');
     bouton_pouvoir.classList.toggle('pret', p >= 1);
     texte_pouvoir.textContent = p >= 1 ? T('★ PRÊT') : `★ ${Math.floor(p * 100)}%`;   // court : la barre doit tenir entre les boutons
     texte_pouvoir.classList.toggle('pret', p >= 1);
-    bouton_pouvoir.title = `${cfg_pouvoir().nom} (${Touches.libelle('pouvoir')}) : ${pouvoir.charge}/${cfg_pouvoir().kills}`;
+    bouton_pouvoir.title = `${cfg_pouvoir().nom} (${Touches.libelle('pouvoir')}) : ${pouvoir.charge}/${kills_requis()}`;
 }
 
 bouton_pouvoir.addEventListener('pointerdown', e => { e.preventDefault(); activer_pouvoir(); });

@@ -61,6 +61,9 @@ const SUCCES = [
     { id: 'inarretable', nom: 'Inarrêtable', desc: 'Survivre 15 minutes', titre: 'Inarrêtable', recompense: 300, objectif: 900, unite: 's', valeur: () => meilleur(SV().stats.meilleurTemps) },
     { id: 'rentier', nom: 'Rentier', desc: 'Avoir 5 000 crânes en poche', titre: 'Rentier', recompense: 0, objectif: 5000, valeur: () => SV().loot.cranes },
     { id: 'pouvoir_100', nom: 'Au-delà de 9000', desc: 'Utiliser 100 pouvoirs spéciaux', titre: 'Surhumain', recompense: 300, objectif: 100, valeur: () => SV().stats.pouvoirs || 0 },
+    // Mode Vagues
+    { id: 'vague_10', nom: 'Brise-lames', desc: 'Terminer la vague 10', titre: 'Brise-lames', recompense: 200, objectif: 10, valeur: () => SV().stats.meilleureVague || 0 },
+    { id: 'vague_25', nom: 'Raz-de-marée', desc: 'Terminer la vague 25', titre: 'Digue humaine', recompense: 500, objectif: 25, valeur: () => SV().stats.meilleureVague || 0 },
     { id: 'bestiaire', nom: 'Bestiaire complet', desc: 'Tuer au moins un monstre de chaque espèce', titre: 'Zoologiste', recompense: 250, objectif: 11,
         valeur: () => ['normal', 'tank', 'magicalgirl', 'joggeur', 'emeute', 'pondeuse', 'larve', 'infirmier', 'boxeur', 'boss', 'fossoyeur'].filter(t => (SV().stats.tues[t] || 0) > 0).length }
 ];
@@ -77,7 +80,7 @@ const ORDRE_SUCCES = [
     'casseur', 'naissances', 'pas_de_soin', 'fashion', 'torero', 'recruteur', 'machine', 'chasseur_mg',
     'maintien_ordre', 'ultime', 'profanateur', 'pigeon', 'increvable', 'coeur_brise', 'marathon', 'fleau',
     'sparring', 'ko', 'exterminateur', 'elu', 'rentier', 'inarretable', 'naturaliste', 'bestiaire', 'perpetuite',
-    'pouvoir_100', 'baleine', 'veteran_soldat', 'veteran_brute', 'veteran_mira', 'veteran_lassie', 'legende'
+    'pouvoir_100', 'vague_10', 'baleine', 'vague_25', 'veteran_soldat', 'veteran_brute', 'veteran_mira', 'veteran_lassie', 'legende'
 ];
 SUCCES.sort((a, b) => {
     const rang = s => { const i = ORDRE_SUCCES.indexOf(s.id); return i < 0 ? ORDRE_SUCCES.length : i; };

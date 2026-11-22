@@ -4,7 +4,6 @@
 const canvas = document.getElementById('jeu');
 const ctx = canvas.getContext('2d');
 
-const img_fond = chargerImage('./assets/FOND.jpg');
 
 /* ---------- Monde de jeu et plein écran ----------
    Le canvas couvre toute la page et est dessiné à la résolution réelle de
@@ -39,19 +38,20 @@ maj_echelle_ui();
 window.addEventListener('resize', () => { maj_echelle_ui(); redimensionner(); });
 
 function dessiner() {
+    // Décor en pixel art : la zone de combat (combat_decor.js), ou le camp d'entraînement pendant le tutoriel
+    const fond = etat.tuto && typeof decor_entrainement === 'function' ? decor_entrainement() : decor_combat();
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     if (MONDE.decalageY > 0) {
         // Écran plus haut que le monde : le décor remplit aussi les bandes, assombri
-        ctx.imageSmoothingEnabled = true;
-        ctx.drawImage(img_fond, 0, 0, canvas.width, canvas.height);
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(fond, 0, 0, canvas.width, canvas.height);
         ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
     ctx.setTransform(MONDE.echelle, 0, 0, MONDE.echelle, 0, MONDE.decalageY);
 
-    ctx.imageSmoothingEnabled = true;     // le décor (photo) est lissé
-    ctx.drawImage(img_fond, 0, 0, MONDE.largeur, MONDE.hauteur);
-    ctx.imageSmoothingEnabled = false;    // le pixel art reste net, sans flou
+    ctx.imageSmoothingEnabled = false;    // tout est en pixel art : net, sans flou
+    ctx.drawImage(fond, 0, 0, MONDE.largeur, MONDE.hauteur);
     draw_zombies(ctx);
     draw_balles(ctx);
     draw_pouvoir(ctx);
@@ -88,15 +88,16 @@ const partie_en_cours = () => etat.enCours && !etat.pause;
 /* ---------- Pause ---------- */
 const ecran_pause = document.getElementById('pause-overlay');
 
-function mettre_en_pause(valeur) {
+// ecran = false : pause sans l'écran « PAUSE » (quand le sergent parle)
+function mettre_en_pause(valeur, ecran = true) {
     if (!etat.enCours || etat.pause === valeur) return;
     etat.pause = valeur;
-    ecran_pause.classList.toggle('hidden', !valeur);
+    ecran_pause.classList.toggle('hidden', !(valeur && ecran));
     relacher_commandes();
     if (valeur) {
         if (idAnimation !== null) cancelAnimationFrame(idAnimation);
         idAnimation = null;
-        Son.suspendreMusique();
+        if (ecran) Son.suspendreMusique();   // quand le Sergent parle, la musique continue
     } else {
         Son.reprendreMusique();
         dernierInstant = performance.now();   // pas de « saut » de temps à la reprise
@@ -105,6 +106,8 @@ function mettre_en_pause(valeur) {
 }
 
 document.addEventListener('keydown', e => {
+    if (typeof Instructeur !== 'undefined' && Instructeur.ouvert()) return;   // le sergent attend une réponse
+    if (typeof Vagues !== 'undefined' && Vagues.enBoutique()) return;        // la boutique est ouverte
     if (Touches.action(e.code) === 'pause' && etat.enCours && !e.repeat) {
         e.preventDefault();
         mettre_en_pause(!etat.pause);
@@ -126,7 +129,9 @@ function maj_hud() {
     ui.vies.textContent = etat.vies;
     ui.temps.textContent = Math.floor(etat.temps);
     ui.prixVie.textContent = etat.prixVie;
-    ui.score.classList.toggle('score-ready', etat.score >= etat.prixVie);
+    const achatPossible = etat.variante !== 'vagues' && etat.score >= etat.prixVie;
+    ui.score.classList.toggle('score-ready', achatPossible);
+    if (achatPossible && typeof Conseils !== 'undefined') Conseils.score_vert();
 }
 
 function ajouter_score(points) {
@@ -136,7 +141,8 @@ function ajouter_score(points) {
 }
 
 function acheter_vie() {
-    if (!etat.enCours || etat.score < etat.prixVie) return;
+    // Mode Vagues : les vies s'achètent uniquement à la boutique
+    if (!etat.enCours || etat.variante === 'vagues' || etat.score < etat.prixVie) return;
     etat.score -= etat.prixVie;
     etat.vies++;
     etat.prixVie = Math.min(CONFIG.prixVieMax, Math.floor(etat.prixVie * CONFIG.multiplicateurPrixVie));
@@ -145,6 +151,11 @@ function acheter_vie() {
 
 function perdre_vie() {
     if (!etat.enCours) return;
+    if (etat.tuto) {   // entraînement : on montre le coup, sans retirer de vie
+        Son.effet('degat');
+        joueur_touche();
+        return;
+    }
     etat.vies--;
     maj_hud();
     Son.effet('degat');
@@ -166,7 +177,7 @@ function boucle(instant) {
     etat.temps += dt;
     if (Math.floor(etat.temps) !== secondesAvant) {
         ui.temps.textContent = Math.floor(etat.temps);
-        Succes.seconde();
+        if (!etat.tuto) Succes.seconde();   // l'entraînement ne compte pas
     }
 
     // Mise à jour
@@ -175,6 +186,7 @@ function boucle(instant) {
     update_balles(dt, MONDE.largeur, MONDE.hauteur);
     update_zombies(dt, MONDE.largeur, MONDE.hauteur, etat.temps);
     Missions.fin_image();   // zombies tués « d'un seul coup » pendant cette image
+    if (typeof Tutoriel !== 'undefined') Tutoriel.maj(dt);
 
     dessiner();
 
@@ -188,7 +200,10 @@ function arreter_boucle() {
 }
 
 /* ---------- Début / fin de partie ---------- */
-function init_game(mode, perso) {
+// tuto = true : entraînement (tutoriel.js), connu dès le départ pour que la toute
+// première image montre déjà le camp et que la marche démarre directement
+// variante : 'classique' (infini) ou 'vagues' (vagues.js)
+function init_game(mode, perso, tuto = false, variante = 'classique') {
     arreter_boucle(); // garantit qu'une seule boucle tourne à la fois
 
     Object.assign(etat, {
@@ -198,6 +213,9 @@ function init_game(mode, perso) {
         perso,
         score: 0,
         gagnes: 0,
+        tuto,                // entraînement (tutoriel.js)
+        variante: tuto ? 'classique' : variante,
+        vague: 0,
         vies: CONFIG.viesDepart,
         temps: 0,
         prixVie: CONFIG.prixVieDepart,
@@ -222,8 +240,9 @@ function init_game(mode, perso) {
     ui.gameOver.classList.add('hidden');
     ecran_pause.classList.add('hidden');
     Son.reprendreMusique();
-    Son.jouerAmbiance(mode);
+    Son.jouerAmbiance(tuto ? 'entrainement' : mode);
 
+    if (typeof Vagues !== 'undefined') { Vagues.arreter(); if (etat.variante === 'vagues') Vagues.demarrer(); }
     redimensionner();   // le canvas vient de s'afficher : on prend la taille de l'écran
     dernierInstant = performance.now();
     idAnimation = requestAnimationFrame(boucle);
@@ -231,6 +250,9 @@ function init_game(mode, perso) {
 
 function quitter_partie() {
     arreter_boucle();
+    if (typeof Vagues !== 'undefined') Vagues.arreter();
+    if (typeof Tutoriel !== 'undefined') Tutoriel.arreter();
+    if (typeof Instructeur !== 'undefined') Instructeur.cacher();
     relacher_commandes();
     Son.arreterMusique();
 }
@@ -247,6 +269,7 @@ function game_over() {
 
     remplir_bilan();
     ui.gameOver.classList.remove('hidden');
+    ouvertureFin = performance.now();
 }
 
 /* ---------- Bilan de la partie (écran de fin) ---------- */
@@ -258,6 +281,7 @@ function remplir_bilan() {
     const records = [];
     if (etat.recordAvant.temps > 0 && Math.floor(etat.temps) > etat.recordAvant.temps) records.push(T('temps (avant : {n} s)', { n: etat.recordAvant.temps }));
     if (etat.recordAvant.score > 0 && etat.gagnes > etat.recordAvant.score) records.push(T('score (avant : {n})', { n: etat.recordAvant.score }));
+    $b('bilan-vague').textContent = etat.variante === 'vagues' ? T('🌊 Vague atteinte : {n}', { n: etat.vague }) : '';
     $b('bilan-records').textContent = records.length ? T('🏅 Nouveau record : {liste} !', { liste: records.join(T(' et ')) }) : '';
 
     // Victimes par espèce, avec la vignette du monstre (boss en premier, puis les plus nombreux)
@@ -283,7 +307,16 @@ function remplir_bilan() {
     $b('bilan-succes').textContent = liste(T('🏆 Succès débloqués'), etat.succes);
 }
 
-document.getElementById('btn-retry').addEventListener('click', () => init_game(etat.mode, etat.perso));
+document.getElementById('btn-retry').addEventListener('click', () => init_game(etat.mode, etat.perso, false, etat.variante));
+
+// Raccourcis de l'écran de fin : Entrée pour réessayer, Échap pour le menu. Une courte
+// attente évite qu'une touche encore enfoncée au moment de mourir ne relance tout de suite.
+let ouvertureFin = 0;
+document.addEventListener('keydown', e => {
+    if (ui.gameOver.classList.contains('hidden') || e.repeat || performance.now() - ouvertureFin < 600) return;
+    if (e.code === 'Enter' || e.code === 'NumpadEnter') { e.preventDefault(); document.getElementById('btn-retry').click(); }
+    else if (e.code === 'Escape') { e.preventDefault(); document.getElementById('btn-return-menu').click(); }
+});
 document.getElementById('btn-return-menu').addEventListener('click', () => {
     quitter_partie();
     retour_menu_principal();

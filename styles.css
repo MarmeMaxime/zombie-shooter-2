@@ -37,10 +37,10 @@ body {
 #main-menu { gap: calc(20px * var(--ui)); }
 
 /* Gestion des couches (Z-Index) */
-#main-menu, #game-view, #tutorial-overlay, #perso-overlay, #loot-overlay, #vestiaire-overlay, #save-overlay, #succes-overlay, #missions-overlay, #bestiaire-overlay, #options-overlay, #pause-overlay, #game-over-overlay {
+#main-menu, #game-view, #tutorial-overlay, #perso-overlay, #loot-overlay, #vestiaire-overlay, #save-overlay, #succes-overlay, #missions-overlay, #bestiaire-overlay, #options-overlay, #tuto-proposition, #pause-overlay, #game-over-overlay {
   position: absolute; top: 0; left: 0; width: 100%; height: 100%;
 }
-#main-menu, #tutorial-overlay, #perso-overlay, #loot-overlay, #vestiaire-overlay, #save-overlay, #succes-overlay, #missions-overlay, #bestiaire-overlay, #options-overlay, #pause-overlay, #game-over-overlay {
+#main-menu, #tutorial-overlay, #perso-overlay, #loot-overlay, #vestiaire-overlay, #save-overlay, #succes-overlay, #missions-overlay, #bestiaire-overlay, #options-overlay, #tuto-proposition, #pause-overlay, #game-over-overlay {
   display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10; 
 }
 #game-view { display: block; z-index: 1; }
@@ -111,6 +111,55 @@ button.active { background: #ff3333; border-color: #ff3333; }
 .bouton-langue { font-size: 0.8rem; padding: 6px; }
 .bouton-langue.active { background: #ff3333; border-color: #ff3333; color: #fff; }
 #btn-close-options { width: 100%; }
+#btn-conseils { font-size: 0.8rem; padding: 4px 8px; }
+
+/* Le Sergent : quand il parle, la partie est figée et son message est au centre */
+#instructeur {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 30; zoom: var(--ui);
+  display: flex; align-items: flex-start; gap: 10px; width: min(560px, 90vw);
+  padding: 10px 12px 10px 10px; background: rgba(15, 15, 15, 0.96); border: 2px solid #b0985c; border-radius: 6px;
+  box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.45);   /* assombrit le terrain derrière */
+}
+#instructeur.hidden { display: none; }
+#instructeur-visage { width: 80px; height: 80px; flex: none; image-rendering: pixelated; background: #3a2e1e; border: 1px solid #b0985c; }
+.instructeur-bulle strong { color: #e8c24a; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; }
+#instructeur-texte { margin: 4px 0 8px; color: #fff; font-size: 0.9rem; line-height: 1.4; }
+#instructeur-boutons { display: flex; gap: 6px; flex-wrap: wrap; }
+#instructeur-boutons button { font-size: 0.8rem; padding: 5px 12px; }
+/* « Passer l'entraînement » : toujours dans le coin droit pendant l'entraînement */
+#btn-passer-tuto { position: absolute; top: 66px; right: 20px; z-index: 31; zoom: var(--ui); font-size: 0.75rem; padding: 4px 10px; background: rgba(0, 0, 0, 0.6); }
+#btn-passer-tuto.hidden { display: none; }
+/* Écran « ? » : défile s'il est trop haut, pour toujours atteindre « À L'ATTAQUE ! » */
+#tutorial-overlay .mission-card { max-height: 94vh; overflow-y: auto; }
+#tuto-proposition { background: rgba(0, 0, 0, 0.8); z-index: 220; }
+
+/* Mode Vagues : choix au lancement, bandeau « VAGUE n », boutique */
+#choix-variante, #boutique-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; background: rgba(0, 0, 0, 0.8); z-index: 220; }
+#choix-variante.hidden, #boutique-overlay.hidden { display: none; }
+.choix-variantes { display: flex; gap: 10px; margin-bottom: 12px; }
+.choix-variantes button { flex: 1; display: flex; flex-direction: column; gap: 6px; padding: 12px; text-align: left; }
+.choix-variantes strong { font-size: 1rem; color: #fff; }
+.choix-variantes small { font-size: 0.72rem; color: #bbb; line-height: 1.35; }
+#btn-close-variante, #btn-vague-suivante { width: 100%; }
+#btn-vague-suivante { background: #ff3333; color: #fff; border: none; font-weight: bold; padding: 10px; }
+#bandeau-vague { position: absolute; top: 38%; left: 0; width: 100%; text-align: center; z-index: 7; margin: 0; pointer-events: none; zoom: var(--ui);
+  color: #ffd23c; font-size: 2.4rem; font-weight: bold; letter-spacing: 6px; text-shadow: 0 0 12px #000, 3px 3px 0 #8a0000; }
+#bandeau-vague.hidden { display: none; }
+#bandeau-vague.anime { animation: bandeau-vague 2.4s ease-out forwards; }
+@keyframes bandeau-vague { 0% { opacity: 0; transform: scale(1.6); } 15% { opacity: 1; transform: scale(1); } 75% { opacity: 1; } 100% { opacity: 0; } }
+.boutique-solde { color: #ffd23c; font-weight: bold; margin: 0 0 10px; }
+#boutique-liste { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.article { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 10px; text-align: left; }
+.article-texte { display: flex; flex-direction: column; gap: 3px; }
+.article-texte strong { color: #fff; font-size: 0.85rem; }
+.article-texte small { color: #aaa; font-size: 0.7rem; }
+.article-prix { color: #ffd23c; font-weight: bold; white-space: nowrap; }
+.article.indisponible { opacity: 0.45; cursor: not-allowed; }
+#bilan-vague { color: #8fc0ff; font-weight: bold; margin-top: 6px; font-size: 0.9rem; }
+#bilan-vague:empty { display: none; }
+#hud-vague.hidden { display: none; }
+#proposition-visage { width: 120px; height: 120px; image-rendering: pixelated; background: #3a2e1e; border: 2px solid #b0985c; margin-bottom: 8px; }
+#btn-entrainement { width: 100%; margin-bottom: 10px; border-color: #b0985c; color: #e8c24a; }
 
 /* =========================================================================
    5. HUD (IN-GAME)
@@ -137,7 +186,7 @@ span#score.score-ready {
 /* =========================================================================
    6. MODALES (TUTO & GAME OVER)
    ========================================================================= */
-#tutorial-overlay, #perso-overlay, #loot-overlay, #vestiaire-overlay, #save-overlay, #succes-overlay, #missions-overlay, #bestiaire-overlay, #options-overlay, #pause-overlay, #game-over-overlay { 
+#tutorial-overlay, #perso-overlay, #loot-overlay, #vestiaire-overlay, #save-overlay, #succes-overlay, #missions-overlay, #bestiaire-overlay, #options-overlay, #tuto-proposition, #pause-overlay, #game-over-overlay { 
   background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(5px); z-index: 100; 
 }
 #game-over-overlay { background: rgba(50, 0, 0, 0.9); z-index: 200; }
@@ -620,3 +669,25 @@ span#score.score-ready {
 .mission-barre { display: block; height: 4px; margin-top: 3px; background: #333; border-radius: 2px; overflow: hidden; }
 .mission-barre span { display: block; height: 100%; background: linear-gradient(90deg, #3a8dff, #6fd0ff); }
 .mission-ligne.ok .mission-barre span { background: #3cc83c; }
+
+/* Écran de fin : deux colonnes (résumé à gauche, bilan à droite), boutons
+   côte à côte. Tient dans les 400 px de haut de l'interface, quel que soit
+   le format de l'écran ; si jamais ça déborde, la carte défile. */
+#game-over-overlay { justify-content: safe center; overflow-y: auto; }
+.mission-card.game-over {
+  max-width: 740px; width: 94%; padding: 12px 20px; margin: 6px 0;
+  max-height: 384px; overflow-y: auto;
+  display: grid; grid-template-columns: 1fr 1fr; column-gap: 18px;
+  grid-template-areas: "titre titre" "texte bilan" "stats bilan" "boutons boutons";
+  grid-template-rows: auto auto 1fr auto;
+}
+.mission-card.game-over h2 { grid-area: titre; font-size: 1.3rem; margin-bottom: 10px; padding-bottom: 6px; }
+.mission-card.game-over .game-over-text { grid-area: texte; font-size: 0.95rem; line-height: 1.35; margin-bottom: 10px; }
+.mission-card.game-over .stats-box { grid-area: stats; padding: 10px; margin: 0; align-self: start; }
+.mission-card.game-over .stat-time { font-size: 1.2rem; }
+.mission-card.game-over .bilan { grid-area: bilan; margin: 0; max-height: 230px; }
+.mission-card.game-over .game-over-buttons { grid-area: boutons; flex-direction: row; gap: 12px; margin-top: 12px; }
+.mission-card.game-over .game-over-buttons button { flex: 1; width: auto; }
+
+/* Touche du raccourci, en petit dans les boutons de l'écran de fin */
+.raccourci { font-size: 0.65em; opacity: 0.7; font-weight: normal; text-transform: none; margin-left: 4px; }

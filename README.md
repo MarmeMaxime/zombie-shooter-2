@@ -1,8 +1,8 @@
-# Zombie Shooter 2 — version 1.1
+# Zombie Shooter 2 — version 1.2
 
 Jeu de tir en pixel art dans le navigateur : les zombies arrivent par la droite,
-tu les retiens le plus longtemps possible. Deux modes (Normal et Hardcore),
-jouables à l'infini, sur PC comme sur téléphone.
+tu les retiens le plus longtemps possible. Deux difficultés (Normal et Hardcore),
+deux façons de jouer (Classique et Vagues), sur PC, téléphone ou à la manette.
 
 ## Jouer
 
@@ -10,18 +10,34 @@ Ouvre `index.html` dans un navigateur récent (aucune installation, aucun serveu
 La progression est enregistrée dans le navigateur ; elle peut être téléchargée et
 réimportée depuis le menu 💾.
 
+Au lancement d'un combat, on choisit le mode :
+
+- **♾ Classique** : les zombies arrivent sans fin, de plus en plus nombreux. Les
+  points achètent des vies en cours de partie (touche V).
+- **🌊 Vagues** : une vague à la fois, une boutique entre chaque vague (vie,
+  cadence de tir, vitesse, recharge du pouvoir), un boss toutes les 5 vagues.
+
+À la toute première partie, le Sergent propose un **entraînement** (on peut le
+refaire à tout moment depuis l'aide-mémoire « ? »).
+
 | Action | Clavier | Tactile | Manette |
 |---|---|---|---|
 | Monter / descendre | ↑ ↓, Z / W, S | joystick | stick gauche, croix |
 | Tirer | Espace | TIR (maintenu : tir auto) | A ou gâchette droite (maintenu : tir auto) |
 | Pouvoir spécial | E ou Maj | ★ | X, LB ou RB |
-| Acheter une vie | V | V | Y |
+| Acheter une vie (Classique) | V | V | Y |
 | Pause | Échap ou P | ⏸ | Start |
+| Écran de fin : réessayer / menu | Entrée / Échap | boutons | A / B |
 
 Dans les menus, à la manette : A pour jouer ou valider, B pour revenir.
-Vibrations (téléphone Android et manette) : réglables dans le panneau 🔊.
+Les touches du clavier se changent dans les **Options ⚙️**, qui règlent aussi le
+son (musique, bruitages), les vibrations (téléphone Android et manette) et la
+langue : français, anglais, espagnol… et zombie.
 
 ## Personnages
+
+On commence avec le Soldat ; chaque personnage suivant se débloque en réussissant
+3 missions avec le précédent.
 
 | Perso | Arme | Pouvoir spécial |
 |---|---|---|
@@ -35,17 +51,23 @@ Vibrations (téléphone Android et manette) : réglables dans le panneau 🔊.
 Zombie, Tank, Magical girl (hardcore, se téléporte), Joggeur (charge quand il est
 aligné), Anti-émeute (3 PV, un seul par tir, arrête la foudre), Pondeuse (éclate en
 larves), Infirmier (soigne les zombies autour de lui), Boxeur (hardcore, esquive un
-tir puis s'essouffle) et le boss, le Mastodonte. Un ennemi spécial prend la place
-d'un zombie normal, et leur nombre à l'écran est plafonné.
+tir puis s'essouffle), et deux boss : le Mastodonte et le Fossoyeur. Un ennemi
+spécial prend la place d'un zombie normal, et leur nombre à l'écran est plafonné.
+Chaque monstre rencontré rejoint le **bestiaire 📖**, avec sa fiche.
 
 ## Contenu
 
-- Caisses de butin (parodie assumée, monnaie du jeu uniquement) : 20 tenues, skins
-  universels, déchets.
-- 10 missions par personnage, 31 succès avec titres.
+- Caisses de butin (parodie assumée, monnaie du jeu uniquement) : 20 tenues,
+  3 skins universels, déchets.
+- 15 missions par personnage, 48 succès avec titres.
+- Bilan à la fin de chaque partie : victimes par espèce, records, missions et
+  succès obtenus.
+- Musiques du menu, du mode normal et de l'entraînement générées par le jeu
+  (Web Audio) ; le mode hardcore garde sa playlist.
 - Sauvegarde versionnée avec historique et export / import.
 
-## Outils
+## Dossiers
 
-Le dossier `outils/` contient les scripts de génération des sprites (PowerShell)
-et le simulateur d'équilibrage (`node outils/simulation.js`). Voir `outils/README.md`.
+- `outils/` : scripts de génération des sprites (PowerShell) et simulateur
+  d'équilibrage (`node outils/simulation.js`). Voir `outils/README.md`.
+- `ancien/` : fichiers que le jeu n'utilise plus, gardés pour mémoire.

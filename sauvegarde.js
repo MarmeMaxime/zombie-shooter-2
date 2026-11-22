@@ -25,12 +25,12 @@ const Sauvegarde = (() => {
         perso: 'soldat',
         loot: { cranes: 0, possedes: [], dechets: {}, equipes: {}, ouvertes: 0, depuisLegendaire: 0 },
         // Ajoutés après coup : les anciennes sauvegardes les reçoivent vides, sans migration
-        stats: { tues: {}, parties: 0, bossTues: 0, persosJoues: [], meilleurTemps: {}, meilleurScore: {}, mythiques: 0, persos: {}, esquives: 0, sprintsStoppes: 0, bouclierBrises: 0, pouvoirs: 0, soins: 0, esquivesBoxeur: 0 },
+        stats: { tues: {}, parties: 0, bossTues: 0, persosJoues: [], meilleurTemps: {}, meilleurScore: {}, mythiques: 0, persos: {}, esquives: 0, sprintsStoppes: 0, bouclierBrises: 0, pouvoirs: 0, soins: 0, esquivesBoxeur: 0, meilleureVague: 0 },
         succes: [],
         missions: [],
         persosDebloques: ['soldat'],
         son: { actif: true, musique: 0.8, effets: 0.8, vibrations: true },   // réglages du son (activé de base)
-        options: { langue: 'fr', touches: {} },                               // langue, touches choisies (options.js)
+        options: { langue: 'fr', touches: {}, conseils: true, tutoPropose: false, conseilsVus: [] },                               // langue, touches choisies (options.js)
         bestiaire: [],
         titre: ''
     });
