@@ -71,6 +71,9 @@ const SUCCES = [
         valeur: () => campagne_reussies(1, ['hardcore']) },
     { id: 'nuit_blanche', nom: 'Nuit blanche', desc: 'Réussir « Couvre-feu » sans perdre une vie', titre: 'Insomniaque', recompense: 250, objectif: 1,
         valeur: () => (SV().campagne.parfaites && SV().campagne.parfaites.c1m2 ? 1 : 0) },
+    // Succès secret : caché dans la liste tant qu'on ne l'a pas trouvé
+    { id: 'tir_ami', nom: 'Tir ami', desc: 'Trouver la fin secrète de « La Débandade »', titre: 'Gâchette facile', recompense: 150, objectif: 1, secret: true,
+        valeur: () => (SV().campagne.secrets && SV().campagne.secrets.tirAmi ? 1 : 0) },
     // Mode Vagues
     { id: 'vague_10', nom: 'Brise-lames', desc: 'Terminer la vague 10', titre: 'Brise-lames', recompense: 200, objectif: 10, valeur: () => SV().stats.meilleureVague || 0 },
     { id: 'vague_25', nom: 'Raz-de-marée', desc: 'Terminer la vague 25', titre: 'Digue humaine', recompense: 500, objectif: 25, valeur: () => SV().stats.meilleureVague || 0 },
@@ -90,7 +93,7 @@ const ORDRE_SUCCES = [
     'casseur', 'naissances', 'pas_de_soin', 'fashion', 'torero', 'recruteur', 'machine', 'chasseur_mg',
     'maintien_ordre', 'ultime', 'profanateur', 'pigeon', 'increvable', 'coeur_brise', 'marathon', 'fleau',
     'sparring', 'ko', 'exterminateur', 'elu', 'rentier', 'inarretable', 'naturaliste', 'bestiaire', 'perpetuite',
-    'pouvoir_100', 'nuit_blanche', 'vague_10', 'baleine', 'vague_25', 'campagne_c1_hc', 'veteran_soldat', 'veteran_brute', 'veteran_mira', 'veteran_lassie', 'legende'
+    'pouvoir_100', 'nuit_blanche', 'vague_10', 'baleine', 'vague_25', 'campagne_c1_hc', 'veteran_soldat', 'veteran_brute', 'veteran_mira', 'veteran_lassie', 'legende', 'tir_ami'
 ];
 SUCCES.sort((a, b) => {
     const rang = s => { const i = ORDRE_SUCCES.indexOf(s.id); return i < 0 ? ORDRE_SUCCES.length : i; };
@@ -216,6 +219,8 @@ const Succes = (() => {
             const desc = document.createElement('small');
             const v = Math.min(s.valeur(), s.objectif);
             desc.textContent = `${s.desc} · ${ok ? T('fait') : `${v}${s.unite || ''} / ${s.objectif}${s.unite || ''}`} · +${s.recompense} 💀 · ${T('titre « {titre} »', { titre: s.titre })}`;
+            // Succès secret pas encore trouvé : on ne dévoile rien
+            if (s.secret && !ok) { nom.textContent = '???'; desc.textContent = T('Succès secret. Certains disent qu{q}on le trouve en désobéissant.', { q: "'" }); }
             texte.append(nom, desc);
 
             ligne.append(icone, texte);

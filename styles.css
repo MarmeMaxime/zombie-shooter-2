@@ -743,3 +743,6 @@ span#score.score-ready {
 }
 #btn-retour-campagne { background: #2a2a2a; color: #e8c24a; border: 2px solid #e8c24a; }
 #bandeau-vague.bandeau-mission { white-space: pre-line; line-height: 1.25; }
+/* Fin secrète d'une mission */
+.mission-card.game-over.secrete { border-top-color: #b04aff; }
+.mission-card.game-over.secrete h2 { color: #d08aff; border-color: #d08aff; }

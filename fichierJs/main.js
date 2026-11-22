@@ -226,6 +226,7 @@ function init_game(mode, perso, tuto = false, variante = 'classique', mission = 
         mission: variante === 'campagne' ? mission : null,
         viesPerdues: 0,
         finChapitre: false,     // dernière mission d'un chapitre réussie : épilogue (campagne.js)
+        finSecrete: false,      // fin secrète d'une mission (campagne.js)
         victoire: false,
         vague: 0,
         vies: CONFIG.viesDepart,
@@ -294,7 +295,7 @@ function habiller_fin() {
     FIN_ORIGINE ??= { titre: carte.querySelector('h2').innerHTML, texte: carte.querySelector('.game-over-text').innerHTML };
     carte.querySelector('h2').innerHTML = FIN_ORIGINE.titre;
     carte.querySelector('.game-over-text').innerHTML = FIN_ORIGINE.texte;
-    carte.classList.remove('victoire');
+    carte.classList.remove('victoire', 'secrete');
     document.getElementById('btn-mission-suivante').classList.add('hidden');
     document.getElementById('btn-retour-campagne').classList.add('hidden');
     document.getElementById('btn-retry').firstChild.textContent = T('RÉESSAYER') + ' ';

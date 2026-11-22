@@ -207,13 +207,16 @@ const Campagne = (() => {
        la horde, et cogne les derniers zombies au passage. Quand il arrive près du
        Soldat (ou qu'il n'y a plus personne devant lui), les retrouvailles. */
     function lancer_finale() {
-        finale = { x: MONDE.largeur + 30, y: Math.max(CONFIG.margeHaut, Math.min(MONDE.hauteur - CONFIG.margeBas, joueur.y)), image: 0, chrono: 0, coup: 0, parle: false };
+        finale = { x: MONDE.largeur + 30, y: Math.max(CONFIG.margeHaut, Math.min(MONDE.hauteur - CONFIG.margeBas, joueur.y)), image: 0, chrono: 0, coup: 0, parle: false,
+            averti: false, touches: 0, cri: '', criT: 0, secoue: 0, mort: false };   // tir ami (fin secrète)
         $c('hud-mission').classList.add('hidden');
         bandeau(T('QUELQUE CHOSE ARRIVE…'));
         Son.effet('grognementTank');
     }
     function maj_finale(dt) {
         const f = finale;
+        f.criT = Math.max(0, f.criT - dt);
+        f.secoue = Math.max(0, f.secoue - dt);
         if (f.parle) return;
         f.x -= 70 * MONDE.echelleX * dt;
         f.chrono += dt;
@@ -230,19 +233,86 @@ const Campagne = (() => {
         if (!arrive) return;
         f.parle = true;
         zombies.length = 0;
-        if (typeof Instructeur !== 'undefined' && document.getElementById('instructeur')) dire_epilogue(m.brutus, 0, () => terminer(true));
+        // S'il a pris des balles (après l'avertissement), il le fait remarquer
+        let lignes = m.brutus;
+        if (f.averti && m.tirAmi) {
+            const n = f.touches + 1;
+            const touche = m.tirAmi.touche.map(l => ({ ...l, vars: { n } }));
+            lignes = [...lignes.slice(0, 5), ...touche, ...lignes.slice(5)];   // après « Ne m'appelle pas comme ça. »
+        }
+        if (typeof Instructeur !== 'undefined' && document.getElementById('instructeur')) dire_epilogue(lignes, 0, () => terminer(true));
         else terminer(true);
+    }
+
+    /* Tir ami : une balle du Soldat touche Brutus pendant qu'il arrive. La
+       première déclenche l'avertissement (le jeu se fige, on lâche forcément la
+       détente) ; ensuite, 5 balles de plus et c'est la fin secrète. */
+    function balle_sur_brutus(r) {
+        const f = finale;
+        if (!f || f.parle || f.mort || !m || !m.tirAmi) return false;
+        const touche = r.x < f.x + 48 && r.x + r.largeur > f.x + 16 && r.y < f.y + 60 && r.y + r.hauteur > f.y + 8;
+        if (!touche) return false;
+        f.secoue = 0.15;
+        Son.effet('degat');
+        if (!f.averti) {
+            f.averti = true;
+            if (typeof Instructeur !== 'undefined' && document.getElementById('instructeur')) dire_epilogue(m.tirAmi.avertissement, 0, () => {});
+            return true;
+        }
+        f.touches++;
+        f.cri = m.tirAmi.cris[Math.min(f.touches, m.tirAmi.cris.length) - 1];
+        f.criT = 1.4;
+        if (f.touches >= 5) fin_secrete();
+        return true;
+    }
+    function fin_secrete() {
+        const f = finale;
+        f.mort = true;
+        f.parle = true;
+        f.cri = '';
+        zombies.length = 0;
+        Son.effet('mort');
+        secouer_ecran(3);
+        const conclure = () => {
+            fini = true;
+            etat.victoire = false;
+            etat.finSecrete = true;
+            S().secrets = { ...(S().secrets || {}), tirAmi: true };
+            Sauvegarde.sauver();
+            if (typeof Succes !== 'undefined') Succes.verifier();   // succès secret
+            game_over();
+        };
+        if (typeof Instructeur !== 'undefined' && document.getElementById('instructeur')) setTimeout(() => dire_epilogue(m.tirAmi.fin, 0, conclure), 900);
+        else conclure();
     }
     // Brutus, tourné vers le Soldat (le dessin est retourné), qui marche ou qui cogne
     function dessiner_brutus(ctx) {
         if (!finale) return;
         const sprites = Loot.sprites('brute');
         const img = finale.coup > 0 ? sprites.tir : finale.parle ? sprites.arret : sprites.marche[finale.image];
+        const sx = finale.secoue > 0 ? Math.round((Math.random() - 0.5) * 4) : 0;
         ctx.save();
-        ctx.translate(Math.round(finale.x) + 64, Math.round(finale.y));
+        ctx.translate(Math.round(finale.x) + 64 + sx, Math.round(finale.y));
         ctx.scale(-1, 1);
+        if (finale.mort) { ctx.translate(32, 64); ctx.rotate(-Math.PI / 2); ctx.translate(-32, -64); }   // il tombe en arrière
         ctx.drawImage(img, 0, 0, 64, 64);
         ctx.restore();
+        if (finale.criT > 0 && finale.cri) {
+            // Le cri au-dessus de sa tête, écrit à l'endroit même quand l'écran est en miroir
+            const e = MONDE.echelle, cx = (finale.x + 32) * e;
+            ctx.save();
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.font = 'bold ' + Math.round(11 * e) + 'px monospace';
+            ctx.textAlign = 'center';
+            ctx.lineWidth = Math.max(2, 3 * e);
+            ctx.strokeStyle = '#000';
+            ctx.fillStyle = '#fff';
+            const demi = ctx.measureText(T(finale.cri)).width / 2 + 4;   // le cri reste dans l'écran
+            const x = Math.max(demi, Math.min(ctx.canvas.width - demi, m && m.miroir ? ctx.canvas.width - cx : cx)), y = MONDE.decalageY + (finale.y - 6) * e;
+            ctx.strokeText(T(finale.cri), x, y);
+            ctx.fillText(T(finale.cri), x, y);
+            ctx.restore();
+        }
     }
 
     // Fin de mission : les zombies restants s'enfuient (victoire), le Sergent fait le point
@@ -269,7 +339,7 @@ const Campagne = (() => {
     function dire_epilogue(lignes, i, ensuite) {
         const l = lignes[i];
         if (!l) return ensuite();
-        Instructeur.parler(T(l.texte), T(l.bouton || 'Suite ▶'), () => dire_epilogue(lignes, i + 1, ensuite), l.qui);
+        Instructeur.parler(T(l.texte, l.vars), T(l.bouton || 'Suite ▶'), () => dire_epilogue(lignes, i + 1, ensuite), l.qui);
     }
     const chapitre_fini = n => Boolean(S().chapitres && S().chapitres[n]);
     function derniere_du_chapitre(mi) {
@@ -350,6 +420,11 @@ const Campagne = (() => {
                     ? T('Elle est entrée dans le camp. Elle te cherche toujours. Le Sergent s\'est caché dans la jeep.')
                     : T('Le camp est tombé. Le labo avec. Le Sergent va être de très mauvaise humeur.');
         carte.classList.toggle('victoire', etat.victoire);
+        carte.classList.toggle('secrete', Boolean(etat.finSecrete));
+        if (etat.finSecrete) {
+            carte.querySelector('h2').textContent = T('FIN SECRÈTE : TIR AMI');
+            carte.querySelector('.game-over-text').textContent = T('Ça ne compte pas : Brutus va bien. Enfin, il ira bien.');
+        }
         $c('btn-retry').firstChild.textContent = etat.victoire ? T('REJOUER') + ' ' : T('RÉESSAYER') + ' ';
         // Victoire : on enchaîne directement sur la mission suivante (avec son intro la première fois)
         const suivante = MISSIONS_CAMPAGNE[MISSIONS_CAMPAGNE.findIndex(x => x.id === id) + 1];
@@ -596,5 +671,5 @@ const Campagne = (() => {
         });
     }
 
-    return { demarrer, arreter, maj, tue, fin, lancer, ouvrir, etape, dessiner_nuit, dessiner_sol, miroir: () => Boolean(m && m.miroir) };
+    return { demarrer, arreter, maj, tue, fin, lancer, ouvrir, etape, dessiner_nuit, dessiner_sol, balle_sur_brutus, miroir: () => Boolean(m && m.miroir) };
 })();

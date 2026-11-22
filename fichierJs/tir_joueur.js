@@ -144,6 +144,8 @@ function update_balles(dt, largeurCanvas, hauteurCanvas) {
             else toucher_zombie(cible, p.degats, p.tir);
             return false;
         }
+        // Fin de « La Débandade » : Brutus arrive, et une balle peut le toucher (tir ami)
+        if (etat.variante === 'campagne' && typeof Campagne !== 'undefined' && Campagne.balle_sur_brutus(trajet)) return false;
         if (p.portee <= 0) {
             if (p.type === 'grenade') exploser(p);
             return false;

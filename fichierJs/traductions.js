@@ -503,5 +503,22 @@ const TRADUCTIONS = {
     'Retourne-toi, Soldat. Cette fois, ils arrivent de l\'autre côté. Et le mur, de ce côté-là, est plus bas que mon moral.': ['Turn around, Soldier. This time they\'re coming from the other side. And the wall on that side is lower than my morale.', 'Date la vuelta, Soldado. Esta vez llegan por el otro lado. Y el muro de ese lado está más bajo que mi moral.'],
     'Sergent… ils courent. Ils ne regardent même pas le camp. On dirait qu\'ils fuient quelque chose.': ['Sergeant… they\'re running. They\'re not even looking at the camp. It\'s like they\'re fleeing something.', 'Sargento… corren. Ni siquiera miran el campamento. Parece que huyen de algo.'],
     'Fuir ? Qu\'est-ce qui peut faire peur à un zombie ?': ['Fleeing? What could scare a zombie?', '¿Huir? ¿Qué puede asustar a un zombi?'],
-    'C\'est bien ce que je pensais : toi non plus, tu n\'en sais rien. En position !': ['Just as I thought: you don\'t know either. In position!', 'Lo que pensaba: tú tampoco tienes ni idea. ¡En posición!']
+    'C\'est bien ce que je pensais : toi non plus, tu n\'en sais rien. En position !': ['Just as I thought: you don\'t know either. In position!', 'Lo que pensaba: tú tampoco tienes ni idea. ¡En posición!'],
+    'Hé ! C\'est moi ! Le gentil !': ['Hey! It\'s me! The good guy!', '¡Eh! ¡Soy yo! ¡El bueno!'],
+    'STOP ! TIR AMI ! CESSEZ LE FEU !': ['STOP! FRIENDLY FIRE! CEASE FIRE!', '¡ALTO! ¡FUEGO AMIGO! ¡ALTO EL FUEGO!'],
+    'Aïe !': ['Ouch!', '¡Ay!'],
+    'Mais arrête !': ['Cut it out!', '¡Para ya!'],
+    'Chef, ta recrue est folle !': ['Chief, your recruit is crazy!', '¡Jefe, tu recluta está loca!'],
+    'Ça… ça fait mal…': ['That… that hurts…', 'Eso… eso duele…'],
+    'Chef Cigare, ta recrue m\'a tiré dessus {n} fois.': ['Chief Cigar, your recruit shot me {n} times.', 'Jefe Puro, tu recluta me ha disparado {n} veces.'],
+    'Il vise bien, au moins.': ['Good aim, at least.', 'Al menos apunta bien.'],
+    '… Tu viens d\'abattre le seul homme qui m\'ait jamais porté sur douze kilomètres.': ['… You just shot down the only man who ever carried me twelve kilometres.', '… Acabas de abatir al único hombre que me cargó doce kilómetros.'],
+    'On va faire comme si ça n\'était jamais arrivé. Recommence. Et cette fois, tu vises les zombies.': ['We\'ll pretend this never happened. Start over. And this time, aim at the zombies.', 'Haremos como si esto nunca hubiera pasado. Otra vez. Y esta vez, apunta a los zombis.'],
+    'Pardon, sergent…': ['Sorry, sergeant…', 'Perdón, sargento…'],
+    'FIN SECRÈTE : TIR AMI': ['SECRET ENDING: FRIENDLY FIRE', 'FINAL SECRETO: FUEGO AMIGO'],
+    'Ça ne compte pas : Brutus va bien. Enfin, il ira bien.': ['This doesn\'t count: Brutus is fine. Well, he will be.', 'Esto no cuenta: Brutus está bien. Bueno, lo estará.'],
+    'Tir ami': ['Friendly fire', 'Fuego amigo'],
+    'Trouver la fin secrète de « La Débandade »': ['Find the secret ending of “The Stampede”', 'Encontrar el final secreto de «La Desbandada»'],
+    'Gâchette facile': ['Trigger-happy', 'Gatillo fácil'],
+    'Succès secret. Certains disent qu{q}on le trouve en désobéissant.': ['Secret achievement. Some say you find it by disobeying.', 'Logro secreto. Dicen que se encuentra desobedeciendo.']
 };

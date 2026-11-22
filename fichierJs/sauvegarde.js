@@ -32,7 +32,7 @@ const Sauvegarde = (() => {
         son: { actif: true, musique: 0.8, effets: 0.8, vibrations: true },   // réglages du son (activé de base)
         options: { langue: 'fr', touches: {}, conseils: true, tutoPropose: false, conseilsVus: [] },                               // langue, touches choisies (options.js)
         bestiaire: [],
-        campagne: { introVue: false, intros: {}, missions: {}, meilleurs: {}, parfaites: {}, chapitres: {} },   // campagne.js : intros vues, missions réussies, records
+        campagne: { introVue: false, intros: {}, missions: {}, meilleurs: {}, parfaites: {}, chapitres: {}, secrets: {} },   // campagne.js : intros vues, missions réussies, records
         titre: ''
     });
 

@@ -122,6 +122,25 @@ const MISSIONS_CAMPAGNE = [
             { qui: 'sergent', texte: 'Ne m\'appelle pas comme ça.' },
             { qui: 'soldat', texte: '…' }
         ],
+        // Fin secrète « Tir ami » : tirer sur Brutus pendant qu'il arrive (une balle d'avertissement, puis 5)
+        tirAmi: {
+            avertissement: [
+                { qui: 'brutus', texte: 'Hé ! C\'est moi ! Le gentil !' },
+                { qui: 'sergent', texte: 'STOP ! TIR AMI ! CESSEZ LE FEU !' }
+            ],
+            cris: ['Aïe !', 'Mais arrête !', 'Chef, ta recrue est folle !', 'Ça… ça fait mal…'],
+            // Il a pris des balles mais il est encore debout : les retrouvailles en parlent
+            touche: [
+                { qui: 'brutus', texte: 'Chef Cigare, ta recrue m\'a tiré dessus {n} fois.' },
+                { qui: 'sergent', texte: 'Il vise bien, au moins.' }
+            ],
+            fin: [
+                { qui: 'sergent', texte: '…' },
+                { qui: 'sergent', texte: '… Tu viens d\'abattre le seul homme qui m\'ait jamais porté sur douze kilomètres.' },
+                { qui: 'soldat', texte: '…' },
+                { qui: 'sergent', texte: 'On va faire comme si ça n\'était jamais arrivé. Recommence. Et cette fois, tu vises les zombies.', bouton: 'Pardon, sergent…' }
+            ]
+        },
         debrief: {
             normal: 'Bon. On a un nouveau pensionnaire. Je sens que mes nuits calmes, c\'est terminé.',
             hardcore: 'Une horde en panique, et le pire, c\'était encore celui qui la poussait. Bienvenue au camp, Brutus. Hélas.'
