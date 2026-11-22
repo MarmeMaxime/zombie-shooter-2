@@ -33,7 +33,7 @@ const Campagne = (() => {
        Trois sortes d'objectifs : « objectif » (nombre de zombies à repousser),
        « camion » (un camion à escorter jusqu'au camp) ou « chantier » (tenir
        pendant une réparation, qui s'arrête quand un zombie est trop près). */
-    let m = null, chrono = 0, tues = 0, fini = false, camion = null, chantier = null, phaseBoss = false;
+    let m = null, chrono = 0, tues = 0, fini = false, camion = null, chantier = null, phaseBoss = false, moteurCamion = null;
 
     // Camion : sa caisse dans le sprite 128×128 (x 6..122, y 54..120), et l'arrière où les zombies s'agrippent
     const CAISSE = { x: 6, y: 54, l: 116, h: 66 }, ARRIERE = 96;
@@ -50,10 +50,12 @@ const Campagne = (() => {
         if (m.camion) {
             const c = m.camion;
             camion = { x: MONDE.largeur + 30, y: c.y, pv: c.pv[etat.mode], pvMax: c.pv[etat.mode], vitesse: (MONDE.largeur + 170) / c.duree[etat.mode], depart: c.depart, detruit: false };
+            moteurCamion = Son.moteur();   // on l'entend arriver avant de le voir
         }
         $c('hud-mission').classList.remove('hidden');
         maj_hud_mission();
-        bandeau(T('MISSION {n} · {titre}', { n: m.numero, titre: T(m.titre) }).toUpperCase());
+        // Deux lignes : le numéro, puis le titre (un long titre tient même sur un petit téléphone)
+        bandeau(T('MISSION {n}', { n: m.numero }) + '\n' + T(m.titre).toUpperCase());
     }
 
     // Bandeau animé au centre de l'écran (le même que pour les vagues, en plus petit)
@@ -69,6 +71,7 @@ const Campagne = (() => {
     function arreter() {
         m = null;
         camion = null;
+        if (moteurCamion) { moteurCamion.arreter(); moteurCamion = null; }
         chantier = null;
         $c('hud-mission').classList.add('hidden');
         $c('bandeau-vague').classList.remove('bandeau-mission');
@@ -145,6 +148,7 @@ const Campagne = (() => {
         maj_hud_mission();
         if (camion.pv <= 0) {
             camion.detruit = true;
+            if (moteurCamion) { moteurCamion.arreter(0.1); moteurCamion = null; }
             Son.effet('explosion');
             secouer_ecran(4);
             return terminer(false);
@@ -191,6 +195,7 @@ const Campagne = (() => {
         fini = true;
         etat.victoire = victoire;
         if (victoire) {
+            Son.effet('fanfare');
             zombies.length = 0;
             if (typeof dessiner === 'function') dessiner();   // l'image figée montre le terrain dégagé
         }
@@ -272,6 +277,7 @@ const Campagne = (() => {
         const suivante = MISSIONS_CAMPAGNE[MISSIONS_CAMPAGNE.findIndex(x => x.id === id) + 1];
         $c('btn-mission-suivante').classList.toggle('hidden', !(etat.victoire && suivante));
         $c('btn-mission-suivante').dataset.mission = suivante ? suivante.id : '';
+        $c('btn-retour-campagne').classList.remove('hidden');   // retour direct à la liste des missions
     }
 
     /* ---------- Lancer une mission (avec son intro la première fois) ---------- */
@@ -301,6 +307,8 @@ const Campagne = (() => {
         $c('game-container').classList.add('en-scene');   // pas de commandes de jeu pendant l'intro
         const cfg = SCENES_CAMPAGNE[id];
         scene = { id, cfg, debut: performance.now(), ligne: -1, secousse: 0, sirene: 0, ensuite };
+        // La jeep qui arrive : on entend son moteur, qui s'arrête quand elle se gare
+        if (cfg.jeep) { scene.moteur = Son.moteur(0.8); setTimeout(() => { if (scene && scene.moteur) scene.moteur.arreter(0.6); }, 2300); }
         requestAnimationFrame(dessiner_scene);
         setTimeout(() => { if (scene && scene.id === id) dire(0); }, cfg.attente);
     }
@@ -319,6 +327,7 @@ const Campagne = (() => {
     function terminer_intro() {
         if (!scene) return;
         const { ensuite, id } = scene;
+        if (scene.moteur) scene.moteur.arreter(0.2);
         scene = null;
         Instructeur.cacher();
         $c('scene-campagne').classList.add('hidden');
@@ -401,17 +410,9 @@ const Campagne = (() => {
         const sg = cfg.sergent, images = sg.pyjama ? SPRITES_SERGENT.pyjama : SPRITES_SERGENT;
         const sortie = sg.sortDe !== undefined ? Math.min(1, t / 1.2) : 1;
         const sgx = sg.sortDe !== undefined ? Math.round(sg.sortDe + (sg.x - sg.sortDe) * sortie) : sg.x;
-        // Il respire (un pixel de haut en bas), ou il trottine en sortant de sa tente
-        const sgy = sg.y + (sortie < 1 ? Math.round(Math.abs(Math.sin(t * 12))) : Math.round((Math.sin(t * 2.6) + 1) / 2));
-        c.drawImage(images[parle ? 1 : 0], sgx, sgy);
-        // La fumée du cigare monte en volutes et s'efface
-        c.fillStyle = '#c8c8c8';
-        for (let k = 0; k < 4; k++) {
-            const age = (t * 0.6 + k / 4) % 1;
-            c.globalAlpha = 0.7 * (1 - age);
-            c.fillRect(Math.round(sgx + 42 + Math.sin(t * 2 + k * 1.7) * 2 + age * 4), Math.round(sgy + 12 - age * 22), age > 0.5 ? 2 : 1, age > 0.5 ? 2 : 1);
-        }
-        c.globalAlpha = 1;
+        // Il trottine en sortant de sa tente ; sinon il respire et fume (camp_decor.js)
+        if (sortie < 1) c.drawImage(images[parle ? 1 : 0], sgx, sg.y + Math.round(Math.abs(Math.sin(t * 12))));
+        else dessiner_sergent(c, sgx, sg.y, t, images, parle);
         // Le voyant du labo s'allume quand le labo parle
         if (ligne && ligne.qui === 'labo' && Math.floor(instant / 200) % 2) c.drawImage(PORTE_LABO.campAllume, CAMP.labo.x, CAMP.labo.y);
         // Le Soldat (avec sa tenue équipée)
@@ -497,6 +498,12 @@ const Campagne = (() => {
         $c('btn-campagne').addEventListener('click', () => { Son.bouton(); ouvrir(); });
         $c('btn-close-campagne').addEventListener('click', () => { Son.bouton(); $c('campagne-overlay').classList.add('hidden'); });
         $c('btn-passer-intro').addEventListener('click', () => { Son.bouton(); terminer_intro(); });
+        $c('btn-retour-campagne').addEventListener('click', () => {
+            Son.bouton();
+            quitter_partie();
+            retour_menu_principal();
+            ouvrir();
+        });
         $c('btn-mission-suivante').addEventListener('click', () => {
             Son.bouton();
             ui.gameOver.classList.add('hidden');

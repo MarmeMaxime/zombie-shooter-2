@@ -26,11 +26,11 @@ const SUCCES = [
     { id: 'fashion', nom: 'Fashion victim', desc: 'Posséder 10 skins', titre: 'Fashion victim', recompense: 150, objectif: 10, valeur: () => SV().loot.possedes.length },
     { id: 'elu', nom: 'L\'Élu du RNG', desc: 'Obtenir un objet mythique', titre: 'Élu du RNG', recompense: 250, objectif: 1, valeur: () => SV().stats.mythiques },
     // Liés aux missions par personnage (missions.js)
-    { id: 'veteran_soldat', nom: 'Vétéran : Soldat', desc: 'Terminer les {n} missions du Soldat', titre: 'Sergent', recompense: 500, objectif: 10, valeur: () => (typeof Missions === 'undefined' ? 0 : Missions.terminees('soldat')) },
-    { id: 'veteran_brute', nom: 'Vétéran : Brutus', desc: 'Terminer les {n} missions de Brutus', titre: 'Boucher', recompense: 500, objectif: 10, valeur: () => (typeof Missions === 'undefined' ? 0 : Missions.terminees('brute')) },
-    { id: 'veteran_mira', nom: 'Vétéran : Mira', desc: 'Terminer les {n} missions de Mira', titre: 'Artificière', recompense: 500, objectif: 10, valeur: () => (typeof Missions === 'undefined' ? 0 : Missions.terminees('grenadier')) },
-    { id: 'veteran_lassie', nom: 'Vétéran : Lassie', desc: 'Terminer les {n} missions de Lassie', titre: 'Reine de la foudre', recompense: 500, objectif: 10, valeur: () => (typeof Missions === 'undefined' ? 0 : Missions.terminees('lassie')) },
-    { id: 'legende', nom: 'Légende vivante', desc: 'Terminer les {n} missions', titre: 'Légende vivante', recompense: 1500, objectif: 40, valeur: () => (typeof Missions === 'undefined' ? 0 : Missions.terminees()) },
+    { id: 'veteran_soldat', nom: 'Vétéran : Soldat', desc: 'Réussir les {n} défis du Soldat', titre: 'Sergent', recompense: 500, objectif: 10, valeur: () => (typeof Missions === 'undefined' ? 0 : Missions.terminees('soldat')) },
+    { id: 'veteran_brute', nom: 'Vétéran : Brutus', desc: 'Réussir les {n} défis de Brutus', titre: 'Boucher', recompense: 500, objectif: 10, valeur: () => (typeof Missions === 'undefined' ? 0 : Missions.terminees('brute')) },
+    { id: 'veteran_mira', nom: 'Vétéran : Mira', desc: 'Réussir les {n} défis de Mira', titre: 'Artificière', recompense: 500, objectif: 10, valeur: () => (typeof Missions === 'undefined' ? 0 : Missions.terminees('grenadier')) },
+    { id: 'veteran_lassie', nom: 'Vétéran : Lassie', desc: 'Réussir les {n} défis de Lassie', titre: 'Reine de la foudre', recompense: 500, objectif: 10, valeur: () => (typeof Missions === 'undefined' ? 0 : Missions.terminees('lassie')) },
+    { id: 'legende', nom: 'Légende vivante', desc: 'Réussir les {n} défis', titre: 'Légende vivante', recompense: 1500, objectif: 40, valeur: () => (typeof Missions === 'undefined' ? 0 : Missions.terminees()) },
     // Le Joggeur
     { id: 'premier_footing', nom: 'Fin du footing', desc: 'Tuer un Joggeur', titre: 'Coach sportif', recompense: 30, objectif: 1, valeur: () => SV().stats.tues.joggeur || 0 },
     { id: 'marathon', nom: 'Marathonien', desc: 'Tuer 50 Joggeurs', titre: 'Marathonien', recompense: 150, objectif: 50, valeur: () => SV().stats.tues.joggeur || 0 },

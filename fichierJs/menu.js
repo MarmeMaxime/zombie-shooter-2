@@ -69,7 +69,7 @@ function rafraichir_cartes_persos() {
         carte.disabled = verrouille;
         const c = Deblocage.condition(id);
         carte.querySelector('.verrou').textContent = verrouille && c
-            ? T('🔒 Terminer {n} missions avec {perso} ({f}/{n})', { n: c.requis, perso: CONFIG.personnages[c.precedent].nom, f: c.faites }) : '';
+            ? T('🔒 Réussir {n} défis avec {perso} ({f}/{n})', { n: c.requis, perso: CONFIG.personnages[c.precedent].nom, f: c.faites }) : '';
     }
 }
 rafraichir_cartes_persos();

@@ -14,7 +14,7 @@ const TRADUCTIONS = {
     'Hardcore': ['Hardcore', 'Hardcore'],
     'PERSONNAGE :': ['CHARACTER:', 'PERSONAJE:'],
     'CAISSES ·': ['CRATES ·', 'CAJAS ·'],
-    '📋 MISSIONS': ['📋 MISSIONS', '📋 MISIONES'],
+    '🎯 DÉFIS': ['🎯 CHALLENGES', '🎯 DESAFÍOS'],
     '🏆 SUCCÈS': ['🏆 ACHIEVEMENTS', '🏆 LOGROS'],
     '📖 BESTIAIRE': ['📖 BESTIARY', '📖 BESTIARIO'],
     'PLAY': ['PLAY', 'JUGAR'],
@@ -22,7 +22,7 @@ const TRADUCTIONS = {
     'VALIDER': ['CONFIRM', 'CONFIRMAR'],
     'FERMER': ['CLOSE', 'CERRAR'],
     'RETOUR': ['BACK', 'VOLVER'],
-    'MISSIONS': ['MISSIONS', 'MISIONES'],
+    'DÉFIS': ['CHALLENGES', 'DESAFÍOS'],
     'BESTIAIRE': ['BESTIARY', 'BESTIARIO'],
     'SUCCÈS': ['ACHIEVEMENTS', 'LOGROS'],
     'Sauvegarde': ['Save', 'Partida guardada'],
@@ -114,7 +114,7 @@ const TRADUCTIONS = {
     ' et ': [' and ', ' y '],
     'Victimes : {n}': ['Kills: {n}', 'Víctimas: {n}'],
     'Aucune victime… les zombies te remercient.': ['No kills… the zombies thank you.', 'Ninguna víctima… los zombis te lo agradecen.'],
-    '📋 Missions accomplies': ['📋 Missions completed', '📋 Misiones completadas'],
+    '🎯 Défis réussis': ['🎯 Challenges completed', '🎯 Desafíos superados'],
     '🏆 Succès débloqués': ['🏆 Achievements unlocked', '🏆 Logros desbloqueados'],
 
     // ---------- Tutoriel ----------
@@ -164,7 +164,7 @@ const TRADUCTIONS = {
     '6 obus tombent sur les zombies les plus proches.': ['6 shells fall on the nearest zombies.', 'Caen 6 obuses sobre los zombis más cercanos.'],
     'Orage': ['Storm', 'Tormenta'],
     'La foudre frappe chaque zombie à l\'écran une fois.': ['Lightning strikes every zombie on screen once.', 'El rayo golpea una vez a cada zombi en pantalla.'],
-    '🔒 Terminer {n} missions avec {perso} ({f}/{n})': ['🔒 Complete {n} missions with {perso} ({f}/{n})', '🔒 Completa {n} misiones con {perso} ({f}/{n})'],
+    '🔒 Réussir {n} défis avec {perso} ({f}/{n})': ['🔒 Complete {n} challenges with {perso} ({f}/{n})', '🔒 Supera {n} desafíos con {perso} ({f}/{n})'],
     '🔓 Nouveau personnage débloqué : {nom} !': ['🔓 New character unlocked: {nom}!', '🔓 ¡Nuevo personaje desbloqueado: {nom}!'],
 
     // ---------- Missions ----------
@@ -183,12 +183,12 @@ const TRADUCTIONS = {
     'Tuer 15 Anti-émeutes': ['Kill 15 Riot cops', 'Mata 15 Antidisturbios'], 'Détruire 15 tombes': ['Destroy 15 graves', 'Destruye 15 tumbas'],
     'Tuer 10 Boxeurs (hardcore)': ['Kill 10 Boxers (hardcore)', 'Mata 10 Boxeadores (hardcore)'],
     'fait': ['done', 'hecho'],
-    '📋 Mission accomplie ({perso}) : {nom} · +{n} 💀': ['📋 Mission complete ({perso}): {nom} · +{n} 💀', '📋 Misión cumplida ({perso}): {nom} · +{n} 💀'],
-    'Terminer les {n} missions du Soldat': ['Complete all {n} Soldier missions', 'Completa las {n} misiones del Soldado'],
-    'Terminer les {n} missions de Brutus': ['Complete all {n} Brutus missions', 'Completa las {n} misiones de Brutus'],
-    'Terminer les {n} missions de Mira': ['Complete all {n} Mira missions', 'Completa las {n} misiones de Mira'],
-    'Terminer les {n} missions de Lassie': ['Complete all {n} Lassie missions', 'Completa las {n} misiones de Lassie'],
-    'Terminer les {n} missions': ['Complete all {n} missions', 'Completa las {n} misiones'],
+    '🎯 Défi réussi ({perso}) : {nom} · +{n} 💀': ['🎯 Challenge completed ({perso}): {nom} · +{n} 💀', '🎯 Desafío superado ({perso}): {nom} · +{n} 💀'],
+    'Réussir les {n} défis du Soldat': ['Complete all {n} Soldier challenges', 'Supera los {n} desafíos del Soldado'],
+    'Réussir les {n} défis de Brutus': ['Complete all {n} Brutus challenges', 'Supera los {n} desafíos de Brutus'],
+    'Réussir les {n} défis de Mira': ['Complete all {n} Mira challenges', 'Supera los {n} desafíos de Mira'],
+    'Réussir les {n} défis de Lassie': ['Complete all {n} Lassie challenges', 'Supera los {n} desafíos de Lassie'],
+    'Réussir les {n} défis': ['Complete all {n} challenges', 'Supera los {n} desafíos'],
     'Recrue': ['Recruit', 'Recluta'], 'Tireur': ['Gunner', 'Tirador'], 'Tireur d\'élite': ['Sharpshooter', 'Francotirador'], 'Perce-blindage': ['Armor piercer', 'Perforablindajes'],
     'Anti-magie': ['Anti-magic', 'Antimagia'], 'Tenir la ligne': ['Hold the line', 'Mantener la línea'], 'Intouchable': ['Untouchable', 'Intocable'], 'Feu nourri': ['Heavy fire', 'Fuego nutrido'],
     'Chasseur de géants': ['Giant hunter', 'Cazador de gigantes'], 'Dernier rempart': ['Last bastion', 'Último bastión'], 'Pluie de plomb': ['Rain of lead', 'Lluvia de plomo'],
@@ -388,7 +388,6 @@ const TRADUCTIONS = {
     '… Ou on saute l\'entraînement. Ils arrivent. À ton poste, Soldat !': ['… Or we skip training. They\'re coming. To your post, Soldier!', '… O nos saltamos el entrenamiento. Ya vienen. ¡A tu puesto, Soldado!'],
     'À mon poste !': ['To my post!', '¡A mi puesto!'],
     'Suite ▶': ['Next ▶', 'Siguiente ▶'],
-    'MISSION {n} · {titre}': ['MISSION {n} · {titre}', 'MISIÓN {n} · {titre}'],
     'Mission accomplie !': ['Mission accomplished!', '¡Misión cumplida!'],
     'MISSION ACCOMPLIE': ['MISSION ACCOMPLISHED', 'MISIÓN CUMPLIDA'],
     'MISSION ÉCHOUÉE': ['MISSION FAILED', 'MISIÓN FALLIDA'],
@@ -468,5 +467,6 @@ const TRADUCTIONS = {
     '🏅 Record de la mission : {liste} !': ['🏅 Mission record: {liste}!', '🏅 ¡Récord de la misión: {liste}!'],
     'temps (avant : {n})': ['time (before: {n})', 'tiempo (antes: {n})'],
     'vies (avant : {n})': ['lives (before: {n})', 'vidas (antes: {n})'],
-    '🏅 {temps} · ❤ {vies}': ['🏅 {temps} · ❤ {vies}', '🏅 {temps} · ❤ {vies}']
+    '🏅 {temps} · ❤ {vies}': ['🏅 {temps} · ❤ {vies}', '🏅 {temps} · ❤ {vies}'],
+    'MISSION {n}': ['MISSION {n}', 'MISIÓN {n}']
 };

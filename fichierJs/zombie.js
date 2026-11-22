@@ -210,7 +210,19 @@ function toucher_zombie(z, degats = 1, tir) {
 }
 
 /* ---------- Mise à jour ---------- */
+/* Grognements : un de temps en temps, plus souvent quand ils sont nombreux
+   (jamais plus d'un toutes les 0,7 s, pour ne pas faire un vacarme). */
+let chronoGrognement = 2;
+function grogner(dt) {
+    chronoGrognement -= dt;
+    if (chronoGrognement > 0 || !zombies.length) return;
+    chronoGrognement = Math.max(0.7, (1.5 + Math.random() * 3) / Math.sqrt(zombies.length));
+    const z = zombies[Math.floor(Math.random() * zombies.length)];
+    if (!est_boss(z.type)) Son.effet(z.type === 'tank' ? 'grognementTank' : 'grognement');
+}
+
 function update_zombies(dt, largeurCanvas, hauteurCanvas, tempsJeu) {
+    grogner(dt);
     // Pendant le combat de boss, seuls ses invocations arrivent
     // Entraînement : seuls les zombies placés par le sergent
     if (etat.variante === 'vagues' && !etat.tuto) Vagues.maj(dt);   // mode Vagues : la vague décide

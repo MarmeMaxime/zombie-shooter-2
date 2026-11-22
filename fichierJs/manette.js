@@ -64,6 +64,7 @@ const Manette = (() => {
         }
         if (visible('game-over-overlay')) {
             if (appui('a') || appui('start')) cliquer(visible('btn-mission-suivante') ? 'btn-mission-suivante' : 'btn-retry');
+            else if (appui('x') && visible('btn-retour-campagne')) cliquer('btn-retour-campagne');
             else if (appui('b')) cliquer('btn-return-menu');
             return;
         }

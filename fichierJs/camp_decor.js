@@ -189,3 +189,17 @@ const nuit = (() => {
         ctx.drawImage(voile, 0, 0, W, H);
     };
 })();
+
+/* Le Sergent au camp (menu et intros de la campagne) : il respire (un pixel
+   de haut en bas) et la fumée de son cigare monte en volutes. */
+function dessiner_sergent(c, x, y, t, images = SPRITES_SERGENT, parle = false) {
+    const sy = y + Math.round((Math.sin(t * 2.6) + 1) / 2);
+    c.drawImage(images[parle ? 1 : 0], x, sy);
+    c.fillStyle = '#c8c8c8';
+    for (let k = 0; k < 4; k++) {
+        const age = (t * 0.6 + k / 4) % 1;
+        c.globalAlpha = 0.7 * (1 - age);
+        c.fillRect(Math.round(x + 42 + Math.sin(t * 2 + k * 1.7) * 2 + age * 4), Math.round(sy + 12 - age * 22), age > 0.5 ? 2 : 1, age > 0.5 ? 2 : 1);
+    }
+    c.globalAlpha = 1;
+}

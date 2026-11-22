@@ -58,8 +58,11 @@ const Instructeur = (() => {
         parleJusque = performance.now() + Math.min(2600, 400 + message.length * 30);
         clearInterval(animation);
         let ouvert = false;
+        const VOIX = { sergent: 'voixSergent', sergentPyjama: 'voixSergent', labo: 'voixLabo', radio: 'voixRadio' };   // le Soldat ne dit rien
+        if (qui === 'radio') Son.effet('radio');
         animation = setInterval(() => {
             ouvert = performance.now() < parleJusque && !ouvert;
+            if (ouvert && VOIX[orateur]) Son.effet(VOIX[orateur]);
             visage($i('instructeur-visage'), ouvert, orateur);
             if (performance.now() >= parleJusque) clearInterval(animation);
         }, 130);

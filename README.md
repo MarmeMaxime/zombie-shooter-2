@@ -45,7 +45,7 @@ langue : français, anglais, espagnol… et zombie.
 ## Personnages
 
 On commence avec le Soldat ; chaque personnage suivant se débloque en réussissant
-3 missions avec le précédent.
+3 défis avec le précédent.
 
 | Perso | Arme | Pouvoir spécial |
 |---|---|---|
@@ -67,8 +67,8 @@ Chaque monstre rencontré rejoint le **bestiaire 📖**, avec sa fiche.
 
 - Caisses de butin (parodie assumée, monnaie du jeu uniquement) : 20 tenues,
   3 skins universels, déchets.
-- 15 missions par personnage, 48 succès avec titres.
-- Bilan à la fin de chaque partie : victimes par espèce, records, missions et
+- 15 défis par personnage, 48 succès avec titres.
+- Bilan à la fin de chaque partie : victimes par espèce, records, défis et
   succès obtenus.
 - Musiques du menu, du mode normal et de l'entraînement générées par le jeu
   (Web Audio) ; le mode hardcore garde sa playlist.

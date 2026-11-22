@@ -138,7 +138,7 @@ for (const [perso, ordre] of Object.entries(ORDRE_MISSIONS)) {
 
 // Les succès « Vétéran » et « Légende » suivent le nombre de missions
 {
-    const textes = { soldat: 'Terminer les {n} missions du Soldat', brute: 'Terminer les {n} missions de Brutus', grenadier: 'Terminer les {n} missions de Mira', lassie: 'Terminer les {n} missions de Lassie' };
+    const textes = { soldat: 'Réussir les {n} défis du Soldat', brute: 'Réussir les {n} défis de Brutus', grenadier: 'Réussir les {n} défis de Mira', lassie: 'Réussir les {n} défis de Lassie' };
     for (const [perso, liste] of Object.entries(MISSIONS)) {
         const s = SUCCES.find(x => x.id === `veteran_${perso === 'grenadier' ? 'mira' : perso}`);
         if (s) { s.objectif = liste.length; s.desc = T(textes[perso], { n: liste.length }); }
@@ -146,7 +146,7 @@ for (const [perso, ordre] of Object.entries(ORDRE_MISSIONS)) {
     const total = Object.values(MISSIONS).flat().length;
     const legende = SUCCES.find(x => x.id === 'legende');
     legende.objectif = total;
-    legende.desc = T('Terminer les {n} missions', { n: total });
+    legende.desc = T('Réussir les {n} défis', { n: total });
 }
 
 const Missions = (() => {
@@ -160,7 +160,7 @@ const Missions = (() => {
             if (faites().includes(m.id) || m.valeur(p) < m.objectif) continue;
             faites().push(m.id);
             Sauvegarde.donnees.loot.cranes += m.recompense;
-            Succes.notifier(T('📋 Mission accomplie ({perso}) : {nom} · +{n} 💀', { perso: CONFIG.personnages[m.perso].nom, nom: m.nom, n: m.recompense }));
+            Succes.notifier(T('🎯 Défi réussi ({perso}) : {nom} · +{n} 💀', { perso: CONFIG.personnages[m.perso].nom, nom: m.nom, n: m.recompense }));
             if (etat.missions) etat.missions.push(m.nom);   // bilan de fin de partie
             nouvelle = true;
         }

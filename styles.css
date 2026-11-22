@@ -741,3 +741,5 @@ span#score.score-ready {
 @media (orientation: portrait) {
   #instructeur.dans-scene { top: auto; bottom: 24px; right: auto; left: 50%; transform: translateX(-50%); width: calc(94vw / var(--ui)); }
 }
+#btn-retour-campagne { background: #2a2a2a; color: #e8c24a; border: 2px solid #e8c24a; }
+#bandeau-vague.bandeau-mission { white-space: pre-line; line-height: 1.25; }

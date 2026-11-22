@@ -250,8 +250,74 @@ const Son = (() => {
         impactTerre: () => { bruit(0, 0.3, { vol: 0.35, filtre: 500, filtreFin: 80 }); ton(70, 0, 0.25, { vol: 0.2, f2: 40 }); },
         tombe: () => { bruit(0, 0.6, { vol: 0.25, filtre: 300, filtreFin: 900 }); ton(55, 0, 0.6, { type: 'sawtooth', vol: 0.08, f2: 45 }); },
         succes: () => [784, 988, 1175, 1568].forEach((f, i) => ton(f, i * 0.09, 0.35, { type: 'triangle', vol: 0.15 })),
-        degat: () => { ton(220, 0, 0.25, { type: 'square', vol: 0.12, f2: 90 }); bruit(0, 0.15, { vol: 0.15, filtre: 800 }); }
+        degat: () => { ton(220, 0, 0.25, { type: 'square', vol: 0.12, f2: 90 }); bruit(0, 0.15, { vol: 0.15, filtre: 800 }); },
+
+        // Grognements de zombies, de temps en temps pendant les parties (plus graves pour les Tanks)
+        grognement: () => {
+            const f = 75 + Math.random() * 35;
+            ton(f, 0, 0.65, { type: 'sawtooth', vol: 0.035, f2: f * 0.7, attaque: 0.08 });
+            bruit(0, 0.55, { vol: 0.035, filtre: 420, filtreFin: 220, type: 'bandpass' });
+        },
+        grognementTank: () => {
+            ton(52, 0, 0.9, { type: 'sawtooth', vol: 0.045, f2: 38, attaque: 0.12 });
+            bruit(0, 0.8, { vol: 0.04, filtre: 300, filtreFin: 160, type: 'bandpass' });
+        },
+
+        /* Voix des dialogues : une « syllabe » à chaque mouvement de bouche.
+           Le Sergent bougonne, le labo grésille dans son haut-parleur, l'éclaireur parle par radio. */
+        voixSergent: () => {
+            const f = 95 + Math.random() * 45;
+            ton(f, 0, 0.09, { type: 'square', vol: 0.03, f2: f * 0.85 });
+            bruit(0, 0.06, { vol: 0.02, filtre: 600 });
+        },
+        voixLabo: () => {
+            const f = 230 + Math.random() * 90;
+            ton(f, 0, 0.07, { type: 'square', vol: 0.018, f2: f * 1.1 });
+            bruit(0, 0.07, { vol: 0.012, filtre: 2600, type: 'highpass' });
+        },
+        voixRadio: () => {
+            const f = 150 + Math.random() * 70;
+            ton(f, 0, 0.08, { type: 'sawtooth', vol: 0.016, f2: f * 0.9 });
+            bruit(0, 0.09, { vol: 0.03, filtre: 1800, type: 'bandpass' });
+        },
+        radio: () => {   // grésillement au début d'un message radio, puis le bip
+            bruit(0, 0.28, { vol: 0.08, filtre: 2200, filtreFin: 900, type: 'bandpass' });
+            ton(1400, 0.24, 0.08, { vol: 0.05 });
+        },
+
+        // Petite fanfare de victoire (fin de mission de campagne)
+        fanfare: () => {
+            [523, 659, 784].forEach((f, i) => { ton(f, i * 0.12, 0.16, { type: 'sawtooth', vol: 0.035 }); ton(f, i * 0.12, 0.16, { type: 'triangle', vol: 0.06 }); });
+            for (const f of [523, 659, 784, 1047]) { ton(f, 0.38, 0.7, { type: 'triangle', vol: 0.05, attaque: 0.02 }); ton(f, 0.38, 0.6, { type: 'sawtooth', vol: 0.018, attaque: 0.02 }); }
+        }
     };
+
+    /* Moteur (camion, jeep) : un ronronnement grave continu, qui tremble un peu.
+       Renvoie de quoi l'arrêter (en douceur). Silencieux si le son est coupé. */
+    function moteur(force = 1) {
+        const c = contexte();
+        if (!c || !actif) return { arreter() {} };
+        const g = c.createGain(), fl = c.createBiquadFilter(), lfo = c.createOscillator(), prof = c.createGain();
+        fl.type = 'lowpass'; fl.frequency.value = 240;
+        g.gain.setValueAtTime(0.0001, c.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.07 * force, c.currentTime + 0.4);
+        lfo.frequency.value = 11; prof.gain.value = 0.025 * force;
+        lfo.connect(prof).connect(g.gain);
+        const oscs = [[46, 'sawtooth'], [23, 'square'], [92, 'sawtooth']].map(([f, type]) => {
+            const o = c.createOscillator(); o.type = type; o.frequency.value = f; o.connect(fl); o.start(); return o;
+        });
+        fl.connect(g).connect(sortieEffets);
+        lfo.start();
+        let fini = false;
+        return {
+            arreter(duree = 0.5) {
+                if (fini) return;
+                fini = true;
+                g.gain.setTargetAtTime(0.0001, c.currentTime, duree / 3);
+                setTimeout(() => { for (const o of [...oscs, lfo]) o.stop(); g.disconnect(); }, duree * 1000 + 200);
+            }
+        };
+    }
 
     // Réglage d'un volume ('musique' ou 'effets', de 0 à 1), gardé dans la sauvegarde
     function setVolume(quoi, valeur) {
@@ -864,6 +930,7 @@ const Son = (() => {
         estActif: () => actif,
         contexte,   // contexte Web Audio partagé (aussi utilisé par les sons de lootbox)
         ton,
+        moteur,
         bouton: () => jouerEffet(sonBouton)
     };
 })();

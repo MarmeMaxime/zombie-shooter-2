@@ -84,7 +84,7 @@
         const t = performance.now() / 1000;
         dessiner_feu(c, t);
         c.drawImage(OBJETS_CAMP.jeep, CAMP.jeep.x, CAMP.jeep.y);
-        c.drawImage(SPRITES_SERGENT[0], CAMP.sergent.x, CAMP.sergent.y);
+        dessiner_sergent(c, CAMP.sergent.x, CAMP.sergent.y, t);   // il respire, son cigare fume
         c.setTransform(echelle, 0, 0, echelle, 0, 0);
         c.imageSmoothingEnabled = false;
 

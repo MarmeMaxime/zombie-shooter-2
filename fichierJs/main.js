@@ -290,6 +290,7 @@ function habiller_fin() {
     carte.querySelector('.game-over-text').innerHTML = FIN_ORIGINE.texte;
     carte.classList.remove('victoire');
     document.getElementById('btn-mission-suivante').classList.add('hidden');
+    document.getElementById('btn-retour-campagne').classList.add('hidden');
     document.getElementById('btn-retry').firstChild.textContent = T('RÉESSAYER') + ' ';
     if (etat.variante === 'campagne' && typeof Campagne !== 'undefined') Campagne.fin();
 }
@@ -326,7 +327,7 @@ function remplir_bilan() {
 
     // Missions et succès obtenus pendant la partie
     const liste = (titre, noms) => (noms.length ? `${titre} (${noms.length}) : ${noms.join(', ')}` : '');
-    $b('bilan-missions').textContent = liste(T('📋 Missions accomplies'), etat.missions);
+    $b('bilan-missions').textContent = liste(T('🎯 Défis réussis'), etat.missions);
     $b('bilan-succes').textContent = liste(T('🏆 Succès débloqués'), etat.succes);
 }
 
