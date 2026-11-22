@@ -92,7 +92,7 @@ const Instructeur = (() => {
 
     visage($i('instructeur-visage'), false);
     visage($i('proposition-visage'), false);
-    return { parler, valider, cacher, ouvert, visage, parleEncore: () => performance.now() < parleJusque, orateur: () => orateur };
+    return { parler, valider, cacher, ouvert, visage, parleEncore: () => performance.now() < parleJusque };
 })();
 
 // Nom d'une commande pour les consignes : la touche choisie, ou le bouton tactile

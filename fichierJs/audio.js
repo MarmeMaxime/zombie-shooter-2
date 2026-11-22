@@ -37,11 +37,8 @@ const Son = (() => {
     // play() renvoie une promesse rejetée si le navigateur refuse la lecture
     const lire = (audio) => audio.play().catch(() => {});
 
-    function chargerPiste(src, volume, enBoucle, vitesse = 1) {
+    function chargerPiste(src, volume, enBoucle) {
         musique.src = src;
-        musique.preservesPitch = true;
-        musique.playbackRate = vitesse;
-        musique.defaultPlaybackRate = vitesse;
         volumeBase = volume;
         musique.volume = volume * reglages.musique;
         musique.loop = enBoucle;
