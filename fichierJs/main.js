@@ -134,6 +134,8 @@ function maj_hud() {
     const achatPossible = etat.variante !== 'vagues' && etat.score >= etat.prixVie;
     ui.score.classList.toggle('score-ready', achatPossible);
     if (achatPossible && typeof Conseils !== 'undefined') Conseils.score_vert();
+    // La barre d'infos a pu changer de hauteur (un chiffre de plus) : la barre du boss suit
+    if (typeof boss !== 'undefined' && boss) placer_barre_boss();
 }
 
 function ajouter_score(points) {
@@ -287,6 +289,7 @@ function habiller_fin() {
     carte.querySelector('h2').innerHTML = FIN_ORIGINE.titre;
     carte.querySelector('.game-over-text').innerHTML = FIN_ORIGINE.texte;
     carte.classList.remove('victoire');
+    document.getElementById('btn-mission-suivante').classList.add('hidden');
     document.getElementById('btn-retry').firstChild.textContent = T('RÉESSAYER') + ' ';
     if (etat.variante === 'campagne' && typeof Campagne !== 'undefined') Campagne.fin();
 }
@@ -334,7 +337,11 @@ document.getElementById('btn-retry').addEventListener('click', () => init_game(e
 let ouvertureFin = 0;
 document.addEventListener('keydown', e => {
     if (ui.gameOver.classList.contains('hidden') || e.repeat || performance.now() - ouvertureFin < 600) return;
-    if (e.code === 'Enter' || e.code === 'NumpadEnter') { e.preventDefault(); document.getElementById('btn-retry').click(); }
+    if (e.code === 'Enter' || e.code === 'NumpadEnter') {
+        e.preventDefault();
+        const suivante = document.getElementById('btn-mission-suivante');
+        (suivante && !suivante.classList.contains('hidden') ? suivante : document.getElementById('btn-retry')).click();
+    }
     else if (e.code === 'Escape') { e.preventDefault(); document.getElementById('btn-return-menu').click(); }
 });
 document.getElementById('btn-return-menu').addEventListener('click', () => {

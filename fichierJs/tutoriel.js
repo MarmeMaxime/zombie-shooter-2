@@ -238,7 +238,7 @@ const Tutoriel = (() => {
 const Conseils = (() => {
     const options = Sauvegarde.donnees.options;
     function dire(cle, message) {
-        if (!options.conseils || etat.tuto || !etat.enCours || options.conseilsVus.includes(cle)) return;
+        if (!options.conseils || etat.tuto || etat.variante === 'campagne' || !etat.enCours || options.conseilsVus.includes(cle)) return;
         options.conseilsVus.push(cle);
         Sauvegarde.sauver();
         Instructeur.parler(message);   // la partie attend qu'on ait lu

@@ -10,7 +10,8 @@
      « objectif » (zombies à repousser), « camion » (escorte), « chantier »
      (couvrir une réparation) ou « boss » (une horde, puis le boss). Elle se
      joue en normal comme en hardcore et se débloque avec la précédente.
-   Sauvegarde : Sauvegarde.donnees.campagne = { intros: { id: true }, missions: { id: { normal, hardcore } } }
+   Sauvegarde : Sauvegarde.donnees.campagne = { intros: { id: true }, missions: { id: { normal, hardcore } },
+                meilleurs: { id: { normal: { temps, vies } } } }   (meilleur temps et le plus de vies restantes)
    ========================================================================= */
 
 const Campagne = (() => {
@@ -137,7 +138,7 @@ const Campagne = (() => {
             const touche = z.x + 16 < bx + CAISSE.l && z.x + 48 > bx && z.y + 20 < by + CAISSE.h && z.y + 60 > by;
             if (touche) z.surCamion = true;
             if (z.surCamion) {
-                z.x = Math.max(z.x, camion.x + ARRIERE);   // agrippé à l'arrière, il suit le camion
+                z.x = camion.x + ARRIERE;                  // agrippé à l'arrière, il suit le camion (sans trembler)
                 camion.pv -= (z.type === 'tank' ? m.camion.degatsTank : m.camion.degats) * dt;
             }
         }
@@ -233,13 +234,29 @@ const Campagne = (() => {
         }
     }
 
+    // Meilleur temps (le plus court) et le plus de vies restantes, par mission et par difficulté.
+    // Renvoie ce qui a été battu (rien la toute première fois : il n'y avait pas de record à battre).
+    const duree = s => Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0');
+    function noter_record(id) {
+        S().meilleurs ??= {};
+        const tous = S().meilleurs[id] ??= {};
+        const avant = tous[etat.mode], temps = Math.floor(etat.temps), vies = etat.vies, battus = [];
+        if (avant && temps < avant.temps) battus.push(T('temps (avant : {n})', { n: duree(avant.temps) }));
+        if (avant && vies > avant.vies) battus.push(T('vies (avant : {n})', { n: avant.vies }));
+        tous[etat.mode] = { temps: avant ? Math.min(avant.temps, temps) : temps, vies: avant ? Math.max(avant.vies, vies) : vies };
+        return battus;
+    }
+
     // Écran de fin d'une mission (appelé par game_over) : victoire ou échec, et sauvegarde
     function fin() {
         const id = etat.mission, mi = mission(id);
+        let records = [];
         if (etat.victoire) {
             S().missions[id] = { ...(S().missions[id] || {}), [etat.mode]: true };
+            records = noter_record(id);
             Sauvegarde.sauver();
         }
+        $c('bilan-records').textContent = records.length ? T('🏅 Record de la mission : {liste} !', { liste: records.join(T(' et ')) }) : '';
         const carte = document.querySelector('#game-over-overlay .mission-card');
         carte.querySelector('h2').textContent = etat.victoire ? T('MISSION ACCOMPLIE') : T('MISSION ÉCHOUÉE');
         carte.querySelector('.game-over-text').textContent = etat.victoire
@@ -251,6 +268,10 @@ const Campagne = (() => {
                     : T('Le camp est tombé. Le labo avec. Le Sergent va être de très mauvaise humeur.');
         carte.classList.toggle('victoire', etat.victoire);
         $c('btn-retry').firstChild.textContent = etat.victoire ? T('REJOUER') + ' ' : T('RÉESSAYER') + ' ';
+        // Victoire : on enchaîne directement sur la mission suivante (avec son intro la première fois)
+        const suivante = MISSIONS_CAMPAGNE[MISSIONS_CAMPAGNE.findIndex(x => x.id === id) + 1];
+        $c('btn-mission-suivante').classList.toggle('hidden', !(etat.victoire && suivante));
+        $c('btn-mission-suivante').dataset.mission = suivante ? suivante.id : '';
     }
 
     /* ---------- Lancer une mission (avec son intro la première fois) ---------- */
@@ -277,6 +298,7 @@ const Campagne = (() => {
         $c('scene-campagne').classList.remove('hidden');
         $c('btn-passer-intro').classList.remove('hidden');
         $c('instructeur').classList.add('dans-scene');
+        $c('game-container').classList.add('en-scene');   // pas de commandes de jeu pendant l'intro
         const cfg = SCENES_CAMPAGNE[id];
         scene = { id, cfg, debut: performance.now(), ligne: -1, secousse: 0, sirene: 0, ensuite };
         requestAnimationFrame(dessiner_scene);
@@ -302,6 +324,7 @@ const Campagne = (() => {
         $c('scene-campagne').classList.add('hidden');
         $c('btn-passer-intro').classList.add('hidden');
         $c('instructeur').classList.remove('dans-scene');
+        $c('game-container').classList.remove('en-scene');
         S().intros = { ...(S().intros || {}), [id]: true };
         Sauvegarde.sauver();
         if (ensuite) ensuite();
@@ -347,11 +370,18 @@ const Campagne = (() => {
         if (toile.width !== Math.round(toile.clientWidth * dpr)) { toile.width = Math.round(toile.clientWidth * dpr); toile.height = Math.round(toile.clientHeight * dpr); }
         if (!toile.width || !toile.height) return;   // fenêtre réduite ou cachée
         const cfg = scene.cfg;
-        // Caméra : on se rapproche du camp (on voit 300 de haut, à partir de y = cfg.camera ou 40)
-        const echelle = toile.height / 300, L = Math.max(toile.width / echelle, CAMP.bord + 40), haut = cfg.camera ?? 40;
+        // Caméra : on se rapproche du camp (on voit 300 de haut, à partir de y = cfg.camera ou 40).
+        // Écran en hauteur (téléphone) : le camp entier tient dans la largeur, en haut de l'écran,
+        // et la boîte de dialogue se met en dessous.
+        const portrait = toile.height > toile.width;
+        const echelle = portrait ? toile.width / (CAMP.bord + 30) : toile.height / 300;
+        const L = Math.max(toile.width / echelle, CAMP.bord + 40), haut = portrait ? (cfg.camera ?? 40) - 10 : cfg.camera ?? 40;
         const t = (instant - scene.debut) / 1000;
         let sx = 0, sy = 0;
         if (scene.secousse && instant - scene.secousse < 350) { sx = (Math.random() - 0.5) * 4; sy = (Math.random() - 0.5) * 4; }
+        c.setTransform(1, 0, 0, 1, 0, 0);
+        c.fillStyle = '#000';
+        c.fillRect(0, 0, toile.width, toile.height);   // sous le monde (écran en hauteur) : du noir
         c.setTransform(echelle, 0, 0, echelle, sx * echelle, (sy - haut) * echelle);
         c.imageSmoothingEnabled = false;
         c.drawImage(decor_camp(L, 400, etape()), 0, 0);
@@ -371,7 +401,17 @@ const Campagne = (() => {
         const sg = cfg.sergent, images = sg.pyjama ? SPRITES_SERGENT.pyjama : SPRITES_SERGENT;
         const sortie = sg.sortDe !== undefined ? Math.min(1, t / 1.2) : 1;
         const sgx = sg.sortDe !== undefined ? Math.round(sg.sortDe + (sg.x - sg.sortDe) * sortie) : sg.x;
-        c.drawImage(images[parle ? 1 : 0], sgx, sg.y + (sortie < 1 ? Math.round(Math.abs(Math.sin(t * 12))) : 0));
+        // Il respire (un pixel de haut en bas), ou il trottine en sortant de sa tente
+        const sgy = sg.y + (sortie < 1 ? Math.round(Math.abs(Math.sin(t * 12))) : Math.round((Math.sin(t * 2.6) + 1) / 2));
+        c.drawImage(images[parle ? 1 : 0], sgx, sgy);
+        // La fumée du cigare monte en volutes et s'efface
+        c.fillStyle = '#c8c8c8';
+        for (let k = 0; k < 4; k++) {
+            const age = (t * 0.6 + k / 4) % 1;
+            c.globalAlpha = 0.7 * (1 - age);
+            c.fillRect(Math.round(sgx + 42 + Math.sin(t * 2 + k * 1.7) * 2 + age * 4), Math.round(sgy + 12 - age * 22), age > 0.5 ? 2 : 1, age > 0.5 ? 2 : 1);
+        }
+        c.globalAlpha = 1;
         // Le voyant du labo s'allume quand le labo parle
         if (ligne && ligne.qui === 'labo' && Math.floor(instant / 200) % 2) c.drawImage(PORTE_LABO.campAllume, CAMP.labo.x, CAMP.labo.y);
         // Le Soldat (avec sa tenue équipée)
@@ -379,7 +419,9 @@ const Campagne = (() => {
             c.save();
             const filtre = Loot.filtre('soldat', t);
             if (filtre) c.filter = filtre;
-            c.drawImage(Loot.sprites('soldat').arret, cfg.soldat.x, cfg.soldat.y, 64, 64);
+            // Il change d'appui de temps en temps (un pixel), à un autre rythme que le Sergent
+            const appui = Math.sin(t * 0.9) > 0.6 ? 1 : 0;
+            c.drawImage(Loot.sprites('soldat').arret, cfg.soldat.x + appui, cfg.soldat.y + Math.round((Math.sin(t * 1.7 + 1) + 1) / 2), 64, 64);
             c.restore();
         }
         // La nuit : seul le feu éclaire (il vacille), et un peu le voyant du labo
@@ -425,6 +467,8 @@ const Campagne = (() => {
                     el('small', '', ouverte
                         ? (mi.camion ? T('Escorter le camion jusqu\'au camp') : mi.chantier ? T('Couvrir la réparation du mur') : mi.boss ? T('Repousser la horde, puis l\'abattre') : T('Repousser {n} zombies', { n: mi.objectif[difficulte_choisie] })) + ' · ' + coche('normal') + ' · ' + coche('hardcore')
                         : T('🔒 Réussis la mission précédente pour la débloquer')));
+                const record = S().meilleurs && S().meilleurs[mi.id] && S().meilleurs[mi.id][difficulte_choisie];
+                if (record) texte.append(el('small', 'campagne-record', T('🏅 {temps} · ❤ {vies}', { temps: duree(record.temps), vies: record.vies })));
                 ligne.append(texte);
                 const boutons = el('span', 'campagne-boutons');
                 if (ouverte && introVue(mi.id)) {
@@ -453,6 +497,11 @@ const Campagne = (() => {
         $c('btn-campagne').addEventListener('click', () => { Son.bouton(); ouvrir(); });
         $c('btn-close-campagne').addEventListener('click', () => { Son.bouton(); $c('campagne-overlay').classList.add('hidden'); });
         $c('btn-passer-intro').addEventListener('click', () => { Son.bouton(); terminer_intro(); });
+        $c('btn-mission-suivante').addEventListener('click', () => {
+            Son.bouton();
+            ui.gameOver.classList.add('hidden');
+            lancer($c('btn-mission-suivante').dataset.mission);
+        });
     }
 
     return { demarrer, arreter, maj, tue, fin, lancer, ouvrir, etape, dessiner_nuit, dessiner_sol };

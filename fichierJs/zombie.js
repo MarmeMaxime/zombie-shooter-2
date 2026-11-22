@@ -238,7 +238,8 @@ function update_zombies(dt, largeurCanvas, hauteurCanvas, tempsJeu) {
         if (comp.maj && !etourdi) comp.maj(z, dt);
         if (z.retirer) { zombies.splice(i, 1); continue; }   // retiré par son comportement (tombe ouverte)
         z.vitesseActuelle = etourdi ? 0 : z.joggeur ? vitesse_joggeur(z) : z.emeute ? vitesse_emeute(z) : comp.vitesse ? comp.vitesse(z) : z.vitesse;
-        z.x -= z.vitesseActuelle * MONDE.echelleX * dt;   // même temps de traversée sur tout écran
+        // même temps de traversée sur tout écran ; agrippé au camion (campagne.js), c'est le camion qui l'emmène
+        if (!z.surCamion) z.x -= z.vitesseActuelle * MONDE.echelleX * dt;
         if (z.teleport && !etourdi) gerer_teleport(z, dt, hauteurCanvas);
 
         // En course, ses jambes vont deux fois et demie plus vite

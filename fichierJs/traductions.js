@@ -463,5 +463,10 @@ const TRADUCTIONS = {
     '… Toi ? Qu\'est-ce que tu lui as fait ?': ['… You? What did you do to her?', '… ¿Tú? ¿Qué le has hecho?'],
     'Peu importe. Tu fais le ménage dans la horde, et quand la grosse arrive, tu lui expliques que ce n\'est pas réciproque. Avec ton fusil.': ['Doesn\'t matter. You clean up the horde, and when the big one shows up, you explain to her that it\'s not mutual. With your rifle.', 'Da igual. Limpias la horda, y cuando llegue la grandota, le explicas que no es mutuo. Con tu fusil.'],
     'Elle est entrée dans le camp. Elle te cherche toujours. Le Sergent s\'est caché dans la jeep.': ['She got into the camp. She is still looking for you. The Sergeant is hiding in the jeep.', 'Ha entrado en el campamento. Todavía te busca. El Sargento se ha escondido en el jeep.'],
-    'Difficulté : {d}': ['Difficulty: {d}', 'Dificultad: {d}']
+    'Difficulté : {d}': ['Difficulty: {d}', 'Dificultad: {d}'],
+    'MISSION SUIVANTE ▶': ['NEXT MISSION ▶', 'SIGUIENTE MISIÓN ▶'],
+    '🏅 Record de la mission : {liste} !': ['🏅 Mission record: {liste}!', '🏅 ¡Récord de la misión: {liste}!'],
+    'temps (avant : {n})': ['time (before: {n})', 'tiempo (antes: {n})'],
+    'vies (avant : {n})': ['lives (before: {n})', 'vidas (antes: {n})'],
+    '🏅 {temps} · ❤ {vies}': ['🏅 {temps} · ❤ {vies}', '🏅 {temps} · ❤ {vies}']
 };

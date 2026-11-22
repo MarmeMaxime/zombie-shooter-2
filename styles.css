@@ -730,3 +730,14 @@ span#score.score-ready {
 .campagne-ligne button { padding: 5px 10px; font-size: 0.75rem; }
 #btn-close-campagne { flex: none; padding: 8px; }
 #instructeur-boutons button:disabled { opacity: 0.4; cursor: default; }
+/* Fin de mission réussie : « Mission suivante » devient le bouton principal */
+#btn-mission-suivante { background: #2e9a4a; color: #fff; border: none; font-weight: bold; }
+.game-over-buttons:has(#btn-mission-suivante:not(.hidden)) #btn-retry { background: #2a2a2a; border: 2px solid #ff3333; }
+.game-over-buttons:has(#btn-mission-suivante:not(.hidden)) #btn-retry .raccourci { display: none; }
+.campagne-ligne small.campagne-record { color: #ffd23c; }
+/* Pendant une intro de campagne : pas de commandes de jeu ni de barre d'infos */
+#game-container.en-scene #tactical-controls, #game-container.en-scene #info, #game-container.en-scene #btn-pause { display: none !important; }
+/* Écran en hauteur : la boîte de dialogue de l'intro passe en bas, sur toute la largeur */
+@media (orientation: portrait) {
+  #instructeur.dans-scene { top: auto; bottom: 24px; right: auto; left: 50%; transform: translateX(-50%); width: calc(94vw / var(--ui)); }
+}

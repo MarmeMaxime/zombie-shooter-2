@@ -43,9 +43,21 @@ function faire_apparaitre_boss(largeurCanvas, hauteurCanvas) {
     zombies.push(boss);
     ui_boss.nom.textContent = cfg.nom;   // déjà traduit (i18n.js)
     ui_boss.barre.classList.remove('hidden');
+    placer_barre_boss();
     Son.effet('bossArrive');
     secouer_ecran(2);
 }
+
+/* La barre du boss se place juste sous la barre d'infos, qui peut passer sur
+   deux lignes (écran étroit, mission en cours…) : elle ne la chevauche jamais. */
+function placer_barre_boss() {
+    const info = document.getElementById('info'), parent = ui_boss.barre.offsetParent;
+    if (!parent || !info.getBoundingClientRect || ui_boss.barre.classList.contains('hidden')) return;
+    const zoom = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ui')) || 1;
+    const bas = info.getBoundingClientRect().bottom - parent.getBoundingClientRect().top;
+    ui_boss.barre.style.top = Math.round(bas / zoom + 4) + 'px';   // la barre du boss est agrandie par --ui
+}
+window.addEventListener('resize', placer_barre_boss);
 
 function fin_boss() {
     boss = null;
