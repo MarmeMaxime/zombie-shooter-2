@@ -6,14 +6,9 @@
    (outils/sprites/exporter.html les réécrit en PNG).
    - image('monstres/joggeur/course3') : une image
    - images('monstres/joggeur/course', 12) : course1 … course12
-   VERSION_IMAGES augmente à chaque image chargée : un décor mis en cache avant
-   la fin du chargement (le camp du menu) sait qu'il doit se redessiner.
    ========================================================================= */
-let VERSION_IMAGES = 0;
-
 function image(chemin) {
     const i = new Image();
-    i.onload = () => { VERSION_IMAGES++; };
     i.src = `./assets/${chemin}.png`;
     return i;
 }
