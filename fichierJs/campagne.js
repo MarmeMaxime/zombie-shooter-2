@@ -46,6 +46,26 @@ const MISSIONS_CAMPAGNE = [
             normal: 'Plus un bruit. Bien joué, Soldat. Maintenant, si tu permets, j\'ai un oreiller qui m\'attend.',
             hardcore: 'Ceux-là couraient dans le noir comme en plein jour. Et tu les as eus quand même. Bonne nuit, Soldat. Enfin, ce qu\'il en reste.'
         }
+    },
+    {
+        id: 'c1m3', chapitre: 1, numero: 3, titre: 'La Livraison', perso: 'soldat',
+        // Escorter le camion de ravitaillement jusqu'au camp ; les Tanks (les videuses) arrivent
+        camion: {
+            y: 228,                                      // sur la piste de sable du bas
+            duree: { normal: 80, hardcore: 90 },         // temps du trajet jusqu'au camp (secondes)
+            depart: 3,
+            pv: { normal: 130, hardcore: 100 },          // le camion encaisse un peu plus en normal
+            degats: 5, degatsTank: 12                    // par seconde et par zombie agrippé
+        },
+        apparition: {
+            normal: { depart: 1.5, min: 1.0, acceleration: 0.006, groupe: 0.1, tank: 0.18, versCamion: 0.3 },
+            hardcore: { depart: 1.4, min: 0.9, acceleration: 0.006, groupe: 0.12, tank: 0.22, versCamion: 0.45 }
+        },
+        debrief: {
+            normal: 'Le camion est là. Les échantillons aussi. Et mon café. Tu viens de gagner mon respect. Un peu. Ne t\'habitue pas.',
+            hardcore: 'Ces videuses ne lâchaient rien, et toi non plus. Le camion est criblé de griffures, mais il est là. Le café a survécu. C\'est l\'essentiel.'
+        },
+        echec: 'Le camion… Mon café… Tu sais quoi ? On ne dira rien au labo.'
     }
 ];
 
@@ -90,6 +110,22 @@ const SCENES_CAMPAGNE = {
             { qui: 'sergent', texte: 'Allume ta lampe. Tire sur tout ce qui grogne. Et si ça grogne en pyjama, c\'est moi : tu ne tires pas.' },
             { qui: 'sergent', texte: 'Tiens jusqu\'à ce qu\'on n\'en entende plus un seul. Moi, je surveille. D\'ici. Allongé.', action: 'sirene', bouton: 'À mon poste !' }
         ]
+    },
+    c1m3: {
+        sergent: { x: CAMP.sergent.x, y: CAMP.sergent.y },
+        soldat: { x: 168, y: 214 },
+        attente: 900,
+        lignes: [
+            { qui: 'sergent', texte: 'Bonne nouvelle, Soldat : le ravitaillement arrive aujourd\'hui. Mauvaise nouvelle : il passe par la route de l\'est.' },
+            { qui: 'sergent', texte: 'Sur cette route, il y a une boîte de nuit. Réservée aux filles. Enfin, il y avait. Elle s\'est fait envahir cette nuit.' },
+            { qui: 'sergent', texte: 'Et une boîte pareille, évidemment, ça avait des videuses. Beaucoup de videuses. Il faut bien protéger ces demoiselles des sacripants dans ton genre.' },
+            { qui: 'soldat', texte: '…' },
+            { qui: 'sergent', texte: 'Ne fais pas cette tête. Enfin, je suppose que tu fais une tête, là-dessous.' },
+            { qui: 'sergent', texte: 'Les videuses ont été mordues comme les autres. Elles sont grosses, lentes, et elles encaissent : il faut plusieurs balles pour les coucher.' },
+            { qui: 'labo', texte: 'Sergent ? Le camion, c\'est bien celui avec nos échantillons ?' },
+            { qui: 'sergent', texte: 'Celui-là même. Avec mon café dedans. Donc il arrive entier.' },
+            { qui: 'sergent', texte: 'Le camion entre par l\'est et file jusqu\'au camp. Toi, tu le couvres : rien ne s\'y agrippe, rien ne le touche. En position !', bouton: 'À mon poste !' }
+        ]
     }
 };
 
@@ -108,8 +144,13 @@ const Campagne = (() => {
     // Étape du camp : il grandira à chaque chapitre terminé (première version pour l'instant)
     const etape = () => 0;
 
-    /* ---------- Mission en cours ---------- */
-    let m = null, chrono = 0, tues = 0, fini = false;
+    /* ---------- Mission en cours ----------
+       Deux sortes d'objectifs : « objectif » (nombre de zombies à repousser)
+       ou « camion » (un camion à escorter jusqu'au camp). */
+    let m = null, chrono = 0, tues = 0, fini = false, camion = null;
+
+    // Camion : sa caisse dans le sprite 128×128 (x 6..122, y 54..120), et l'arrière où les zombies s'agrippent
+    const CAISSE = { x: 6, y: 54, l: 116, h: 66 }, ARRIERE = 96;
 
     function demarrer() {
         m = mission(etat.mission);
@@ -117,6 +158,11 @@ const Campagne = (() => {
         tues = 0;
         fini = false;
         etat.victoire = false;
+        camion = null;
+        if (m.camion) {
+            const c = m.camion;
+            camion = { x: MONDE.largeur + 30, y: c.y, pv: c.pv[etat.mode], pvMax: c.pv[etat.mode], vitesse: (MONDE.largeur + 170) / c.duree[etat.mode], depart: c.depart, detruit: false };
+        }
         $c('hud-mission').classList.remove('hidden');
         maj_hud_mission();
         const b = $c('bandeau-vague');
@@ -129,6 +175,7 @@ const Campagne = (() => {
 
     function arreter() {
         m = null;
+        camion = null;
         $c('hud-mission').classList.add('hidden');
         $c('bandeau-vague').classList.remove('bandeau-mission');
     }
@@ -136,37 +183,99 @@ const Campagne = (() => {
     const objectif = () => m.objectif[etat.mode];
     function maj_hud_mission() {
         if (!m) return;
-        $c('mission-compte').textContent = Math.min(tues, objectif());
-        $c('mission-objectif').textContent = objectif();
+        if (camion) {
+            // Camion : son état et le chemin parcouru jusqu'au camp
+            const parcours = Math.round(100 * Math.min(1, Math.max(0, (MONDE.largeur + 30 - camion.x) / (MONDE.largeur + 170))));
+            $c('hud-mission').textContent = T('🚚 {pv} % · ➜ {n} %', { pv: Math.max(0, Math.ceil(100 * camion.pv / camion.pvMax)), n: parcours });
+            return;
+        }
+        $c('hud-mission').textContent = '🎯 ' + Math.min(tues, objectif()) + ' / ' + objectif();
     }
 
     // Appelée à chaque image à la place des apparitions du mode classique (zombie.js)
     function maj(dt) {
         if (!m || fini) return;
+        if (camion) maj_camion(dt);
+        if (fini) return;
         const a = m.apparition[etat.mode];
         chrono -= dt;
         if (chrono > 0) return;
         if (a.max && zombies.length >= a.max) return;   // il attend qu'une place se libère
         chrono = Math.max(a.min, a.depart - etat.temps * a.acceleration);
-        creer_zombie('normal', MONDE.largeur, MONDE.hauteur);
+        apparaitre(a);
         // Ils arrivent parfois par deux
-        if (Math.random() < a.groupe && (!a.max || zombies.length < a.max)) creer_zombie('normal', MONDE.largeur, MONDE.hauteur);
+        if (Math.random() < a.groupe && (!a.max || zombies.length < a.max)) apparaitre(a);
+    }
+
+    // Un zombie (ou un Tank, selon « a.tank ») ; pendant une escorte, certains visent le camion
+    function apparaitre(a) {
+        const z = creer_zombie(Math.random() < (a.tank || 0) ? 'tank' : 'normal', MONDE.largeur, MONDE.hauteur);
+        if (!camion) return;
+        // Jamais directement sur le camion (quand il entre par la droite) : on le fait apparaître au-dessus
+        const by = camion.y + CAISSE.y;
+        if (z.x < camion.x + CAISSE.x + CAISSE.l + 40 && z.y + 60 > by && z.y + 20 < by + CAISSE.h) z.y = Math.max(CONFIG.margeHaut, by - 70);
+        if (z.type === 'tank' || Math.random() < (a.versCamion || 0)) z.versCamion = true;
+    }
+
+    /* Le camion roule vers le camp. Les zombies qui l'attrapent s'agrippent à
+       l'arrière et l'abîment tant qu'on ne les abat pas ; ceux qui le visent
+       glissent vers sa voie. */
+    function maj_camion(dt) {
+        if (etat.temps >= camion.depart) camion.x -= camion.vitesse * dt;
+        const bx = camion.x + CAISSE.x, by = camion.y + CAISSE.y;
+        const voie = camion.y + CAISSE.y + CAISSE.h / 2 - 40;   // y d'un zombie qui marche contre le camion
+        for (const z of zombies) {
+            if (z.versCamion && !z.surCamion && z.x > camion.x + ARRIERE) z.y += Math.sign(voie - z.y) * Math.min(Math.abs(voie - z.y), 45 * dt);
+            const touche = z.x + 16 < bx + CAISSE.l && z.x + 48 > bx && z.y + 20 < by + CAISSE.h && z.y + 60 > by;
+            if (touche) z.surCamion = true;
+            if (z.surCamion) {
+                z.x = Math.max(z.x, camion.x + ARRIERE);   // agrippé à l'arrière, il suit le camion
+                camion.pv -= (z.type === 'tank' ? m.camion.degatsTank : m.camion.degats) * dt;
+            }
+        }
+        maj_hud_mission();
+        if (camion.pv <= 0) {
+            camion.detruit = true;
+            Son.effet('explosion');
+            secouer_ecran(4);
+            return terminer(false);
+        }
+        if (camion.x + CAISSE.x + CAISSE.l < 0) return terminer(true);   // arrivé au camp
     }
 
     // Un zombie est tombé : objectif atteint ?
     function tue() {
-        if (!m || fini) return;
+        if (!m || fini || camion) return;
         tues++;
         maj_hud_mission();
-        if (tues < objectif()) return;
+        if (tues >= objectif()) terminer(true);
+    }
+
+    // Fin de mission : les zombies restants s'enfuient (victoire), le Sergent fait le point
+    function terminer(victoire) {
         fini = true;
-        etat.victoire = true;
-        // Les zombies restants s'enfuient : la mission est gagnée
-        zombies.length = 0;
-        if (typeof dessiner === 'function') dessiner();   // l'image figée montre le terrain dégagé
+        etat.victoire = victoire;
+        if (victoire) {
+            zombies.length = 0;
+            if (typeof dessiner === 'function') dessiner();   // l'image figée montre le terrain dégagé
+        }
         const fin = () => game_over();
-        if (typeof Instructeur !== 'undefined' && document.getElementById('instructeur')) Instructeur.parler(T(m.debrief[etat.mode]), T('Mission accomplie !'), fin);
+        const texte = victoire ? m.debrief[etat.mode] : m.echec;
+        if (texte && typeof Instructeur !== 'undefined' && document.getElementById('instructeur'))
+            Instructeur.parler(T(texte), T(victoire ? 'Mission accomplie !' : 'Compris, sergent…'), fin);
         else fin();
+    }
+
+    // Le camion et sa barre de vie (dessinés sous les zombies)
+    function dessiner_sol(ctx) {
+        if (!camion || camion.detruit) return;
+        const x = Math.round(camion.x), y = Math.round(camion.y);
+        ctx.drawImage(OBJETS_CAMP.camion, x, y + (Math.floor(etat.temps * 8) % 2));   // le moteur fait vibrer la caisse
+        const part = Math.max(0, camion.pv / camion.pvMax);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+        ctx.fillRect(x + 30, y + 44, 70, 6);
+        ctx.fillStyle = part > 0.5 ? '#4ad060' : part > 0.25 ? '#e8c24a' : '#e83a3a';
+        ctx.fillRect(x + 31, y + 45, Math.round(68 * part), 4);
     }
 
     /* La nuit pendant une mission : tout est noir sauf le faisceau de la lampe
@@ -192,7 +301,7 @@ const Campagne = (() => {
 
     // Écran de fin d'une mission (appelé par game_over) : victoire ou échec, et sauvegarde
     function fin() {
-        const id = etat.mission;
+        const id = etat.mission, mi = mission(id);
         if (etat.victoire) {
             S().missions[id] = { ...(S().missions[id] || {}), [etat.mode]: true };
             Sauvegarde.sauver();
@@ -201,7 +310,9 @@ const Campagne = (() => {
         carte.querySelector('h2').textContent = etat.victoire ? T('MISSION ACCOMPLIE') : T('MISSION ÉCHOUÉE');
         carte.querySelector('.game-over-text').textContent = etat.victoire
             ? T('Le camp tient. Le labo aussi. Pour l\'instant.')
-            : T('Le camp est tombé. Le labo avec. Le Sergent va être de très mauvaise humeur.');
+            : (mi.camion && etat.vies > 0)
+                ? T('Le camion n\'est jamais arrivé. Le labo attendra ses échantillons. Le Sergent, son café.')
+                : T('Le camp est tombé. Le labo avec. Le Sergent va être de très mauvaise humeur.');
         carte.classList.toggle('victoire', etat.victoire);
         $c('btn-retry').firstChild.textContent = etat.victoire ? T('REJOUER') + ' ' : T('RÉESSAYER') + ' ';
     }
@@ -349,7 +460,7 @@ const Campagne = (() => {
                 const coche = mode => (reussie(mi.id, mode) ? '✔ ' : '✗ ') + T(mode === 'normal' ? 'Normal' : 'Hardcore');
                 texte.append(el('strong', '', (mi.nuit ? '🌙 ' : '') + T('Mission {n} — {titre}', { n: mi.numero, titre: T(mi.titre) })),
                     el('small', '', ouverte
-                        ? T('Repousser {n} zombies', { n: mi.objectif[difficulte_choisie] }) + ' · ' + coche('normal') + ' · ' + coche('hardcore')
+                        ? (mi.camion ? T('Escorter le camion jusqu\'au camp') : T('Repousser {n} zombies', { n: mi.objectif[difficulte_choisie] })) + ' · ' + coche('normal') + ' · ' + coche('hardcore')
                         : T('🔒 Réussis la mission précédente pour la débloquer')));
                 ligne.append(texte);
                 const boutons = el('span', 'campagne-boutons');
@@ -379,5 +490,5 @@ const Campagne = (() => {
         $c('btn-passer-intro').addEventListener('click', () => { Son.bouton(); terminer_intro(); });
     }
 
-    return { demarrer, arreter, maj, tue, fin, lancer, ouvrir, etape, dessiner_nuit, enIntro: () => Boolean(scene), reussie, debloquee };
+    return { demarrer, arreter, maj, tue, fin, lancer, ouvrir, etape, dessiner_nuit, dessiner_sol, enIntro: () => Boolean(scene), reussie, debloquee };
 })();

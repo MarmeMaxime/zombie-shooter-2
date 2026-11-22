@@ -18,7 +18,8 @@ Au lancement d'un combat, on choisit le mode :
   cadence de tir, vitesse, recharge du pouvoir), un boss toutes les 5 vagues.
 - **📖 Campagne** : l'histoire du camp que le soldat protège, avec sous terre un
   labo qui cherche un remède. Chapitre 1 (« La Recrue ») : « Premier contact », puis
-  « Couvre-feu » de nuit à la lampe torche, chacune avec son intro dans le camp,
+  « Couvre-feu » de nuit à la lampe torche, puis « La Livraison » (escorter un
+  camion, premiers Tanks), chacune avec son intro dans le camp,
   en normal comme en hardcore. Le camp s'affiche derrière le
   menu et grandira au fil des chapitres.
 

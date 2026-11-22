@@ -208,6 +208,32 @@ const OBJETS_CAMP = (() => {
         return res;
     }
 
+    // Camion de ravitaillement bâché, de profil, tourné vers la gauche (il roule vers le camp).
+    // Grille 128 : la caisse occupe à peu près x 6..122, y 54..120.
+    function camion() {
+        const g = PixelArt.grille(128);
+        rect(g, 6, 74, 40, 104, 'J');                    // cabine
+        rect(g, 12, 60, 40, 76, 'J');                    // toit de la cabine
+        rect(g, 2, 88, 10, 104, 'J');                    // capot avant
+        rect(g, 40, 96, 122, 106, 'J');                  // plateau
+        rect(g, 44, 54, 122, 96, 'T');                   // bâche
+        for (const x of [62, 82, 102]) trait(g, x, 56, x, 95, 't');   // arceaux de la bâche
+        for (const x of [24, 78, 104]) ellipse(g, x, 110, 10, 10, 'P', 0);
+        let res = PixelArt.finir(g, PARTIES);
+        // Pare-brise, porte, jantes, phare, étoile blanche, plaque de chargement
+        for (let y = 64; y <= 74; y++) for (let x = 16; x <= 26; x++) res[y][x] = 'n';
+        for (let y = 65; y <= 67; y++) for (let x = 17; x <= 19; x++) res[y][x] = 'M';
+        for (let y = 78; y <= 100; y++) res[y][30] = 'j';
+        res[86][32] = 'K'; res[86][33] = 'K';
+        for (const cx of [24, 78, 104]) { for (let y = 106; y <= 114; y++) for (let x = cx - 4; x <= cx + 4; x++) if ((x - cx) ** 2 + (y - 110) ** 2 <= 16) res[y][x] = 'M'; res[110][cx] = 'n'; }
+        res[92][2] = 'Y'; res[93][2] = 'Y'; res[92][3] = 'Y';
+        for (const [x, y] of [[20, 88], [19, 89], [21, 89], [20, 90], [18, 88], [22, 88], [19, 91], [21, 91]]) res[y][x] = 'Z';
+        for (let x = 70; x <= 96; x++) { res[72][x] = 'Z'; res[80][x] = 'Z'; }
+        for (let y = 72; y <= 80; y++) { res[y][70] = 'Z'; res[y][96] = 'Z'; }
+        for (let y = 74; y <= 78; y++) for (let x = 81; x <= 85; x++) if (x === 83 || y === 76) res[y][x] = 'R';   // croix rouge
+        return res;
+    }
+
     const img = g => PixelArt.en_image(g, COULEURS);
-    return { tente: img(tente(false)), tenteCommandement: img(tente(true)), jeep: img(jeep()) };
+    return { tente: img(tente(false)), tenteCommandement: img(tente(true)), jeep: img(jeep()), camion: img(camion()) };
 })();

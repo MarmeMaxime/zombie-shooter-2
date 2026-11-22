@@ -52,6 +52,7 @@ function dessiner() {
 
     ctx.imageSmoothingEnabled = false;    // tout est en pixel art : net, sans flou
     ctx.drawImage(fond, 0, 0, MONDE.largeur, MONDE.hauteur);
+    if (etat.variante === 'campagne' && typeof Campagne !== 'undefined') Campagne.dessiner_sol(ctx);   // camion à escorter
     draw_zombies(ctx);
     draw_balles(ctx);
     draw_pouvoir(ctx);

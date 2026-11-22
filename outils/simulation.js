@@ -78,7 +78,7 @@ const resultat = vm.runInContext(`
             const degatsParTir = typeArme === 'pompe' ? 2 : arme.degats;
             const tTir = (Math.ceil(z.pv / degatsParTir) - 1) * arme.delai + 0.1 + (typeArme === 'grenade' ? (z.x - avant) / (arme.vitesse * MONDE.echelleX) : 0);
             const faisable = tAlign + tTir + reaction < t;
-            const score = (faisable ? 0 : 1000) + t;
+            const score = (faisable ? 0 : 1000) + t - (z.surCamion ? 500 : 0);   // escorte : ceux agrippés au camion d'abord
             if (score < meilleurScore) { meilleurScore = score; meilleur = z; }
         }
         return meilleur;
