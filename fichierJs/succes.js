@@ -6,6 +6,9 @@
 const SV = () => Sauvegarde.donnees;
 const totalTues = () => Object.values(SV().stats.tues).reduce((s, n) => s + (Number(n) || 0), 0);
 const meilleur = table => Math.max(0, ...Object.values(table).map(Number).filter(Number.isFinite));
+// Missions de campagne d'un chapitre réussies dans l'une des difficultés données
+const campagne_reussies = (chapitre, modes) => (typeof MISSIONS_CAMPAGNE === 'undefined' ? 0
+    : MISSIONS_CAMPAGNE.filter(m => m.chapitre === chapitre && modes.some(mode => SV().campagne.missions[m.id] && SV().campagne.missions[m.id][mode])).length);
 
 // (les descriptions des Vétérans et de Légende reçoivent leur nombre de missions dans missions.js)
 const SUCCES = [
@@ -61,6 +64,13 @@ const SUCCES = [
     { id: 'inarretable', nom: 'Inarrêtable', desc: 'Survivre 15 minutes', titre: 'Inarrêtable', recompense: 300, objectif: 900, unite: 's', valeur: () => meilleur(SV().stats.meilleurTemps) },
     { id: 'rentier', nom: 'Rentier', desc: 'Avoir 5 000 crânes en poche', titre: 'Rentier', recompense: 0, objectif: 5000, valeur: () => SV().loot.cranes },
     { id: 'pouvoir_100', nom: 'Au-delà de 9000', desc: 'Utiliser 100 pouvoirs spéciaux', titre: 'Surhumain', recompense: 300, objectif: 100, valeur: () => SV().stats.pouvoirs || 0 },
+    // Campagne (leurs objectifs, le nombre de missions du chapitre, sont fixés dans campagne.js)
+    { id: 'campagne_c1', nom: 'La Recrue', desc: 'Terminer le chapitre 1 de la campagne', titre: 'Recrue confirmée', recompense: 300, objectif: 5,
+        valeur: () => campagne_reussies(1, ['normal', 'hardcore']) },
+    { id: 'campagne_c1_hc', nom: 'Forces spéciales', desc: 'Terminer le chapitre 1 de la campagne en hardcore', titre: 'Forces spéciales', recompense: 600, objectif: 5,
+        valeur: () => campagne_reussies(1, ['hardcore']) },
+    { id: 'nuit_blanche', nom: 'Nuit blanche', desc: 'Réussir « Couvre-feu » sans perdre une vie', titre: 'Insomniaque', recompense: 250, objectif: 1,
+        valeur: () => (SV().campagne.parfaites && SV().campagne.parfaites.c1m2 ? 1 : 0) },
     // Mode Vagues
     { id: 'vague_10', nom: 'Brise-lames', desc: 'Terminer la vague 10', titre: 'Brise-lames', recompense: 200, objectif: 10, valeur: () => SV().stats.meilleureVague || 0 },
     { id: 'vague_25', nom: 'Raz-de-marée', desc: 'Terminer la vague 25', titre: 'Digue humaine', recompense: 500, objectif: 25, valeur: () => SV().stats.meilleureVague || 0 },
@@ -76,11 +86,11 @@ Langue.traduire_objets(SUCCES, ['nom', 'desc', 'titre']);
    liste s'affiche à la fin. */
 const ORDRE_SUCCES = [
     'premier_sang', 'super_pouvoir', 'premier_footing', 'dispersion', 'centurion', 'geologue', 'survivant',
-    'ouvre_boite', 'carton_rouge', 'tueur_geant', 'fossoyeur', 'polyvalent', 'securite_sociale', 'desinsectisation',
+    'ouvre_boite', 'campagne_c1', 'carton_rouge', 'tueur_geant', 'fossoyeur', 'polyvalent', 'securite_sociale', 'desinsectisation',
     'casseur', 'naissances', 'pas_de_soin', 'fashion', 'torero', 'recruteur', 'machine', 'chasseur_mg',
     'maintien_ordre', 'ultime', 'profanateur', 'pigeon', 'increvable', 'coeur_brise', 'marathon', 'fleau',
     'sparring', 'ko', 'exterminateur', 'elu', 'rentier', 'inarretable', 'naturaliste', 'bestiaire', 'perpetuite',
-    'pouvoir_100', 'vague_10', 'baleine', 'vague_25', 'veteran_soldat', 'veteran_brute', 'veteran_mira', 'veteran_lassie', 'legende'
+    'pouvoir_100', 'nuit_blanche', 'vague_10', 'baleine', 'vague_25', 'campagne_c1_hc', 'veteran_soldat', 'veteran_brute', 'veteran_mira', 'veteran_lassie', 'legende'
 ];
 SUCCES.sort((a, b) => {
     const rang = s => { const i = ORDRE_SUCCES.indexOf(s.id); return i < 0 ? ORDRE_SUCCES.length : i; };

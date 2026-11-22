@@ -468,5 +468,21 @@ const TRADUCTIONS = {
     'temps (avant : {n})': ['time (before: {n})', 'tiempo (antes: {n})'],
     'vies (avant : {n})': ['lives (before: {n})', 'vidas (antes: {n})'],
     '🏅 {temps} · ❤ {vies}': ['🏅 {temps} · ❤ {vies}', '🏅 {temps} · ❤ {vies}'],
-    'MISSION {n}': ['MISSION {n}', 'MISIÓN {n}']
+    'MISSION {n}': ['MISSION {n}', 'MISIÓN {n}'],
+    'Terminer le chapitre 1 de la campagne': ['Finish chapter 1 of the campaign', 'Termina el capítulo 1 de la campaña'],
+    'Recrue confirmée': ['Seasoned recruit', 'Recluta veterano'],
+    'Forces spéciales': ['Special forces', 'Fuerzas especiales'],
+    'Terminer le chapitre 1 de la campagne en hardcore': ['Finish chapter 1 of the campaign in hardcore', 'Termina el capítulo 1 de la campaña en hardcore'],
+    'Nuit blanche': ['Sleepless night', 'Noche en vela'],
+    'Réussir « Couvre-feu » sans perdre une vie': ['Complete "Curfew" without losing a life', 'Supera «Toque de queda» sin perder una vida'],
+    'Insomniaque': ['Insomniac', 'Insomne'],
+    'CHAPITRE {n} TERMINÉ': ['CHAPTER {n} COMPLETE', 'CAPÍTULO {n} COMPLETADO'],
+    'Fin du chapitre {n}. La suite de l\'histoire arrive bientôt…': ['End of chapter {n}. The story continues soon…', 'Fin del capítulo {n}. La historia continúa pronto…'],
+    'Fin du chapitre 1': ['End of chapter 1', 'Fin del capítulo 1'],
+    'Bon. Le mur tient, la mutante est tombée, et le labo a ses échantillons. Enfin, ce qu\'il en reste.': ['Right. The wall holds, the mutant is down, and the lab has its samples. Well, what\'s left of them.', 'Bien. El muro aguanta, la mutante ha caído y el laboratorio tiene sus muestras. Bueno, lo que queda de ellas.'],
+    'Sergent ? Les tissus de la mutante… ils réagissent au remède. Pas comme prévu. Mais ils réagissent.': ['Sergeant? The mutant\'s tissue… it reacts to the cure. Not as expected. But it reacts.', '¿Sargento? Los tejidos de la mutante… reaccionan a la cura. No como esperábamos. Pero reaccionan.'],
+    '« Pas comme prévu ». Je commence à détester cette phrase.': ['"Not as expected". I\'m starting to hate that phrase.', '«No como esperábamos». Empiezo a odiar esa frase.'],
+    'Éclaireur au camp. Il y a du mouvement à l\'ouest. Beaucoup de mouvement.': ['Scout to camp. There\'s movement to the west. A lot of movement.', 'Explorador al campamento. Hay movimiento al oeste. Mucho movimiento.'],
+    'À l\'ouest ? Il n\'y a jamais rien à l\'ouest.': ['To the west? There\'s never anything to the west.', '¿Al oeste? Nunca hay nada al oeste.'],
+    'Repose-toi, Soldat. Tu l\'as mérité. Demain, on change de programme.': ['Get some rest, Soldier. You\'ve earned it. Tomorrow, plans change.', 'Descansa, Soldado. Te lo has ganado. Mañana cambiamos de planes.']
 };

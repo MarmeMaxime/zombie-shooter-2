@@ -161,6 +161,7 @@ function perdre_vie() {
         return;
     }
     etat.vies--;
+    etat.viesPerdues = (etat.viesPerdues || 0) + 1;
     maj_hud();
     Son.effet('degat');
     Son.vibrer(1, 200);
@@ -220,6 +221,8 @@ function init_game(mode, perso, tuto = false, variante = 'classique', mission = 
         tuto,                // entraînement (tutoriel.js)
         variante: tuto ? 'classique' : variante,
         mission: variante === 'campagne' ? mission : null,
+        viesPerdues: 0,
+        finChapitre: false,     // dernière mission d'un chapitre réussie : épilogue (campagne.js)
         victoire: false,
         vague: 0,
         vies: CONFIG.viesDepart,

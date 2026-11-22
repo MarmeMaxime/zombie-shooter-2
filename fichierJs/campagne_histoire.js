@@ -194,3 +194,17 @@ const SCENES_CAMPAGNE = {
         ]
     }
 };
+
+/* Épilogues : joués après le débriefing de la dernière mission d'un chapitre,
+   la première fois qu'on le termine. Ils annoncent la suite sans rien en dire. */
+const EPILOGUES = {
+    1: [
+        { qui: 'sergent', texte: 'Bon. Le mur tient, la mutante est tombée, et le labo a ses échantillons. Enfin, ce qu\'il en reste.' },
+        { qui: 'labo', texte: 'Sergent ? Les tissus de la mutante… ils réagissent au remède. Pas comme prévu. Mais ils réagissent.' },
+        { qui: 'sergent', texte: '« Pas comme prévu ». Je commence à détester cette phrase.' },
+        { qui: 'radio', texte: 'Éclaireur au camp. Il y a du mouvement à l\'ouest. Beaucoup de mouvement.' },
+        { qui: 'sergent', texte: 'À l\'ouest ? Il n\'y a jamais rien à l\'ouest.' },
+        { qui: 'soldat', texte: '…' },
+        { qui: 'sergent', texte: 'Repose-toi, Soldat. Tu l\'as mérité. Demain, on change de programme.', bouton: 'Fin du chapitre 1' }
+    ]
+};

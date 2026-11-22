@@ -201,9 +201,25 @@ const Campagne = (() => {
         }
         const fin = () => game_over();
         const texte = victoire ? m.debrief[etat.mode] : m.echec;
+        // Dernière mission d'un chapitre, réussie pour la première fois : l'épilogue suit le débriefing
+        const epilogue = victoire && !chapitre_fini(m.chapitre) && derniere_du_chapitre(m) ? EPILOGUES[m.chapitre] : null;
+        etat.finChapitre = Boolean(epilogue);
+        const suite = epilogue ? () => dire_epilogue(epilogue, 0, fin) : fin;
         if (texte && typeof Instructeur !== 'undefined' && document.getElementById('instructeur'))
-            Instructeur.parler(T(texte), T(victoire ? 'Mission accomplie !' : 'Compris, sergent…'), fin, 'sergent', 1000);   // impossible à passer pendant 1 s
+            Instructeur.parler(T(texte), T(victoire ? 'Mission accomplie !' : 'Compris, sergent…'), suite, 'sergent', 1000);   // impossible à passer pendant 1 s
         else fin();
+    }
+
+    // Les répliques de l'épilogue, une par une, sur le terrain figé
+    function dire_epilogue(lignes, i, ensuite) {
+        const l = lignes[i];
+        if (!l) return ensuite();
+        Instructeur.parler(T(l.texte), T(l.bouton || 'Suite ▶'), () => dire_epilogue(lignes, i + 1, ensuite), l.qui);
+    }
+    const chapitre_fini = n => Boolean(S().chapitres && S().chapitres[n]);
+    function derniere_du_chapitre(mi) {
+        const du_chapitre = MISSIONS_CAMPAGNE.filter(x => x.chapitre === mi.chapitre);
+        return du_chapitre[du_chapitre.length - 1] === mi;
     }
 
     // Le camion et sa barre de vie (dessinés sous les zombies)
@@ -258,13 +274,19 @@ const Campagne = (() => {
         let records = [];
         if (etat.victoire) {
             S().missions[id] = { ...(S().missions[id] || {}), [etat.mode]: true };
+            if (!etat.viesPerdues) S().parfaites = { ...(S().parfaites || {}), [id]: true };   // sans perdre une vie
+            if (etat.finChapitre) S().chapitres = { ...(S().chapitres || {}), [mi.chapitre]: true };
             records = noter_record(id);
             Sauvegarde.sauver();
+            if (typeof Succes !== 'undefined') Succes.verifier();   // succès de campagne
         }
         $c('bilan-records').textContent = records.length ? T('🏅 Record de la mission : {liste} !', { liste: records.join(T(' et ')) }) : '';
         const carte = document.querySelector('#game-over-overlay .mission-card');
-        carte.querySelector('h2').textContent = etat.victoire ? T('MISSION ACCOMPLIE') : T('MISSION ÉCHOUÉE');
-        carte.querySelector('.game-over-text').textContent = etat.victoire
+        carte.querySelector('h2').textContent = etat.finChapitre ? T('CHAPITRE {n} TERMINÉ', { n: mi.chapitre })
+            : etat.victoire ? T('MISSION ACCOMPLIE') : T('MISSION ÉCHOUÉE');
+        carte.querySelector('.game-over-text').textContent = etat.finChapitre
+            ? T('Fin du chapitre {n}. La suite de l\'histoire arrive bientôt…', { n: mi.chapitre })
+            : etat.victoire
             ? T('Le camp tient. Le labo aussi. Pour l\'instant.')
             : (mi.camion && etat.vies > 0)
                 ? T('Le camion n\'est jamais arrivé. Le labo attendra ses échantillons. Le Sergent, son café.')
@@ -491,6 +513,12 @@ const Campagne = (() => {
         liste.replaceChildren(...lignes);
         // La liste défile : on l'ouvre sur la dernière mission débloquée
         requestAnimationFrame(() => { if (derniere) liste.scrollTop = Math.max(0, derniere.offsetTop - liste.offsetTop - liste.clientHeight + derniere.offsetHeight + 8); });
+    }
+
+    // Objectif des succès de campagne : le nombre de missions du chapitre
+    if (typeof SUCCES !== 'undefined') {
+        const n1 = MISSIONS_CAMPAGNE.filter(x => x.chapitre === 1).length;
+        for (const s of SUCCES) if (s.id === 'campagne_c1' || s.id === 'campagne_c1_hc') s.objectif = n1;
     }
 
     // Boutons (absents du simulateur : on vérifie qu'ils existent)
