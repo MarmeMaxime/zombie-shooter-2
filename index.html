@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Zombie Shooter 2</title>
     <link rel="stylesheet" href="./styles.css" />
-    <link rel="icon" type="image/png" href="./assets/joueur_marche2.png" />
+    <link rel="icon" type="image/png" href="./assets/persos/soldat/marche2.png" />
   </head>
   
   <body>
@@ -20,13 +20,13 @@
           <p class="titre-sur">ILS ARRIVENT…</p>
           <h1 class="titre-geant" data-langue-fixe>ZOMBIE<br>SHOOTER <span>2</span></h1>
           <p class="titre-slogan">Survivez. Ouvrez des caisses. Regrettez.</p>
-          <p class="titre-version">version 1.2</p>
+          <p class="titre-version">version 1.3</p>
           <p class="titre-invite">▶ Appuie sur une touche ou touche l'écran ◀</p>
         </div>
       </div>
 
       <div id="main-menu">
-        <h1 data-langue-fixe>Zombie Shooter 2 <small class="version">1.2</small></h1>
+        <h1 data-langue-fixe>Zombie Shooter 2 <small class="version">1.3</small></h1>
         <p id="titre-joueur"></p>
         
         <div class="difficulty-selector">
@@ -37,7 +37,7 @@
         <div class="menu-row">
           <button id="btn-perso">PERSONNAGE : <span id="nom-perso">Soldat</span></button>
           <button id="btn-caisses">CAISSES · <span id="solde-menu">0</span> 💀</button>
-          <button id="btn-missions">📋 MISSIONS</button>
+          <button id="btn-missions">🎯 DÉFIS</button>
           <button id="btn-succes">🏆 SUCCÈS</button>
           <button id="btn-bestiaire">📖 BESTIAIRE</button>
         </div>
@@ -88,7 +88,7 @@
 
       <div id="missions-overlay" class="hidden">
         <div class="mission-card loot-card">
-          <h2>MISSIONS</h2>
+          <h2>DÉFIS</h2>
           <div id="missions-onglets"></div>
           <div id="missions-liste"></div>
           <button id="btn-close-missions">FERMER</button>
@@ -99,10 +99,19 @@
         <div class="mission-card">
           <h2>MODE DE JEU</h2>
           <div class="choix-variantes">
-            <button id="btn-classique"><strong>♾ CLASSIQUE</strong><small>Les zombies arrivent sans fin, de plus en plus nombreux.</small></button>
-            <button id="btn-vagues"><strong>🌊 VAGUES</strong><small>Une vague à la fois, une boutique entre chaque vague, un boss toutes les 5 vagues.</small></button>
+            <button id="btn-classique"><strong>♾ CLASSIQUE</strong><small>Les zombies arrivent sans fin, de plus en plus nombreux.</small><em class="record-variante" id="record-classique"></em></button>
+            <button id="btn-vagues"><strong>🌊 VAGUES</strong><small>Une vague à la fois, une boutique entre chaque vague, un boss toutes les 5 vagues.</small><em class="record-variante" id="record-vagues"></em></button>
+            <button id="btn-campagne"><strong>📖 CAMPAGNE</strong><small>L'histoire du camp. Chapitre 1 : La Recrue.</small></button>
           </div>
           <button id="btn-close-variante">RETOUR</button>
+        </div>
+      </div>
+
+      <div id="campagne-overlay" class="hidden">
+        <div class="mission-card campagne-card">
+          <h2>CAMPAGNE</h2>
+          <div id="campagne-liste"></div>
+          <button id="btn-close-campagne">RETOUR</button>
         </div>
       </div>
 
@@ -170,6 +179,7 @@
           <span>Vies : <span id="vies">3</span></span>
           <span>Temps : <span id="temps">0</span></span>
           <span id="hud-prix-vie"><span>Vie</span> (<span data-touche="vie">V</span>) : <span id="prix-vie">100</span></span>
+          <span id="hud-mission" class="hidden"></span>
           <span id="hud-vague" class="hidden"><span>Vague</span> <span id="vague-num">1</span> · 🧟 <span id="vague-reste">0</span></span>
           <span><span id="pouvoir-hud">★ 0%</span><span class="touche-pc"> (<span data-touche="pouvoir">E</span>)</span></span>
         </div>
@@ -197,13 +207,17 @@
         <div id="instructeur" class="hidden">
           <canvas id="instructeur-visage" width="80" height="80"></canvas>
           <div class="instructeur-bulle">
-            <strong>Sergent</strong>
+            <strong id="instructeur-nom">Sergent</strong>
             <p id="instructeur-texte"></p>
             <div id="instructeur-boutons"></div>
           </div>
         </div>
 
         <p id="bandeau-vague" class="hidden"></p>
+        <div id="scene-campagne" class="hidden">
+          <canvas id="scene-toile"></canvas>
+        </div>
+        <button id="btn-passer-intro" class="hidden">Passer l'intro ▶</button>
 
         <canvas id="jeu" width="800" height="400"></canvas>
       </div>
@@ -249,7 +263,9 @@
           </div>
 
           <div class="game-over-buttons">
+            <button id="btn-mission-suivante" class="hidden">MISSION SUIVANTE ▶ <small class="touche-pc raccourci">Entrée</small></button>
             <button id="btn-retry">RÉESSAYER <small class="touche-pc raccourci">Entrée</small></button>
+            <button id="btn-retour-campagne" class="hidden">📖 CAMPAGNE</button>
             <button id="btn-return-menu">RETOUR MENU <small class="touche-pc raccourci">Échap</small></button>
           </div>
         </div>
@@ -326,47 +342,51 @@
 
     </div> 
     
-    <script src="./config.js"></script>
-    <script src="./sauvegarde.js"></script>
-    <script src="./traductions.js"></script>
-    <script src="./i18n.js"></script>
-    <script src="./audio.js"></script>
-    <script src="./options.js"></script>
+    <script src="./fichierJs/config.js"></script>
+    <script src="./fichierJs/sauvegarde.js"></script>
+    <script src="./fichierJs/traductions.js"></script>
+    <script src="./fichierJs/i18n.js"></script>
+    <script src="./fichierJs/audio.js"></script>
+    <script src="./fichierJs/options.js"></script>
     <!-- Sprites générés en pixel art (avant les scripts qui les utilisent) -->
-    <script src="./pixel_art.js"></script>
-    <script src="./instructeur_sprite.js"></script>
-    <script src="./attache_sprite.js"></script>
-    <script src="./entrainement_decor.js"></script>
-    <script src="./combat_decor.js"></script>
-    <script src="./boss_sprite.js"></script>
-    <script src="./joggeur_sprite.js"></script>
-    <script src="./emeute_sprite.js"></script>
-    <script src="./pondeuse_sprite.js"></script>
-    <script src="./infirmier_sprite.js"></script>
-    <script src="./boxeur_sprite.js"></script>
-    <script src="./fossoyeur_sprite.js"></script>
-    <script src="./deplacement_joueur.js"></script>
-    <script src="./tir_joueur.js"></script>
-    <script src="./zombie.js"></script>
-    <script src="./boss.js"></script>
-    <script src="./joggeur.js"></script>
-    <script src="./emeute.js"></script>
-    <script src="./morts.js"></script>
-    <script src="./pondeuse.js"></script>
-    <script src="./infirmier.js"></script>
-    <script src="./boxeur.js"></script>
-    <script src="./fossoyeur.js"></script>
-    <script src="./pouvoirs.js"></script>
-    <script src="./main.js"></script>
-    <script src="./lootbox.js"></script>
-    <script src="./succes.js"></script>
-    <script src="./missions.js"></script>
-    <script src="./bestiaire.js"></script>
-    <script src="./menu.js"></script>
-    <script src="./ecran_titre.js"></script>
-    <script src="./tutoriel.js"></script>
-    <script src="./vagues.js"></script>
-    <script src="./manette.js"></script>
+    <script src="./fichierJs/pixel_art.js"></script>
+    <script src="./fichierJs/instructeur_sprite.js"></script>
+    <script src="./fichierJs/attache_sprite.js"></script>
+    <script src="./fichierJs/entrainement_decor.js"></script>
+    <script src="./fichierJs/combat_decor.js"></script>
+    <script src="./fichierJs/campagne_sprites.js"></script>
+    <script src="./fichierJs/camp_decor.js"></script>
+    <script src="./fichierJs/boss_sprite.js"></script>
+    <script src="./fichierJs/joggeur_sprite.js"></script>
+    <script src="./fichierJs/emeute_sprite.js"></script>
+    <script src="./fichierJs/pondeuse_sprite.js"></script>
+    <script src="./fichierJs/infirmier_sprite.js"></script>
+    <script src="./fichierJs/boxeur_sprite.js"></script>
+    <script src="./fichierJs/fossoyeur_sprite.js"></script>
+    <script src="./fichierJs/deplacement_joueur.js"></script>
+    <script src="./fichierJs/tir_joueur.js"></script>
+    <script src="./fichierJs/zombie.js"></script>
+    <script src="./fichierJs/boss.js"></script>
+    <script src="./fichierJs/joggeur.js"></script>
+    <script src="./fichierJs/emeute.js"></script>
+    <script src="./fichierJs/morts.js"></script>
+    <script src="./fichierJs/pondeuse.js"></script>
+    <script src="./fichierJs/infirmier.js"></script>
+    <script src="./fichierJs/boxeur.js"></script>
+    <script src="./fichierJs/fossoyeur.js"></script>
+    <script src="./fichierJs/pouvoirs.js"></script>
+    <script src="./fichierJs/main.js"></script>
+    <script src="./fichierJs/lootbox.js"></script>
+    <script src="./fichierJs/succes.js"></script>
+    <script src="./fichierJs/missions.js"></script>
+    <script src="./fichierJs/bestiaire.js"></script>
+    <script src="./fichierJs/menu.js"></script>
+    <script src="./fichierJs/ecran_titre.js"></script>
+    <script src="./fichierJs/tutoriel.js"></script>
+    <script src="./fichierJs/vagues.js"></script>
+    <script src="./fichierJs/campagne_histoire.js"></script>
+    <script src="./fichierJs/campagne.js"></script>
+    <script src="./fichierJs/manette.js"></script>
     <script>Langue.traduire_page(); Touches.maj_affichages();</script>
 
   </body>

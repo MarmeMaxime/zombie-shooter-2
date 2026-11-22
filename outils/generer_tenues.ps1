@@ -5,13 +5,17 @@ $ErrorActionPreference = 'Stop'
 function C($hex) { [System.Drawing.ColorTranslator]::FromHtml("#$hex") }
 
 $frames = @('arret', 'tir', 'marche1', 'marche2', 'marche3', 'marche4')
+# Dossier d'images de chaque perso (assets\persos\<dossier>\) et de ses tenues (assets\skins\<dossier>\<tenue>\)
+$DOSSIERS = @{ 'joueur' = 'soldat'; 'soldat' = 'soldat'; 'brute' = 'brutus'; 'grenadier' = 'mira'; 'mira' = 'mira'; 'lassie' = 'lassie' }
 function BaseFile($base, $frame) {
-    if ($base -eq 'joueur') {
-        if ($frame -eq 'arret') { return "$assets\joueur_arr" + [char]0xEA + "t.png" }
-        return "$assets\joueur_$frame.png"
-    }
     if ($base.Contains('\')) { return "${base}_$frame.png" }   # full path prefix (nine-tailed Lassie)
-    return "$assets\${base}_$frame.png"
+    return "$assets\persos\$($DOSSIERS[$base])\$frame.png"
+}
+function SkinDir($out) {
+    $i = $out.IndexOf('_')
+    $d = "$assets\skins\$($DOSSIERS[$out.Substring(0, $i)])\$($out.Substring($i + 1))"
+    New-Item -ItemType Directory -Force $d | Out-Null
+    return $d
 }
 
 # --- Accessories -------------------------------------------------------------
@@ -58,7 +62,7 @@ function Recolor($base, $out, $map, $special) {
             $bmp.SetPixel($x, $y, (C $n))
         } }
         if ($posOeil -and $DECOS.ContainsKey($out)) { & $DECOS[$out] $bmp $posOeil[0] $posOeil[1] }
-        $bmp.Save("$assets\skin_${out}_$fr.png", [System.Drawing.Imaging.ImageFormat]::Png)
+        $bmp.Save("$(SkinDir $out)\$fr.png", [System.Drawing.Imaging.ImageFormat]::Png)
         $bmp.Dispose()
     }
 }

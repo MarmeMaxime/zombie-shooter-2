@@ -17,7 +17,7 @@ const el = () => ({
     dataset: {}, children: [], style: { setProperty() {} }, offsetWidth: 0, querySelector: () => null, addEventListener() {}, setPointerCapture() {}, blur() {}, replaceChildren() {}, appendChild() {}, append() {}
 });
 const elements = {};
-const ctx2d = new Proxy({}, { get: (t, k) => (k in t ? t[k] : () => {}), set: (t, k, v) => (t[k] = v, true) });
+const ctx2d = new Proxy({}, { get: (t, k) => (k in t ? t[k] : () => ({ addColorStop() {} })), set: (t, k, v) => (t[k] = v, true) });
 const document = {
     getElementById: id => elements[id] || (elements[id] = Object.assign(el(), id === 'jeu' ? { width: 800, height: 400, getContext: () => ctx2d } : {})),
     querySelectorAll: () => [], documentElement: { style: { setProperty() {} } },
@@ -30,8 +30,8 @@ const ctx = vm.createContext({
     performance: { now: () => 0 }, requestAnimationFrame: () => 1, cancelAnimationFrame() {},
     Math: Object.assign(Object.create(Math), { random: rand }), console, localStorage: { getItem() {}, setItem() {} }
 });
-for (const f of ['config.js', 'sauvegarde.js', 'traductions.js', 'i18n.js', 'audio.js', 'options.js', 'pixel_art.js', 'instructeur_sprite.js', 'combat_decor.js', 'boss_sprite.js', 'joggeur_sprite.js', 'emeute_sprite.js', 'pondeuse_sprite.js', 'infirmier_sprite.js', 'boxeur_sprite.js', 'fossoyeur_sprite.js', 'deplacement_joueur.js', 'tir_joueur.js', 'zombie.js', 'boss.js', 'joggeur.js', 'emeute.js', 'morts.js', 'pondeuse.js', 'infirmier.js', 'boxeur.js', 'fossoyeur.js', 'pouvoirs.js', 'main.js', 'lootbox.js', 'succes.js', 'missions.js', 'vagues.js', 'menu.js']) {
-    vm.runInContext(fs.readFileSync(path.join(dir, f), 'utf8'), ctx, { filename: f });
+for (const f of ['config.js', 'sauvegarde.js', 'traductions.js', 'i18n.js', 'audio.js', 'options.js', 'pixel_art.js', 'instructeur_sprite.js', 'combat_decor.js', 'campagne_sprites.js', 'camp_decor.js', 'boss_sprite.js', 'joggeur_sprite.js', 'emeute_sprite.js', 'pondeuse_sprite.js', 'infirmier_sprite.js', 'boxeur_sprite.js', 'fossoyeur_sprite.js', 'deplacement_joueur.js', 'tir_joueur.js', 'zombie.js', 'boss.js', 'joggeur.js', 'emeute.js', 'morts.js', 'pondeuse.js', 'infirmier.js', 'boxeur.js', 'fossoyeur.js', 'pouvoirs.js', 'main.js', 'lootbox.js', 'succes.js', 'missions.js', 'vagues.js', 'menu.js', 'campagne_histoire.js', 'campagne.js']) {
+    vm.runInContext(fs.readFileSync(path.join(dir, 'fichierJs', f), 'utf8'), ctx, { filename: f });
 }
 
 // Surcharge de réglages pour les essais
@@ -41,9 +41,9 @@ if (process.env.LARGEUR) vm.runInContext('MONDE.largeur = ' + process.env.LARGEU
 
 // --- Bot ---
 const resultat = vm.runInContext(`
-(function (mode, dureeMax, reaction, perso, variante) {
+(function (mode, dureeMax, reaction, perso, variante, idMission) {
     const DT = 1 / 60;
-    init_game(mode, perso, false, variante);
+    init_game(mode, perso, false, variante, idMission);
     const arme = joueur.arme, typeArme = CONFIG.personnages[perso].arme;
     let pertes = 0, achats = 0; const causes = {};
     let pouvoirsUtilises = 0, crachatsRecus = 0, bossPasses = 0, dureesBoss = [], debutBoss = null;
@@ -78,7 +78,7 @@ const resultat = vm.runInContext(`
             const degatsParTir = typeArme === 'pompe' ? 2 : arme.degats;
             const tTir = (Math.ceil(z.pv / degatsParTir) - 1) * arme.delai + 0.1 + (typeArme === 'grenade' ? (z.x - avant) / (arme.vitesse * MONDE.echelleX) : 0);
             const faisable = tAlign + tTir + reaction < t;
-            const score = (faisable ? 0 : 1000) + t;
+            const score = (faisable ? 0 : 1000) + t - (z.surCamion ? 500 : 0);   // escorte : ceux agrippés au camion d'abord
             if (score < meilleurScore) { meilleurScore = score; meilleur = z; }
         }
         return meilleur;
@@ -150,7 +150,7 @@ const resultat = vm.runInContext(`
             pertesMinute = pertes;
         }
     }
-    return { vague: etat.vague, tues: Sauvegarde.donnees.stats.tues, pouvoirsUtilises, joggeurs: (Sauvegarde.donnees.stats.tues.joggeur || 0) + ' tués, ' + Sauvegarde.donnees.stats.esquives + ' esquives, ' + Sauvegarde.donnees.stats.sprintsStoppes + ' sprints stoppés', missionsRatees: MISSIONS[perso].filter(m => !Sauvegarde.donnees.missions.includes(m.id)).map(m => m.nom + ' ' + m.valeur(statsPerso(perso)) + '/' + m.objectif).join(' | '), coupMax: statsPerso(perso).coupMax, crachatsRecus, bossPasses, dureesBoss: dureesBoss.join(','), boss: Sauvegarde.donnees.stats.bossTues, bossApparus, causes, survie: Math.round(etat.temps), vivant: etat.enCours, vies: etat.vies, pertes, achats, pertesParMinute: pertesParMinute.join('') };
-})`, ctx)(mode, Number(minutes) * 60, Number(reaction), process.env.PERSO || 'soldat', process.env.VARIANTE || 'classique');
+    return { victoire: etat.victoire, vague: etat.vague, tues: Sauvegarde.donnees.stats.tues, pouvoirsUtilises, joggeurs: (Sauvegarde.donnees.stats.tues.joggeur || 0) + ' tués, ' + Sauvegarde.donnees.stats.esquives + ' esquives, ' + Sauvegarde.donnees.stats.sprintsStoppes + ' sprints stoppés', missionsRatees: MISSIONS[perso].filter(m => !Sauvegarde.donnees.missions.includes(m.id)).map(m => m.nom + ' ' + m.valeur(statsPerso(perso)) + '/' + m.objectif).join(' | '), coupMax: statsPerso(perso).coupMax, crachatsRecus, bossPasses, dureesBoss: dureesBoss.join(','), boss: Sauvegarde.donnees.stats.bossTues, bossApparus, causes, survie: Math.round(etat.temps), vivant: etat.enCours, vies: etat.vies, pertes, achats, pertesParMinute: pertesParMinute.join('') };
+})`, ctx)(mode, Number(minutes) * 60, Number(reaction), process.env.PERSO || 'soldat', process.env.VARIANTE || 'classique', process.env.MISSION || null);
 
 console.log(JSON.stringify({ perso: process.env.PERSO || 'soldat', mode, reaction: Number(reaction), ...resultat }));

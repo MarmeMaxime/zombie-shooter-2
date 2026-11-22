@@ -1,8 +1,8 @@
 param([string]$assets, [int]$queues = 1, [string]$sortie = '')
 # -queues 9 -sortie <path prefix> : nine-tailed variant (base of an outfit, see generer_tenues.ps1)
-# Lassie, the foxgirl: built from Mira's finished sprites (grenadier_*.png) so she
+# Lassie, the foxgirl: built from Mira's finished sprites (persos\mira\*.png) so she
 # keeps the same pixel-art style. ASCII only (PowerShell 5.1).
-# Run AFTER generer_persos.ps1. Output: lassie_arret/tir/marche1..4.png
+# Run AFTER generer_persos.ps1. Output: persos\lassie\arret/tir/marche1..4.png
 #  1. slimmer and a bit smaller (frees the top rows for the ears), room for the tail
 #  2. colours: ginger hair, green eye, dark outfit with yellow trim, electric gun
 #  3. swimsuit-style top: two cups, skin visible between and above, light bounce
@@ -35,7 +35,7 @@ $rebond = @{ 'marche1' = 1; 'marche2' = 0; 'marche3' = -1; 'marche4' = 0; 'arret
 $balance = @{ 'marche1' = 1; 'marche2' = 0; 'marche3' = -1; 'marche4' = 0; 'arret' = 0; 'tir' = 0 }
 
 foreach ($fr in $frames) {
-    $s = [System.Drawing.Bitmap]::FromFile("$assets\grenadier_$fr.png")
+    $s = [System.Drawing.Bitmap]::FromFile("$assets\persos\mira\$fr.png")
     $bmp = New-Object System.Drawing.Bitmap 64, 64
     # 1) slimmer + smaller (anchored on the feet), shifted right, recoloured
     for ($y = 0; $y -lt 64; $y++) { for ($x = 0; $x -lt 64; $x++) {
@@ -189,7 +189,7 @@ foreach ($fr in $frames) {
         }
     } }
 
-    $fichier = if ($sortie) { "${sortie}_$fr.png" } else { "$assets\lassie_$fr.png" }
+    $fichier = if ($sortie) { "${sortie}_$fr.png" } else { New-Item -ItemType Directory -Force "$assets\persos\lassie" | Out-Null; "$assets\persos\lassie\$fr.png" }
     $bmp.Save($fichier, [System.Drawing.Imaging.ImageFormat]::Png)
     $bmp.Dispose()
 }
