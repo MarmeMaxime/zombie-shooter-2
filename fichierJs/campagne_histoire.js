@@ -2,9 +2,12 @@
    L'HISTOIRE DE LA CAMPAGNE (les données ; le moteur est dans campagne.js)
    - CHAPITRES : les chapitres et leur titre.
    - MISSIONS_CAMPAGNE : chaque mission, son objectif, ses apparitions et les
-     mots du Sergent à la fin.
+     mots de la fin (voir le détail des champs plus bas).
    - SCENES_CAMPAGNE : l'intro de chaque mission (décor de la scène et
      répliques). Les personnages ne parlent que de l'histoire, jamais du jeu.
+   - EPILOGUES : la fin d'un chapitre, après le débriefing de sa dernière mission.
+   Chaque avancée de l'histoire a une raison (pourquoi ils se battent, pourquoi
+   ils se retrouvent là) : pas de coïncidence gratuite.
    Pour ajouter une mission : une entrée dans MISSIONS_CAMPAGNE, sa scène
    dans SCENES_CAMPAGNE, et ses textes dans traductions.js.
    ========================================================================= */
@@ -13,10 +16,20 @@ const CHAPITRES = [
     { numero: 2, titre: 'Le Cogneur' }
 ];
 
-/* apparition : intervalle entre deux zombies (de « depart » à « min » secondes,
-   il raccourcit de « acceleration » par seconde), « groupe » : chance qu'un
-   second arrive en même temps, « max » : zombies à l'écran au plus.
-   nuit : la mission se joue dans le noir, à la lampe torche. */
+/* Les champs d'une mission :
+   - perso : qui on joue ; objectif / camion / chantier / boss / boxe : le but (campagne.js) ;
+     boss.type : le boss imposé (sinon le Mastodonte), boss.bandeau : ce qui s'affiche à son arrivée.
+   - apparition : intervalle entre deux zombies (de « depart » à « min » secondes,
+     il raccourcit de « acceleration » par seconde), « groupe » : chance qu'un
+     second arrive en même temps, « max » : zombies à l'écran au plus ; la part de
+     chaque espèce (« tank », « joggeur », « infirmier », « pondeuse », « emeute »),
+     « panique » : ils courent plus vite.
+   - nuit (+ neons) : dans le noir, à la lampe ; miroir : à l'ouest, l'écran inversé ;
+     decor : 'ville', 'metro' ou 'arene' (sinon le désert).
+   - debut : ce qui est dit au début, pendant : à une part de l'objectif,
+     debrief / echec : à la fin (debriefQui : qui parle, sinon le Sergent),
+     echecBouton, texteFin : le texte de l'écran de fin (hors du camp).
+   - brutus, tirAmi : l'arrivée de Brutus et la fin secrète (« La Débandade »). */
 const MISSIONS_CAMPAGNE = [
     {
         id: 'c1m1', chapitre: 1, numero: 1, titre: 'Premier contact', perso: 'soldat',

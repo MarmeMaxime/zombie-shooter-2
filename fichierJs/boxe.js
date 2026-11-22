@@ -18,8 +18,7 @@
    ========================================================================= */
 const Boxe = (() => {
     let c = null;
-    const ECH = 2;                 // Gégé est dessiné en 2×
-    const ECH_B = 2.25;            // Brutus un peu plus (son sprite est plus fin)
+    const ECH = 2.25;              // les deux boxeurs à la même échelle (mêmes pixels à l'écran)
     const SOL = 334;               // ligne des pieds sur le ring (unités du monde)
 
     const alea = (a, b) => a + Math.random() * (b - a);
@@ -370,11 +369,11 @@ const Boxe = (() => {
 
         // Gégé (derrière Brutus) : il avance quand il frappe, recule quand il est touché
         const dxg = g.etat === 'frappe' ? -16 : g.etat === 'armer' ? 6 : g.etat === 'ouvert' ? -10 : g.flash > 0 ? 8 : 0;
-        poser(ctx, image_g(), cx - 60 + (g.etat === 'ko' ? 20 : dxg), SOL - GORILLE_PIEDS * ECH_B, GORILLE_TOILE * ECH_B);   // mêmes pixels que Brutus
+        poser(ctx, image_g(), cx - 60 + (g.etat === 'ko' ? 20 : dxg), SOL - GORILLE_PIEDS * ECH, GORILLE_TOILE * ECH);   // mêmes pixels que Brutus
         // Brutus : il recule quand il esquive ou qu'il est sonné
         const dxb = b.etat === 'esquive' ? -14 : b.etat === 'sonne' ? -18 * (1 - b.t / 0.5) : (b.etat === 'jab' || b.etat === 'direct') ? 6 : b.etat === 'uppercut' ? 10 : 0;
         // (son vrai sprite : les pieds sur la dernière ligne, le corps vers la gauche de l'image)
-        poser(ctx, image_b(), cx - 140 - BOXE_MARGE * ECH_B + (b.etat === 'ko' ? -24 : dxb), SOL - BOXE_PIEDS * ECH_B, BOXE_TOILE * ECH_B);
+        poser(ctx, image_b(), cx - 140 - BOXE_MARGE * ECH + (b.etat === 'ko' ? -24 : dxb), SOL - BOXE_PIEDS * ECH, BOXE_TOILE * ECH);
 
         cordes(ctx, true);
         dessiner_foule(ctx, true);

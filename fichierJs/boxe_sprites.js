@@ -1,6 +1,6 @@
 /* =========================================================================
    SPRITES DU COMBAT DE BOXE (chapitre 2, « Le Ring »), pixel art généré au
-   chargement (voir pixel_art.js). Dessinés en 2× à l'écran par boxe.js.
+   chargement (voir pixel_art.js). Dessinés en 2,25× à l'écran par boxe.js.
    - SPRITES_BOXE.brutus (grille 64, tourné vers la droite) : construit à
      partir de son vrai sprite (ou de sa tenue), sans le fusil qu'on lui a volé,
      avec des bras de boxeur.
@@ -22,7 +22,7 @@ const BOXE_TOILE = 80, BOXE_MARGE = 8, BOXE_PIEDS = 71;
 // Gégé : une grille de 84, affichée comme Brutus (mêmes pixels à l'écran), pieds sur la ligne 81
 const GORILLE_TOILE = 84, GORILLE_PIEDS = 81;
 const SPRITES_BOXE = (() => {
-    const { poser, ellipse, rect, trait, membre } = PixelArt;
+    const { poser, ellipse, rect, membre } = PixelArt;
 
     /* ---------- Brutus : construit à partir de son VRAI sprite ----------
        On part de assets/persos/brutus/arret.png (ou de la tenue équipée, qui a la
@@ -216,12 +216,13 @@ const SPRITES_BOXE = (() => {
         };
     }
 
-    // Les sprites de boxe de Brutus, dans sa tenue du moment (construits au premier besoin)
-    function sprites_brutus() {
-        const img = typeof Loot !== 'undefined' ? Loot.sprites('brute').arret : SPRITES_PERSO.brute.arret;
+    // Les sprites de boxe de Brutus pour une image (une tenue), construits au premier besoin
+    function brutus_pour(img) {
         if (!cacheBrutus.has(img)) cacheBrutus.set(img, brutus_depuis(img));
         return cacheBrutus.get(img);
     }
+    // …et dans la tenue qu'il porte en ce moment
+    const sprites_brutus = () => brutus_pour(typeof Loot !== 'undefined' ? Loot.sprites('brute').arret : SPRITES_PERSO.brute.arret);
 
     /* ---------- Gégé, le Gorille ----------
        Dessiné pour aller avec le sprite de Brutus : à l'écran, ses pixels ont la
@@ -496,8 +497,7 @@ const SPRITES_BOXE = (() => {
 
     return {
         get brutus() { return sprites_brutus(); },
-        // Pour une image donnée (une tenue) : sert aussi à vérifier chaque tenue
-        brutus_pour: img => { if (!cacheBrutus.has(img)) cacheBrutus.set(img, brutus_depuis(img)); return cacheBrutus.get(img); },
+        brutus_pour,   // pour une tenue donnée (sert aussi à vérifier chaque tenue)
         gorille: gg,
         foule
     };

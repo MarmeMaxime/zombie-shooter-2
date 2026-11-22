@@ -3,15 +3,21 @@
    Derrière le soldat se trouve un camp à protéger ; sous le camp, un labo où
    des chercheurs travaillent sur un remède. Le camp s'affiche dans le menu
    (camp_decor.js) et grandit avec la campagne (etape()).
-   - Intro de chaque mission : une scène dans le camp (de jour, de nuit, avec
-     la brèche…), avec les dialogues du Sergent, du Soldat (muet), du labo ou
-     de l'éclaireur, dans la boîte de dialogue du tutoriel.
+   - Intro de chaque mission : une scène dans le camp (de jour, de nuit au coin
+     du feu, avec la brèche…), avec les dialogues du Sergent, du Soldat (muet),
+     du labo, de l'éclaireur, de Brutus ou de Gégé, dans la boîte de dialogue du
+     tutoriel. Depuis l'écran de la campagne, on peut revoir l'intro d'une
+     mission déjà vue, et l'outro (débriefing, épilogue) d'une mission réussie.
    - Mission : une partie avec ses propres apparitions et un objectif parmi
      « objectif » (zombies à repousser), « camion » (escorte), « chantier »
-     (couvrir une réparation) ou « boss » (une horde, puis le boss). Elle se
-     joue en normal comme en hardcore et se débloque avec la précédente.
+     (couvrir une réparation), « boss » (une horde, puis le boss) ou « boxe »
+     (un combat de boxe, boxe.js). Elle peut avoir son décor (ville, métro,
+     arène), se jouer de nuit ou en miroir, et être racontée par Brutus (le
+     chapitre 2 est son histoire). Elle se joue en normal comme en hardcore et
+     se débloque avec la précédente. La dernière d'un chapitre a un épilogue.
    Sauvegarde : Sauvegarde.donnees.campagne = { intros: { id: true }, missions: { id: { normal, hardcore } },
-                meilleurs: { id: { normal: { temps, vies } } } }   (meilleur temps et le plus de vies restantes)
+                meilleurs: { id: { normal: { temps, vies } } },   (meilleur temps et le plus de vies restantes)
+                parfaites, chapitres: { n: true }, secrets: { tirAmi } }
    ========================================================================= */
 
 const Campagne = (() => {
@@ -26,13 +32,15 @@ const Campagne = (() => {
     const debloquee = id => { const i = MISSIONS_CAMPAGNE.findIndex(m => m.id === id); return i <= 0 || reussieUneFois(MISSIONS_CAMPAGNE[i - 1].id); };
     // Ancienne sauvegarde : « introVue » valait pour l'intro de la première mission
     const introVue = id => Boolean((S().intros && S().intros[id]) || (id === 'c1m1' && S().introVue));
-    // Étape du camp : il grandit avec la campagne (1 : mur renforcé et tour de guet, après « La Brèche »)
+    // Étape du camp : il grandit avec la campagne (1 : palissade et tour de guet, après « La Brèche » ;
+    // 2 : la tente de Brutus, après « La Débandade »)
     const etape = () => (reussieUneFois('c2m1') ? 2 : reussieUneFois('c1m4') ? 1 : 0);
 
     /* ---------- Mission en cours ----------
-       Trois sortes d'objectifs : « objectif » (nombre de zombies à repousser),
-       « camion » (un camion à escorter jusqu'au camp) ou « chantier » (tenir
-       pendant une réparation, qui s'arrête quand un zombie est trop près). */
+       Les objectifs : « objectif » (nombre de zombies à repousser), « camion »
+       (un camion à escorter jusqu'au camp), « chantier » (tenir pendant une
+       réparation, qui s'arrête quand un zombie est trop près), « boss » (une
+       horde, puis le boss) ; « boxe » remplace toute la partie (boxe.js). */
     let m = null, chrono = 0, tues = 0, fini = false, camion = null, chantier = null, phaseBoss = false, moteurCamion = null;
     let dits = 0, finale = null;   // répliques déjà dites pendant la vague ; arrivée de Brutus (fin de « La Débandade »)
 
@@ -130,7 +138,7 @@ const Campagne = (() => {
         if (Math.random() < a.groupe && (!a.max || zombies.length < a.max)) apparaitre(a);
     }
 
-    // Un zombie, un Tank (« a.tank ») ou un Joggeur (« a.joggeur ») ; pendant une escorte, certains visent le camion
+    // Un zombie, ou une espèce selon sa part (« a.tank », « a.joggeur »…) ; pendant une escorte, certains visent le camion
     function apparaitre(a) {
         const r = Math.random();
         // Les types spéciaux (part de chaque apparition), sinon un zombie normal
