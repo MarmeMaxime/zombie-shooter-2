@@ -130,3 +130,42 @@ function dessiner_feu(ctx, t) {
     }
     ctx.globalAlpha = 1;
 }
+
+/* La nuit : un voile sombre sur le monde, percé par des lumières.
+   lumieres : [{ x, y, r, force }] (cercles qui éclairent, force de 0 à 1)
+   ou [{ cone: true, x, y, longueur, angle, force }] (faisceau d'une lampe vers la droite).
+   Dessiné en coordonnées du monde, sur un petit canvas : le voile reste en pixel art. */
+const nuit = (() => {
+    let voile = null;
+    return function dessiner_nuit(ctx, largeur, hauteur, lumieres, opacite = 0.88) {
+        const W = Math.max(1, Math.round(largeur)), H = Math.max(1, Math.round(hauteur));
+        if (!voile || voile.width !== W || voile.height !== H) { voile = document.createElement('canvas'); voile.width = W; voile.height = H; }
+        const v = voile.getContext('2d');
+        v.globalCompositeOperation = 'source-over';
+        v.clearRect(0, 0, W, H);
+        v.fillStyle = `rgba(6, 10, 28, ${opacite})`;
+        v.fillRect(0, 0, W, H);
+        v.globalCompositeOperation = 'destination-out';
+        for (const l of lumieres) {
+            const f = l.force ?? 1;
+            if (l.cone) {
+                // Faisceau : un triangle qui s'ouvre vers la droite, plus faible au bout
+                const d = v.createRadialGradient(l.x, l.y, 4, l.x, l.y, l.longueur);
+                d.addColorStop(0, `rgba(0,0,0,${f})`); d.addColorStop(0.7, `rgba(0,0,0,${f * 0.85})`); d.addColorStop(1, 'rgba(0,0,0,0)');
+                v.fillStyle = d;
+                v.beginPath();
+                v.moveTo(l.x, l.y);
+                v.lineTo(l.x + l.longueur, l.y - Math.tan(l.angle) * l.longueur);
+                v.lineTo(l.x + l.longueur, l.y + Math.tan(l.angle) * l.longueur);
+                v.closePath();
+                v.fill();
+            } else {
+                const d = v.createRadialGradient(l.x, l.y, 0, l.x, l.y, l.r);
+                d.addColorStop(0, `rgba(0,0,0,${f})`); d.addColorStop(0.6, `rgba(0,0,0,${f * 0.7})`); d.addColorStop(1, 'rgba(0,0,0,0)');
+                v.fillStyle = d;
+                v.fillRect(l.x - l.r, l.y - l.r, l.r * 2, l.r * 2);
+            }
+        }
+        ctx.drawImage(voile, 0, 0, W, H);
+    };
+})();

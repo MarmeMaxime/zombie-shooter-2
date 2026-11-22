@@ -712,6 +712,9 @@ span#score.score-ready {
 .mission-card.game-over.victoire { border-top-color: #3ac060; }
 .mission-card.game-over.victoire h2 { color: #7dff9a; border-color: #7dff9a; }
 /* Pendant l'intro, la boîte de dialogue passe à droite (le camp est à gauche) */
-#instructeur.dans-scene { left: auto; right: 16px; transform: translateY(-50%); width: min(400px, 48vw); box-shadow: 0 4px 18px rgba(0, 0, 0, 0.6); }
+#instructeur.dans-scene { left: auto; right: 16px; transform: translateY(-50%); width: min(400px, calc(48vw / var(--ui))); box-shadow: 0 4px 18px rgba(0, 0, 0, 0.6); }
 /* Bandeau du début de mission : titre plus long que « VAGUE 3 », écrit plus petit */
 #bandeau-vague.bandeau-mission { font-size: 1.5rem; letter-spacing: 3px; padding: 0 12px; }
+.campagne-boutons { display: flex; gap: 6px; flex: none; flex-direction: row !important; }
+.campagne-ligne.verrouillee { opacity: 0.55; }
+.campagne-ligne button:disabled { cursor: not-allowed; background: #333; color: #888; border-color: #555; }

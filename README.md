@@ -17,8 +17,9 @@ Au lancement d'un combat, on choisit le mode :
 - **🌊 Vagues** : une vague à la fois, une boutique entre chaque vague (vie,
   cadence de tir, vitesse, recharge du pouvoir), un boss toutes les 5 vagues.
 - **📖 Campagne** : l'histoire du camp que le soldat protège, avec sous terre un
-  labo qui cherche un remède. Chapitre 1 (« La Recrue ») : l'intro dans le camp et
-  la première mission, en normal comme en hardcore. Le camp s'affiche derrière le
+  labo qui cherche un remède. Chapitre 1 (« La Recrue ») : « Premier contact », puis
+  « Couvre-feu » de nuit à la lampe torche, chacune avec son intro dans le camp,
+  en normal comme en hardcore. Le camp s'affiche derrière le
   menu et grandira au fil des chapitres.
 
 À la toute première partie, le Sergent propose un **entraînement** (on peut le

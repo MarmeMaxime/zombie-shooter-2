@@ -19,6 +19,7 @@ const Instructeur = (() => {
        son sprite avec la tenue équipée ; il ne dit jamais rien). */
     const ORATEURS = {
         sergent: { nom: 'Sergent', image: ouvert => SPRITES_INSTRUCTEUR[ouvert ? 1 : 0] },
+        sergentPyjama: { nom: 'Sergent', image: ouvert => SPRITES_INSTRUCTEUR.pyjama[ouvert ? 1 : 0] },
         labo: { nom: 'Labo', image: ouvert => PORTE_LABO.portrait[ouvert ? 1 : 0] },
         soldat: { nom: 'Soldat', image: () => Loot.sprites('soldat').arret, cadre: [3, 0, 22, 22] }
     };

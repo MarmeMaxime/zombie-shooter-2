@@ -404,5 +404,18 @@ const TRADUCTIONS = {
     '📖 CAMPAGNE': ['📖 CAMPAIGN', '📖 CAMPAÑA'],
     'L\'histoire du camp. Chapitre 1 : La Recrue.': ['The story of the camp. Chapter 1: The Recruit.', 'La historia del campamento. Capítulo 1: El Recluta.'],
     'CAMPAGNE': ['CAMPAIGN', 'CAMPAÑA'],
-    'Passer l\'intro ▶': ['Skip intro ▶', 'Saltar intro ▶']
+    'Passer l\'intro ▶': ['Skip intro ▶', 'Saltar intro ▶'],
+    'Couvre-feu': ['Curfew', 'Toque de queda'],
+    'Plus un bruit. Bien joué, Soldat. Maintenant, si tu permets, j\'ai un oreiller qui m\'attend.': ['Not a sound. Well done, Soldier. Now, if you\'ll excuse me, I have a pillow waiting.', 'Ni un ruido. Bien hecho, Soldado. Y ahora, si me disculpas, tengo una almohada esperándome.'],
+    'Ceux-là couraient dans le noir comme en plein jour. Et tu les as eus quand même. Bonne nuit, Soldat. Enfin, ce qu\'il en reste.': ['Those ones ran in the dark like it was broad daylight. And you still got them. Good night, Soldier. What\'s left of it, anyway.', 'Esos corrían a oscuras como a plena luz del día. Y aun así los abatiste. Buenas noches, Soldado. Bueno, lo que queda de ella.'],
+    'Soldat ! Debout ! … Ah. Tu es déjà debout.': ['Soldier! Up! … Oh. You\'re already up.', '¡Soldado! ¡Arriba! … Ah. Ya estás de pie.'],
+    'Tu dors en armure, toi ? … Remarque, ça fait gagner du temps. Je devrais essayer.': ['You sleep in armor? … Well, it saves time. I should try it.', '¿Duermes con armadura? … Bueno, ahorra tiempo. Debería probarlo.'],
+    'Ne regarde pas le pyjama. C\'est un pyjama réglementaire. Il l\'était en tout cas, en 1987.': ['Don\'t look at the pajamas. They\'re regulation pajamas. They were, anyway, in 1987.', 'No mires el pijama. Es un pijama reglamentario. Al menos lo era en 1987.'],
+    'Sergent ? Il y a du bruit là-haut. On peut dormir tranquilles ?': ['Sergeant? There\'s noise up there. Can we sleep in peace?', '¿Sargento? Hay ruido ahí arriba. ¿Podemos dormir tranquilos?'],
+    'Personne ne dort tranquille ici. Surtout pas moi, visiblement.': ['Nobody sleeps in peace here. Least of all me, apparently.', 'Aquí nadie duerme tranquilo. Y yo menos, por lo visto.'],
+    'Les guetteurs ont entendu grogner à l\'est. Ils arrivent par petits groupes. Moins nombreux, mais on ne les voit pas venir.': ['The lookouts heard growling to the east. They\'re coming in small groups. Fewer of them, but you can\'t see them coming.', 'Los vigías han oído gruñidos al este. Llegan en grupos pequeños. Son menos, pero no los ves venir.'],
+    'Allume ta lampe. Tire sur tout ce qui grogne. Et si ça grogne en pyjama, c\'est moi : tu ne tires pas.': ['Turn on your flashlight. Shoot anything that growls. And if it growls in pajamas, that\'s me: you don\'t shoot.', 'Enciende la linterna. Dispara a todo lo que gruña. Y si gruñe en pijama, soy yo: no disparas.'],
+    'Tiens jusqu\'à ce qu\'on n\'en entende plus un seul. Moi, je surveille. D\'ici. Allongé.': ['Hold until we can\'t hear a single one. Me, I\'ll keep watch. From here. Lying down.', 'Aguanta hasta que no se oiga ni uno. Yo vigilo. Desde aquí. Tumbado.'],
+    '🔒 Réussis la mission précédente pour la débloquer': ['🔒 Complete the previous mission to unlock it', '🔒 Supera la misión anterior para desbloquearla'],
+    'Revoir l\'intro': ['Watch the intro again', 'Volver a ver la intro']
 };

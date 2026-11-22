@@ -70,7 +70,7 @@ const Manette = (() => {
         const ouvert = ECRANS.find(([ecran]) => visible(ecran));
         if (ouvert) { if (appui('b')) cliquer(ouvert[1]); return; }
         if (visible('choix-variante')) { if (appui('a')) cliquer('btn-classique'); else if (appui('x')) cliquer('btn-vagues'); else if (appui('y')) cliquer('btn-campagne'); return; }
-        if (visible('campagne-overlay')) { const j = document.querySelector('.campagne-jouer'); if (appui('a') && j) j.click(); return; }
+        if (visible('campagne-overlay')) { const d = document.getElementById('campagne-liste').dataset.derniere; if (appui('a') && d) Campagne.lancer(d); return; }
         if (visible('main-menu') && (appui('a') || appui('start'))) cliquer('btn-start');
     }
 

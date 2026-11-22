@@ -30,28 +30,36 @@ const SPRITES_SERGENT = (() => {
         X: { rang: 4, base: 'H', ombre: 'h', bande: 'fine' }      // chapeau
     };
 
-    function dessiner(parle) {
+    // pyjama : la tenue de nuit (pyjama rayé, bonnet de nuit, chaussons), cigare compris
+    function dessiner(parle, pyjama = false) {
         const g = PixelArt.grille(64);
-        // Jambes écartées et bottes
+        // Jambes écartées ; bottes ou chaussons
         rect(g, 24, 40, 31, 57, 'P'); rect(g, 33, 40, 40, 57, 'P');
-        rect(g, 23, 57, 31, 61, 'N'); rect(g, 33, 57, 41, 61, 'N');
-        // Torse large, ceinture
+        rect(g, 23, 57, 31, 61, pyjama ? 'M' : 'N'); rect(g, 33, 57, 41, 61, pyjama ? 'M' : 'N');
+        // Torse large ; ceinture ou élastique du pyjama
         ellipse(g, 32, 30, 11.5, 11, 'U', 0.03);
         rect(g, 22, 30, 42, 39, 'U');
-        rect(g, 22, 38, 42, 40, 'B'); rect(g, 31, 38, 33, 40, 'Y');
+        if (!pyjama) { rect(g, 22, 38, 42, 40, 'B'); rect(g, 31, 38, 33, 40, 'Y'); }
         trait(g, 32, 22, 32, 30, 'u');                              // boutonnière
-        // Galons de sergent sur les manches
-        for (const x of [21, 41]) { poser(g, x, 25, 'Y'); poser(g, x + 1, 26, 'Y'); poser(g, x, 27, 'Y'); }
+        // Galons de sergent sur les manches (pas sur le pyjama… quoique)
+        if (!pyjama) for (const x of [21, 41]) { poser(g, x, 25, 'Y'); poser(g, x + 1, 26, 'Y'); poser(g, x, 27, 'Y'); }
         // Cou et tête à mâchoire carrée
         rect(g, 29, 17, 35, 21, 'V');
         ellipse(g, 32, 12, 6.2, 6.5, 'V', 0.03);
         rect(g, 26, 12, 38, 17, 'V');
         poser(g, 26, 17, null); poser(g, 38, 17, null);
-        // Chapeau d'instructeur : large bord, calotte à creux, ruban
-        ellipse(g, 32, 7, 11, 1.8, 'X', 0);
-        rect(g, 27, 1, 37, 6, 'X');
-        poser(g, 27, 1, null); poser(g, 37, 1, null); poser(g, 32, 1, null);
-        rect(g, 27, 5, 37, 6, 'B');
+        if (pyjama) {
+            // Bonnet de nuit : bord roulé, pointe qui retombe sur le côté, pompon blanc
+            rect(g, 26, 5, 38, 7, 'X');
+            for (let k = 0; k <= 10; k++) rect(g, 28 + k, 4 - Math.round(k * 0.35), 37, 4 - Math.round(k * 0.35), 'X');
+            for (let k = 0; k <= 5; k++) rect(g, 38 + k, k, 39 + k, k + 1, 'X');
+        } else {
+            // Chapeau d'instructeur : large bord, calotte à creux, ruban
+            ellipse(g, 32, 7, 11, 1.8, 'X', 0);
+            rect(g, 27, 1, 37, 6, 'X');
+            poser(g, 27, 1, null); poser(g, 37, 1, null); poser(g, 32, 1, null);
+            rect(g, 27, 5, 37, 6, 'B');
+        }
         // Visage : sourcils froncés, yeux plissés, moustache en brosse
         trait(g, 28, 9, 30, 10, 'N'); trait(g, 36, 9, 34, 10, 'N');
         poser(g, 29, 11, 'N'); poser(g, 35, 11, 'N');
@@ -64,9 +72,19 @@ const SPRITES_SERGENT = (() => {
         // Cigare au coin de la bouche, braise, fumée
         trait(g, 35, 16, 40, 15, 'C'); poser(g, 41, 15, 'O');
         poser(g, 42, 12, 'F'); poser(g, 43, 10, 'F'); poser(g, 42, 8, 'F');
-        return PixelArt.finir(g, PARTIES);
+        const res = PixelArt.finir(g, PARTIES);
+        if (pyjama) {
+            // Rayures verticales du pyjama, et pompon au bout du bonnet
+            for (let y = 0; y < 64; y++) for (let x = 0; x < 64; x++) if (x % 3 === 0 && 'UuPp'.includes(res[y][x])) res[y][x] = 'W';
+            for (const [x, y] of [[44, 5], [45, 5], [44, 6], [45, 6], [45, 4], [43, 6]]) res[y][x] = 'W';
+        }
+        return res;
     }
-    return [dessiner(false), dessiner(true)].map(g => PixelArt.en_image(g, COULEURS));
+    // Tenue de nuit : les mêmes lettres, d'autres couleurs
+    const PYJAMA = { ...COULEURS, U: '#8fb4d8', u: '#5f84a8', P: '#8fb4d8', p: '#5f84a8', H: '#c83a3a', h: '#8a2020', M: '#9a6a40', W: '#eef4fa' };
+    const sprites = [dessiner(false), dessiner(true)].map(g => PixelArt.en_image(g, COULEURS));
+    sprites.pyjama = [dessiner(false, true), dessiner(true, true)].map(g => PixelArt.en_image(g, PYJAMA));
+    return sprites;
 })();
 
 /* Porte du labo : une trappe en acier inclinée, dans un cadre de béton qui

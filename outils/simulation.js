@@ -17,7 +17,7 @@ const el = () => ({
     dataset: {}, children: [], style: { setProperty() {} }, offsetWidth: 0, querySelector: () => null, addEventListener() {}, setPointerCapture() {}, blur() {}, replaceChildren() {}, appendChild() {}, append() {}
 });
 const elements = {};
-const ctx2d = new Proxy({}, { get: (t, k) => (k in t ? t[k] : () => {}), set: (t, k, v) => (t[k] = v, true) });
+const ctx2d = new Proxy({}, { get: (t, k) => (k in t ? t[k] : () => ({ addColorStop() {} })), set: (t, k, v) => (t[k] = v, true) });
 const document = {
     getElementById: id => elements[id] || (elements[id] = Object.assign(el(), id === 'jeu' ? { width: 800, height: 400, getContext: () => ctx2d } : {})),
     querySelectorAll: () => [], documentElement: { style: { setProperty() {} } },
@@ -30,7 +30,7 @@ const ctx = vm.createContext({
     performance: { now: () => 0 }, requestAnimationFrame: () => 1, cancelAnimationFrame() {},
     Math: Object.assign(Object.create(Math), { random: rand }), console, localStorage: { getItem() {}, setItem() {} }
 });
-for (const f of ['config.js', 'sauvegarde.js', 'traductions.js', 'i18n.js', 'audio.js', 'options.js', 'pixel_art.js', 'instructeur_sprite.js', 'combat_decor.js', 'boss_sprite.js', 'joggeur_sprite.js', 'emeute_sprite.js', 'pondeuse_sprite.js', 'infirmier_sprite.js', 'boxeur_sprite.js', 'fossoyeur_sprite.js', 'deplacement_joueur.js', 'tir_joueur.js', 'zombie.js', 'boss.js', 'joggeur.js', 'emeute.js', 'morts.js', 'pondeuse.js', 'infirmier.js', 'boxeur.js', 'fossoyeur.js', 'pouvoirs.js', 'main.js', 'lootbox.js', 'succes.js', 'missions.js', 'vagues.js', 'menu.js', 'campagne.js']) {
+for (const f of ['config.js', 'sauvegarde.js', 'traductions.js', 'i18n.js', 'audio.js', 'options.js', 'pixel_art.js', 'instructeur_sprite.js', 'combat_decor.js', 'campagne_sprites.js', 'camp_decor.js', 'boss_sprite.js', 'joggeur_sprite.js', 'emeute_sprite.js', 'pondeuse_sprite.js', 'infirmier_sprite.js', 'boxeur_sprite.js', 'fossoyeur_sprite.js', 'deplacement_joueur.js', 'tir_joueur.js', 'zombie.js', 'boss.js', 'joggeur.js', 'emeute.js', 'morts.js', 'pondeuse.js', 'infirmier.js', 'boxeur.js', 'fossoyeur.js', 'pouvoirs.js', 'main.js', 'lootbox.js', 'succes.js', 'missions.js', 'vagues.js', 'menu.js', 'campagne.js']) {
     vm.runInContext(fs.readFileSync(path.join(dir, 'fichierJs', f), 'utf8'), ctx, { filename: f });
 }
 

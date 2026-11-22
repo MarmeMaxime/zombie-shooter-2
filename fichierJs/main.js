@@ -56,6 +56,7 @@ function dessiner() {
     draw_balles(ctx);
     draw_pouvoir(ctx);
     draw_joueur(ctx);
+    if (etat.variante === 'campagne' && typeof Campagne !== 'undefined') Campagne.dessiner_nuit(ctx);   // mission de nuit
     draw_flash_pouvoir(ctx);
 }
 
