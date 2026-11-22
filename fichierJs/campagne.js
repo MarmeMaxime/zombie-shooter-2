@@ -401,18 +401,32 @@ const Campagne = (() => {
         // Nuit noire : hors de la lampe, on ne voit que les yeux
         nuit(ctx, MONDE.largeur, MONDE.hauteur, lumieres, 0.985);
         ctx.fillStyle = '#ffe070';
-        for (const z of zombies) {
-            const t = z.taille, ex = Math.round(z.x + t * 0.42), ey = Math.round(z.y + t * 0.08);
-            ctx.fillRect(ex, ey, 2, 2);
-            ctx.fillRect(ex + 4, ey, 2, 2);
-        }
-        // La croix rouge de l'Infirmier se voit dans le noir : on sait qui viser en premier
+        for (const z of zombies) for (const [ex, ey] of yeux(z)) ctx.fillRect(Math.round(z.x + ex), Math.round(z.y + ey), 2, 2);
+        // La croix rouge de l'Infirmier (sur sa coiffe) se voit dans le noir : on sait qui viser en premier
         ctx.fillStyle = '#ff4040';
         for (const z of zombies) if (z.type === 'infirmier') {
-            const cx = Math.round(z.x + z.taille * 0.47), cy = Math.round(z.y + z.taille * 0.08) - 6;
+            const cx = Math.round(z.x + 28), cy = Math.round(z.y + 5);
             ctx.fillRect(cx - 1, cy - 3, 2, 6); ctx.fillRect(cx - 3, cy - 1, 6, 2);
         }
         ctx.fillStyle = '#ffe070';
+    }
+
+    /* Où briller dans le noir : les yeux de chaque sprite (en pixels du sprite, coin haut
+       gauche). Le zombie et le Tank sont de face (deux yeux) ; les sprites générés sont de
+       profil, tournés vers la gauche (un seul œil, là où leur sprite le dessine). */
+    function yeux(z) {
+        const t = z.taille;
+        switch (z.type) {
+            case 'joggeur': {
+                const e = z.joggeur && z.joggeur.etat;
+                return e === 'course' || e === 'cri' ? [[17, 14]] : e === 'essouffle' ? [[16, 29]] : [[23, 12]];
+            }
+            case 'infirmier': return [[24, 11]];
+            case 'emeute': return [[25, 14]];
+            case 'pondeuse': return [[25, 15]];
+            case 'larve': return [[7, 28]];
+            default: return [[t * 0.42, t * 0.08], [t * 0.42 + 4, t * 0.08]];
+        }
     }
 
     // Meilleur temps (le plus court) et le plus de vies restantes, par mission et par difficulté.
