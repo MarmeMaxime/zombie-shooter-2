@@ -21,6 +21,7 @@ const Instructeur = (() => {
         sergent: { nom: 'Sergent', image: ouvert => SPRITES_INSTRUCTEUR[ouvert ? 1 : 0] },
         sergentPyjama: { nom: 'Sergent', image: ouvert => SPRITES_INSTRUCTEUR.pyjama[ouvert ? 1 : 0] },
         labo: { nom: 'Labo', image: ouvert => PORTE_LABO.portrait[ouvert ? 1 : 0] },
+        radio: { nom: 'Éclaireur (radio)', image: ouvert => SPRITES_RADIO[ouvert ? 1 : 0] },
         soldat: { nom: 'Soldat', image: () => Loot.sprites('soldat').arret, cadre: [3, 0, 22, 22] }
     };
     let orateur = 'sergent';

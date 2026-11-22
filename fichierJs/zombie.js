@@ -255,7 +255,8 @@ function update_zombies(dt, largeurCanvas, hauteurCanvas, tempsJeu) {
                 // Le boss passe : grosse perte, mais la partie continue
                 fin_boss();
                 secouer_ecran(3);
-                for (let k = 0; k < CONFIG.boss.degatsSiPasse; k++) perdre_vie();
+                // (en campagne, c'est la mission qui échoue : campagne.js s'en charge)
+                if (etat.variante !== 'campagne') for (let k = 0; k < CONFIG.boss.degatsSiPasse; k++) perdre_vie();
             } else {
                 perdre_vie();
             }

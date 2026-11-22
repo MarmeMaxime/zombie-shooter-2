@@ -20,7 +20,8 @@ Au lancement d'un combat, on choisit le mode :
   labo qui cherche un remède. Chapitre 1 (« La Recrue ») : « Premier contact », puis
   « Couvre-feu » de nuit à la lampe torche, « La Livraison » (escorter un
   camion, premiers Tanks) et « La Brèche » (couvrir la réparation du mur, premiers
-  Joggeurs), chacune avec son intro dans le camp, en normal comme en hardcore.
+  Joggeurs) et « Coup de foudre » (la horde, puis la Mastodonte, échantillon
+  du labo qui a muté), chacune avec son intro dans le camp, en normal comme en hardcore.
   Le camp s'affiche derrière le menu et grandit avec la campagne (palissade et
   tour de guet après « La Brèche »).
 

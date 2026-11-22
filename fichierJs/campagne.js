@@ -83,6 +83,23 @@ const MISSIONS_CAMPAGNE = [
             normal: 'Le mur tient. Plus solide qu\'avant, même. Et j\'ai fait monter une tour de guet. Si tu vois un marathonien, tu tires d\'en haut.',
             hardcore: 'Ils couraient plus vite qu\'aux Jeux olympiques, et le mur est quand même debout. Je commence à t\'apprécier. Ne le répète pas.'
         }
+    },
+    {
+        id: 'c1m5', chapitre: 1, numero: 5, titre: 'Coup de foudre', perso: 'soldat',
+        // L'échantillon enfui a muté en Mastodonte : d'abord sa horde, puis elle arrive (elle est attirée par le Soldat).
+        boss: {
+            avant: { normal: 25, hardcore: 30 },       // zombies à repousser avant qu'elle n'arrive
+            ralenti: { normal: 3.5, hardcore: 4 }     // pendant le combat, la horde arrive autant de fois moins souvent
+        },
+        apparition: {
+            normal: { depart: 1.4, min: 1.0, acceleration: 0.006, groupe: 0.1, joggeur: 0.12, tank: 0.08 },
+            hardcore: { depart: 1.25, min: 0.9, acceleration: 0.006, groupe: 0.13, joggeur: 0.18, tank: 0.11 }
+        },
+        debrief: {
+            normal: 'Elle est tombée. Et toi, tu es toujours debout. Le labo veut récupérer un morceau d\'elle. Je leur ai dit de se servir.',
+            hardcore: 'Une horde enragée et une mutante amoureuse, et tu es encore là. Si un jour quelqu\'un m\'aime comme elle t\'aimait, je déserte.'
+        },
+        echec: 'Elle est passée. Elle te cherche dans le camp. Elle renverse les tentes une par une en t\'appelant… à sa façon.'
     }
 ];
 
@@ -161,6 +178,24 @@ const SCENES_CAMPAGNE = {
             { qui: 'sergent', texte: 'Et ouvre l\'œil : un marathon de charité passait par ici le jour où tout a commencé. Ils courent toujours.' },
             { qui: 'sergent', texte: 'Pour une bonne cause, j\'imagine. Ils chargent dès qu\'ils te voient dans l\'axe : ne reste pas planté en face d\'eux. Au travail !', bouton: 'À mon poste !' }
         ]
+    },
+    c1m5: {
+        sergent: { x: CAMP.sergent.x, y: CAMP.sergent.y },
+        soldat: { x: 182, y: 204 },                  // à droite de la tour de guet
+        attente: 900,
+        lignes: [
+            { qui: 'sergent', texte: 'Mauvaise nouvelle, Soldat. L\'échantillon qui « bougeait encore »… ne bouge plus ici. Il s\'est enfui cette nuit. Vers l\'est.' },
+            { qui: 'labo', texte: 'On vous avait dit qu\'il bougeait encore ! On vous l\'avait dit !' },
+            { qui: 'sergent', texte: 'Oui, oui. J\'ai envoyé un éclaireur sur ses traces. Il devrait appeler… maintenant.' },
+            { qui: 'radio', texte: 'Éclaireur au camp. Je l\'ai retrouvé. Enfin… je crois que c\'est lui. Il a changé.' },
+            { qui: 'radio', texte: 'Il a muté, Sergent. Deux mètres cinquante. Vert. Avec des pustules qui clignotent. Et… je crois que c\'est une « elle », maintenant.' },
+            { qui: 'radio', texte: 'Elle n\'est pas seule : toute une horde la suit. Ils foncent droit vers le camp.' },
+            { qui: 'sergent', texte: 'Droit vers le camp ? Qu\'est-ce qui l\'attire ?' },
+            { qui: 'radio', texte: 'Je ne sais pas. Elle renifle l\'air… et elle regarde vers le mur. Là où se tient… le soldat.' },
+            { qui: 'soldat', texte: '…' },
+            { qui: 'sergent', texte: '… Toi ? Qu\'est-ce que tu lui as fait ?' },
+            { qui: 'sergent', texte: 'Peu importe. Tu fais le ménage dans la horde, et quand la grosse arrive, tu lui expliques que ce n\'est pas réciproque. Avec ton fusil.', action: 'sirene', bouton: 'À mon poste !' }
+        ]
     }
 };
 
@@ -183,7 +218,7 @@ const Campagne = (() => {
        Trois sortes d'objectifs : « objectif » (nombre de zombies à repousser),
        « camion » (un camion à escorter jusqu'au camp) ou « chantier » (tenir
        pendant une réparation, qui s'arrête quand un zombie est trop près). */
-    let m = null, chrono = 0, tues = 0, fini = false, camion = null, chantier = null;
+    let m = null, chrono = 0, tues = 0, fini = false, camion = null, chantier = null, phaseBoss = false;
 
     // Camion : sa caisse dans le sprite 128×128 (x 6..122, y 54..120), et l'arrière où les zombies s'agrippent
     const CAISSE = { x: 6, y: 54, l: 116, h: 66 }, ARRIERE = 96;
@@ -196,6 +231,7 @@ const Campagne = (() => {
         etat.victoire = false;
         camion = null;
         chantier = m.chantier ? { avance: 0, arret: false } : null;
+        phaseBoss = false;
         if (m.camion) {
             const c = m.camion;
             camion = { x: MONDE.largeur + 30, y: c.y, pv: c.pv[etat.mode], pvMax: c.pv[etat.mode], vitesse: (MONDE.largeur + 170) / c.duree[etat.mode], depart: c.depart, detruit: false };
@@ -227,6 +263,12 @@ const Campagne = (() => {
             $c('hud-mission').textContent = T('🚚 {pv} % · ➜ {n} %', { pv: Math.max(0, Math.ceil(100 * camion.pv / camion.pvMax)), n: parcours });
             return;
         }
+        if (m.boss) {
+            // Pendant le combat, sa barre de vie en haut de l'écran suffit (et la barre du haut ne déborde pas)
+            $c('hud-mission').classList.toggle('hidden', phaseBoss);
+            $c('hud-mission').textContent = '🎯 ' + Math.min(tues, m.boss.avant[etat.mode]) + ' / ' + m.boss.avant[etat.mode];
+            return;
+        }
         if (chantier) {
             $c('hud-mission').textContent = T('🔨 Mur : {n} %', { n: Math.floor(100 * chantier.avance) }) + (chantier.arret ? ' ' + T('⏸ à l\'abri !') : '');
             return;
@@ -239,9 +281,11 @@ const Campagne = (() => {
         if (!m || fini) return;
         if (camion) maj_camion(dt);
         if (chantier) maj_chantier(dt);
+        // Elle a traversé l'écran sans tomber : elle est dans le camp
+        if (phaseBoss && !boss) return terminer(false);
         if (fini) return;
         const a = m.apparition[etat.mode];
-        chrono -= dt;
+        chrono -= phaseBoss ? dt / m.boss.ralenti[etat.mode] : dt;
         if (chrono > 0) return;
         if (a.max && zombies.length >= a.max) return;   // il attend qu'une place se libère
         chrono = Math.max(a.min, a.depart - etat.temps * a.acceleration);
@@ -302,8 +346,25 @@ const Campagne = (() => {
     }
 
     // Un zombie est tombé : objectif atteint ?
-    function tue() {
+    function tue(z) {
         if (!m || fini || camion || chantier) return;
+        if (m.boss) {
+            if (phaseBoss) { if (z && est_boss(z.type)) terminer(true); return; }
+            tues++;
+            maj_hud_mission();
+            if (tues >= m.boss.avant[etat.mode]) {
+                // La horde est repoussée… et elle arrive
+                phaseBoss = true;
+                faire_apparaitre_boss(MONDE.largeur, MONDE.hauteur);
+                const b = $c('bandeau-vague');
+                b.textContent = T('ELLE ARRIVE…');
+                b.classList.remove('hidden', 'anime');
+                void b.offsetWidth;
+                b.classList.add('anime');
+                maj_hud_mission();
+            }
+            return;
+        }
         tues++;
         maj_hud_mission();
         if (tues >= objectif()) terminer(true);
@@ -370,7 +431,9 @@ const Campagne = (() => {
             ? T('Le camp tient. Le labo aussi. Pour l\'instant.')
             : (mi.camion && etat.vies > 0)
                 ? T('Le camion n\'est jamais arrivé. Le labo attendra ses échantillons. Le Sergent, son café.')
-                : T('Le camp est tombé. Le labo avec. Le Sergent va être de très mauvaise humeur.');
+                : (mi.boss && etat.vies > 0)
+                    ? T('Elle est entrée dans le camp. Elle te cherche toujours. Le Sergent s\'est caché dans la jeep.')
+                    : T('Le camp est tombé. Le labo avec. Le Sergent va être de très mauvaise humeur.');
         carte.classList.toggle('victoire', etat.victoire);
         $c('btn-retry').firstChild.textContent = etat.victoire ? T('REJOUER') + ' ' : T('RÉESSAYER') + ' ';
     }
@@ -476,7 +539,7 @@ const Campagne = (() => {
         if (scene.secousse && instant - scene.secousse < 350) { sx = (Math.random() - 0.5) * 4; sy = (Math.random() - 0.5) * 4; }
         c.setTransform(echelle, 0, 0, echelle, sx * echelle, (sy - haut) * echelle);
         c.imageSmoothingEnabled = false;
-        c.drawImage(decor_camp(L, 400, 0), 0, 0);
+        c.drawImage(decor_camp(L, 400, etape()), 0, 0);
         if (cfg.breche) dessiner_breche(c);
         else dessiner_feu(c, t);
 
@@ -543,7 +606,7 @@ const Campagne = (() => {
                 const coche = mode => (reussie(mi.id, mode) ? '✔ ' : '✗ ') + T(mode === 'normal' ? 'Normal' : 'Hardcore');
                 texte.append(el('strong', '', (mi.nuit ? '🌙 ' : '') + T('Mission {n} — {titre}', { n: mi.numero, titre: T(mi.titre) })),
                     el('small', '', ouverte
-                        ? (mi.camion ? T('Escorter le camion jusqu\'au camp') : mi.chantier ? T('Couvrir la réparation du mur') : T('Repousser {n} zombies', { n: mi.objectif[difficulte_choisie] })) + ' · ' + coche('normal') + ' · ' + coche('hardcore')
+                        ? (mi.camion ? T('Escorter le camion jusqu\'au camp') : mi.chantier ? T('Couvrir la réparation du mur') : mi.boss ? T('Repousser la horde, puis l\'abattre') : T('Repousser {n} zombies', { n: mi.objectif[difficulte_choisie] })) + ' · ' + coche('normal') + ' · ' + coche('hardcore')
                         : T('🔒 Réussis la mission précédente pour la débloquer')));
                 ligne.append(texte);
                 const boutons = el('span', 'campagne-boutons');

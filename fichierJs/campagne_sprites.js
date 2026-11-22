@@ -237,3 +237,31 @@ const OBJETS_CAMP = (() => {
     const img = g => PixelArt.en_image(g, COULEURS);
     return { tente: img(tente(false)), tenteCommandement: img(tente(true)), jeep: img(jeep()), camion: img(camion()) };
 })();
+
+/* Talkie-walkie : le « portrait » de l'éclaireur, qu'on n'entend que par radio.
+   0 : voyant éteint ; 1 : voyant allumé (il parle). Grille 40×40, ×2. */
+const SPRITES_RADIO = (() => {
+    const { rect, trait, poser } = PixelArt;
+    const COULEURS = {
+        G: '#3a3e44', g: '#25282c', L: '#5a6068',    // boîtier
+        A: '#1a1a1a',                                 // antenne, grille
+        E: '#d88a2a', e: '#7a4a18',                   // petit écran
+        V: '#ff4040', v: '#5a1a1a',                   // voyant d'émission
+        K: '#050403'
+    };
+    const PARTIES = { G: { rang: 1, base: 'G', ombre: 'g', bande: 'fine' } };
+    function dessiner(allume) {
+        const g = PixelArt.grille(40);
+        rect(g, 12, 9, 28, 38, 'G');                  // boîtier
+        rect(g, 23, 1, 25, 9, 'G');                   // antenne
+        rect(g, 14, 8, 17, 9, 'G');                   // bouton du canal
+        const res = PixelArt.finir(g, PARTIES);
+        for (let y = 2; y <= 8; y++) res[y][24] = 'A';
+        for (let x = 14; x <= 26; x++) res[10][x] = 'L';
+        for (let y = 12; y <= 16; y++) for (let x = 15; x <= 25; x++) res[y][x] = y === 12 || y === 16 || x === 15 || x === 25 ? 'e' : 'E';
+        for (let y = 19; y <= 33; y += 2) for (let x = 15; x <= 25; x++) res[y][x] = 'A';   // grille du haut-parleur
+        res[10][26] = allume ? 'V' : 'v'; res[11][26] = allume ? 'V' : 'v';
+        return res;
+    }
+    return [false, true].map(v => PixelArt.en_image(dessiner(v), COULEURS, 2));
+})();
