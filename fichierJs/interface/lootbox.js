@@ -4,48 +4,59 @@
    gagnée en jouant (les crânes). Aucun argent réel, jamais.
    ========================================================================= */
 const LOOT = {
-    prix: 50,                   // crânes par caisse
+    prix: 100,                  // crânes par caisse
+    lots: [5, 10],              // on peut aussi en ouvrir 5 ou 10 d'un coup
     pointsParCrane: 10,         // 1 crâne gagné tous les 10 points de score
     compensationDoublon: 10,    // crânes rendus pour un skin déjà possédé
-    garantie: 30,               // légendaire (ou mieux) garanti au bout de N caisses sans
+    garantie: 100,              // légendaire (ou mieux) garanti au bout de N caisses sans (compteur caché au joueur)
 
     raretes: [
-        { id: 'commun', nom: 'Commun', couleur: '#9a9a9a', poids: 62 },
+        { id: 'commun', nom: 'Commun', couleur: '#9a9a9a', poids: 61.999 },
         { id: 'rare', nom: 'Rare', couleur: '#3a8dff', poids: 25 },
         { id: 'epique', nom: 'Épique', couleur: '#b04aff', poids: 9 },
         { id: 'legendaire', nom: 'Légendaire', couleur: '#ff9a1a', poids: 3.5 },
-        { id: 'mythique', nom: 'Mythique', couleur: '#ff2e4d', poids: 0.5 }
+        { id: 'mythique', nom: 'Mythique', couleur: '#ff2e4d', poids: 0.5 },
+        // Unique : un seul skin par perso, qu'on n'obtient qu'une fois. Tant qu'il n'y en a
+        // aucun à gagner (pas encore créé, ou déjà tous obtenus), ce rang ne tombe pas : sa
+        // part revient aux objets communs (voir poids_effectifs)
+        { id: 'unique', nom: 'Unique', couleur: '#3cf0ff', poids: 0.001 }   // 0,001 %, et la garantie ne le donne jamais
     ],
 
     /* Skins
        - Tenues dédiées à un perso (« perso ») : de vrais sprites redessinés,
          dans assets/skins/<dossier du perso>/<tenue>/ (l'id « mira_cyber » donne
          assets/skins/mira/cyber/) : arret.png, tir.png, marche1..4.png
-       - Skins universels (sans « perso ») : un filtre de couleur sur n'importe quel perso */
+       - Skins universels (sans « perso ») : un filtre de couleur sur n'importe quel perso
+       - Rang « unique » : un par perso (avec « perso »), jamais en double ; par exemple
+         soldat_xxx: { nom: '…', rarete: 'unique', perso: 'soldat' } */
     skins: {
         soldat_urbain: { nom: 'Gris urbain', rarete: 'commun', perso: 'soldat' },
         soldat_neige: { nom: 'Commando des neiges', rarete: 'rare', perso: 'soldat' },
         soldat_jungle: { nom: 'Jungle', rarete: 'rare', perso: 'soldat' },
         soldat_apparat: { nom: 'Tenue d\'apparat', rarete: 'epique', perso: 'soldat' },
         soldat_cyber: { nom: 'Cyber-soldat', rarete: 'legendaire', perso: 'soldat' },
+        soldat_prototype: { nom: 'Prototype du labo', rarete: 'unique', perso: 'soldat', aura: '#3cf0ff' },
 
         brute_marcel: { nom: 'Marcel blanc', rarete: 'commun', perso: 'brute' },
         brute_fonce: { nom: 'Brutus Black Edition', rarete: 'rare', perso: 'brute' },
         brute_hawai: { nom: 'Vacances à Hawaï', rarete: 'epique', perso: 'brute' },
         brute_noel: { nom: 'Père Noël en colère', rarete: 'epique', perso: 'brute' },
         brute_catch: { nom: 'Légende du catch', rarete: 'legendaire', perso: 'brute' },
+        brute_veteran: { nom: 'Vétéran des Trois Collines', rarete: 'unique', perso: 'brute' },
 
         mira_rousse: { nom: 'Rousse incendiaire', rarete: 'commun', perso: 'grenadier' },
         mira_treillis: { nom: 'Treillis', rarete: 'rare', perso: 'grenadier' },
         mira_gothique: { nom: 'Gothique', rarete: 'epique', perso: 'grenadier' },
         mira_plage: { nom: 'Tenue de plage', rarete: 'epique', perso: 'grenadier' },
         mira_cyber: { nom: 'Néon Runner', rarete: 'legendaire', perso: 'grenadier' },
+        mira_teto: { nom: 'Kasane Teto', rarete: 'unique', perso: 'grenadier', paillettes: true },
 
         lassie_arctique: { nom: 'Renarde arctique', rarete: 'commun', perso: 'lassie' },
         lassie_kitsune: { nom: 'Kitsune', rarete: 'rare', perso: 'lassie' },
         lassie_tempete: { nom: 'Œil de la tempête', rarete: 'rare', perso: 'lassie' },
         lassie_pinup: { nom: 'Pin-up', rarete: 'epique', perso: 'lassie' },
         lassie_kyubi: { nom: 'Kyūbi aux neuf queues', rarete: 'legendaire', perso: 'lassie' },
+        lassie_celeste: { nom: 'Renarde céleste', rarete: 'unique', perso: 'lassie', etoiles: ['2A3272', '1A1E4A', '3A44A0', '202662', '6A7AD8'] },
 
         or: { nom: 'Or massif', rarete: 'legendaire', filtre: 'sepia(1) saturate(5) brightness(1.1)' },
         fantome: { nom: 'Fantôme', rarete: 'legendaire', filtre: 'grayscale(1) brightness(1.8) opacity(0.55)' },
@@ -78,8 +89,22 @@ const Loot = (() => {
     const hasard = tableau => tableau[Math.floor(Math.random() * tableau.length)];
     const rarete = id => LOOT.raretes.find(r => r.id === id);
 
+    // Les skins uniques encore à gagner (un par perso, qu'on n'a pas déjà)
+    const uniques_restants = () => Object.keys(LOOT.skins).filter(id => LOOT.skins[id].rarete === 'unique' && !L().possedes.includes(`${LOOT.skins[id].perso}:${id}`));
+    // Les raretés qui peuvent tomber, avec leur poids : la part d'une rareté vide revient aux communs
+    function poids_effectifs() {
+        const vide = r => r.id === 'unique' && !uniques_restants().length;
+        const perdu = LOOT.raretes.filter(vide).reduce((s, r) => s + r.poids, 0);
+        return LOOT.raretes.filter(r => !vide(r)).map(r => (r.id === 'commun' ? { ...r, poids: Math.round((r.poids + perdu) * 1000) / 1000 } : r));
+    }
+    // « Légendaire ou mieux » : tomber sur l'un d'eux remet la garantie à zéro…
+    const HAUTES = ['legendaire', 'mythique', 'unique'];
+    // …mais la garantie, elle, ne donne jamais un unique : il ne tombe que par chance
+    const GARANTIS = ['legendaire', 'mythique'];
+
     function tirer_rarete(garanti) {
-        const pool = garanti ? LOOT.raretes.filter(r => r.id === 'legendaire' || r.id === 'mythique') : LOOT.raretes;
+        const toutes = poids_effectifs();
+        const pool = garanti ? toutes.filter(r => GARANTIS.includes(r.id)) : toutes;
         let t = Math.random() * pool.reduce((s, r) => s + r.poids, 0);
         for (const r of pool) { if ((t -= r.poids) < 0) return r; }
         return pool[pool.length - 1];
@@ -92,7 +117,8 @@ const Loot = (() => {
             const id = hasard(Object.keys(LOOT.dechets));
             return { ...LOOT.dechets[id], type: 'dechet', id, rarete: r };
         }
-        const skinId = hasard(Object.keys(LOOT.skins).filter(id => LOOT.skins[id].rarete === r.id));
+        // (un unique : seulement ceux qu'on n'a pas encore)
+        const skinId = hasard(r.id === 'unique' ? uniques_restants() : Object.keys(LOOT.skins).filter(id => LOOT.skins[id].rarete === r.id));
         // Tenue dédiée : son perso ; skin universel : un perso au hasard
         const perso = LOOT.skins[skinId].perso || hasard(Object.keys(CONFIG.personnages));
         // Le spread d'abord : sa propriété « rarete » (texte) ne doit pas écraser l'objet rareté
@@ -106,7 +132,7 @@ const Loot = (() => {
 
         const garanti = L().depuisLegendaire >= LOOT.garantie - 1;
         const objet = tirer_objet(garanti);
-        const haut = objet.rarete.id === 'legendaire' || objet.rarete.id === 'mythique';
+        const haut = HAUTES.includes(objet.rarete.id);
         L().depuisLegendaire = haut ? 0 : L().depuisLegendaire + 1;
 
         let doublon = false;
@@ -135,9 +161,10 @@ const Loot = (() => {
         sauver();
     }
 
-    // Filtre à appliquer au sprite du perso (t en secondes, pour l'arc-en-ciel animé)
+    // Filtre à appliquer au sprite du perso (t en secondes, pour l'arc-en-ciel animé et l'aura qui pulse)
     function filtre(perso, t = 0) {
         const skin = LOOT.skins[L().equipes[perso]];
+        if (skin && skin.aura) return `drop-shadow(0 0 ${(3 + 2 * Math.sin(t * 4)).toFixed(1)}px ${skin.aura})`;
         if (!skin || skin.perso) return '';
         if (skin.anime) return `hue-rotate(${Math.round((t * 120) % 360)}deg) saturate(1.8)`;
         return skin.filtre || '';
@@ -154,13 +181,15 @@ const Loot = (() => {
     const sprites = perso => sprites_skin(perso, connu(L().equipes[perso]) ? L().equipes[perso] : null);
 
     return {
-        ouvrir, gagner, equiper, filtre, tirer_objet, rarete, sprites, sprites_skin,
+        ouvrir, gagner, equiper, filtre, tirer_objet, rarete, sprites, sprites_skin, poids_effectifs,
         solde: () => L().cranes,
         equipe: perso => (connu(L().equipes[perso]) ? L().equipes[perso] : null),
+        // La définition du skin équipé (pour ses effets : aura, paillettes, étoiles), ou null
+        skin_equipe: perso => (connu(L().equipes[perso]) ? LOOT.skins[L().equipes[perso]] : null),
         skinsDe: perso => L().possedes.filter(id => typeof id === 'string' && id.startsWith(perso + ':'))
             .map(id => id.split(':')[1]).filter(connu),
         dechets: () => Object.fromEntries(Object.entries(L().dechets).filter(([id]) => LOOT.dechets[id])),
-        stats: () => ({ ouvertes: L().ouvertes, avantGarantie: LOOT.garantie - L().depuisLegendaire })
+        stats: () => ({ ouvertes: L().ouvertes })
     };
 })();
 
@@ -190,6 +219,14 @@ const SonLoot = (() => {
             [523, 659, 784, 1047].forEach(f => note(f, 0.9, 1.6, { type: 'sawtooth', vol: 0.035 }));
             for (let r = 0; r < 3; r++) arpege([1047, 1319, 1568, 2093], 0.06, 0.12, { type: 'sine', vol: 0.05 });
             note(55, 0.9, 1.4, { type: 'sine', vol: 0.25 });
+        },
+        // Unique : une montée, un accord tenu comme un chœur, et des cloches qui tombent en cascade
+        unique: () => {
+            note(90, 0, 1.2, { type: 'sawtooth', vol: 0.08, f2: 2400 });
+            [262, 330, 392, 523, 659, 784].forEach((f, i) => note(f, 1.2, 2.4, { type: i % 2 ? 'triangle' : 'sawtooth', vol: 0.03, attaque: 0.25 }));
+            for (let r = 0; r < 4; r++) arpege([3136, 2637, 2093, 1568, 1319, 1047], 0.05, 0.25, { type: 'sine', vol: 0.045 });
+            [1047, 1568, 2093].forEach((f, i) => note(f, 1.2 + i * 0.5, 1.5, { type: 'sine', vol: 0.06 }));
+            note(55, 1.2, 2, { type: 'sine', vol: 0.28 });
         }
     };
 
@@ -270,7 +307,7 @@ const SonLoot = (() => {
    ========================================================================= */
 const EffetsLoot = (() => {
     const conteneur = () => document.getElementById('game-container');
-    const INTENSITE = { commun: 0, rare: 1, epique: 2, legendaire: 3, mythique: 4 };
+    const INTENSITE = { commun: 0, rare: 1, epique: 2, legendaire: 3, mythique: 4, unique: 5 };
 
     function relancer(el, classe) {
         el.classList.remove(classe);
@@ -311,10 +348,12 @@ const EffetsLoot = (() => {
 
     function revelation(rarete) {
         const niveau = INTENSITE[rarete.id] || 0;
-        lumiere(rarete.couleur, niveau);
-        trembler(niveau);
-        if (niveau >= 3) confettis([rarete.couleur, '#ffe14d', '#ffffff', '#ff6ec7', '#3cf0ff'], niveau === 4 ? 90 : 50);
-        if (niveau === 4) setTimeout(() => { trembler(3); lumiere(rarete.couleur, 4); }, 700);
+        const fort = Math.min(4, niveau);   // (la lumière et le tremblement vont jusqu'au niveau 4)
+        lumiere(rarete.couleur, fort);
+        trembler(fort);
+        if (niveau >= 3) confettis([rarete.couleur, '#ffe14d', '#ffffff', '#ff6ec7', '#3cf0ff'], niveau >= 5 ? 140 : niveau === 4 ? 90 : 50);
+        if (niveau >= 4) setTimeout(() => { trembler(3); lumiere(rarete.couleur, 4); }, 700);
+        if (niveau >= 5) setTimeout(() => { trembler(4); lumiere('#ffffff', 4); confettis(['#ff2e4d', '#ff9a1a', '#ffe14d', '#4ad060', '#3a8dff', '#b04aff', '#3cf0ff'], 80); }, 1400);
     }
 
     return { revelation, trembler };
@@ -359,8 +398,13 @@ const LootUI = (() => {
         $l('solde-menu').textContent = s;
         $l('solde-loot').textContent = s;
         const st = Loot.stats();
-        $l('loot-stats').textContent = T('Caisses ouvertes : {n} · Légendaire garanti dans {g} caisse(s) (on vous aime)', { n: st.ouvertes, g: st.avantGarantie });
+        // (la garantie d'un légendaire existe, mais on ne montre pas où on en est)
+        $l('loot-stats').textContent = T('Caisses ouvertes : {n}', { n: st.ouvertes });
+        // Taux affichés en tout petit, par souci de « transparence » : seulement ce qui peut tomber
+        $l('loot-taux').textContent = T('Taux : ') + Loot.poids_effectifs().map(r => `${r.nom} ${String(r.poids).replace('.', ',')} %`).join(' · ')
+            + T(' · Les objets Communs ont 50 % de chances d\'être un déchet.');
         $l('btn-ouvrir').disabled = enCours || s < LOOT.prix;
+        for (const n of LOOT.lots) $l('btn-ouvrir-' + n).disabled = enCours || s < LOOT.prix * n;
     }
 
     function afficher_resultat(res) {
@@ -381,8 +425,12 @@ const LootUI = (() => {
             detail.textContent = o.texte;
         }
         zone.append(titre, detail);
+        reveler(o);
+        Succes.apres_caisse(o);
+    }
 
-        // Le cadre prend la couleur de la rareté, la case gagnante s'illumine
+    // Le cadre prend la couleur de la rareté, la case gagnante s'illumine, le son et les effets suivent
+    function reveler(o) {
         const fenetre = $l('loot-fenetre');
         fenetre.style.setProperty('--couleur-loot', o.rarete.couleur);
         fenetre.classList.remove('loot-revele');
@@ -390,10 +438,34 @@ const LootUI = (() => {
         fenetre.classList.add('loot-revele');
         const gagnante = $l('loot-bande').children[INDEX_GAGNANT];
         if (gagnante) gagnante.classList.add('loot-gagnante');
-
         SonLoot.revelation(o.rarete.id);
         EffetsLoot.revelation(o.rarete);
-        Succes.apres_caisse(o);
+    }
+
+    // Plusieurs caisses d'un coup : un résumé par rareté, puis tout le butin en petites cases
+    const ORDRE_RARETES = ['unique', 'mythique', 'legendaire', 'epique', 'rare', 'commun'];
+    function afficher_lot(lot, meilleur) {
+        const zone = $l('loot-resultat');
+        zone.replaceChildren();
+        zone.style.color = meilleur.objet.rarete.couleur;
+        const titre = document.createElement('strong');
+        const parRarete = ORDRE_RARETES.map(id => [Loot.rarete(id), lot.filter(r => r.objet.rarete.id === id).length]).filter(([, n]) => n);
+        titre.textContent = parRarete.map(([r, n]) => `${r.nom} ×${n}`).join(' · ');
+        const nouveaux = lot.filter(r => r.objet.type === 'skin' && !r.doublon).length;
+        const doublons = lot.filter(r => r.doublon).length;
+        const detail = document.createElement('span');
+        detail.textContent = T('{n} nouveau(x) skin(s) · {d} doublon(s), remboursé(s) {c} 💀', { n: nouveaux, d: doublons, c: doublons * LOOT.compensationDoublon });
+        const grille = document.createElement('div');
+        grille.className = 'loot-lot';
+        for (const r of [...lot].sort((a, b) => ORDRE_RARETES.indexOf(a.objet.rarete.id) - ORDRE_RARETES.indexOf(b.objet.rarete.id))) {
+            const c = case_roulette(r.objet);
+            c.title = `${r.objet.rarete.nom} : ${r.objet.nom}${r.doublon ? ' (' + T('doublon') + ')' : ''}`;
+            if (r.doublon) c.classList.add('loot-doublon');
+            grille.appendChild(c);
+        }
+        zone.append(titre, detail, grille);
+        reveler(meilleur.objet);
+        for (const r of lot) Succes.apres_caisse(r.objet);
     }
 
     // Cliquetis à chaque case qui passe sous le curseur
@@ -413,10 +485,13 @@ const LootUI = (() => {
         requestAnimationFrame(boucle_tick);
     }
 
-    function ouvrir_caisse() {
-        if (enCours) return;
-        const res = Loot.ouvrir();
-        if (!res) return;
+    function ouvrir_caisse(nombre = 1) {
+        if (enCours || Loot.solde() < LOOT.prix * nombre) return;
+        const lot = [];
+        for (let k = 0; k < nombre; k++) { const r = Loot.ouvrir(); if (r) lot.push(r); }
+        if (!lot.length) return;
+        // La roulette s'arrête sur le plus bel objet du lot
+        const res = lot.reduce((a, b) => (ORDRE_RARETES.indexOf(b.objet.rarete.id) < ORDRE_RARETES.indexOf(a.objet.rarete.id) ? b : a));
         enCours = true;
         maj_soldes();
         $l('loot-resultat').replaceChildren();
@@ -451,7 +526,7 @@ const LootUI = (() => {
 
         setTimeout(() => {
             try {
-                afficher_resultat(res);
+                if (lot.length > 1) afficher_lot(lot, res); else afficher_resultat(res);
                 // La musique de la boutique revient une fois la fanfare passée
                 setTimeout(() => {
                     if (!enCours && !$l('loot-overlay').classList.contains('hidden')) SonLoot.boutique();
@@ -514,7 +589,8 @@ const LootUI = (() => {
         Son.reprendreMusique();
         Sauvegarde.point_de_restauration(T('Après les caisses'));
     });
-    $l('btn-ouvrir').addEventListener('click', ouvrir_caisse);
+    $l('btn-ouvrir').addEventListener('click', () => ouvrir_caisse(1));
+    for (const n of LOOT.lots) $l('btn-ouvrir-' + n).addEventListener('click', () => ouvrir_caisse(n));
     $l('btn-vestiaire').addEventListener('click', () => { remplir_vestiaire(); $l('vestiaire-overlay').classList.remove('hidden'); });
     $l('btn-close-vestiaire').addEventListener('click', () => $l('vestiaire-overlay').classList.add('hidden'));
     $l('btn-payer').addEventListener('click', () => {
@@ -522,10 +598,6 @@ const LootUI = (() => {
         zone.style.color = '#ff3333';
         zone.textContent = T('Paiement refusé : ce jeu est gratuit. Retourne tuer des zombies pour gagner des 💀.');
     });
-
-    // Taux affichés en tout petit, par souci de « transparence »
-    $l('loot-taux').textContent = T('Taux : ') + LOOT.raretes.map(r => `${r.nom} ${String(r.poids).replace('.', ',')} %`).join(' · ')
-        + T(' · Les objets Communs ont 50 % de chances d\'être un déchet.');
 
     maj_soldes();
     return { maj_soldes };

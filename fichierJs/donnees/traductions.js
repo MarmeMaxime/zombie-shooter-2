@@ -8,7 +8,7 @@ const TRADUCTIONS = {
     // ---------- Écran titre, menu ----------
     'ILS ARRIVENT…': ['THEY\'RE COMING…', 'YA VIENEN…'],
     'Survivez. Ouvrez des caisses. Regrettez.': ['Survive. Open crates. Regret it.', 'Sobrevive. Abre cajas. Arrepiéntete.'],
-    'version 1.4.2': ['version 1.4.2', 'versión 1.4.2'],
+    'version 1.4.3': ['version 1.4.3', 'versión 1.4.3'],
     '▶ Appuie sur une touche ou touche l\'écran ◀': ['▶ Press any key or tap the screen ◀', '▶ Pulsa una tecla o toca la pantalla ◀'],
     'Normal': ['Normal', 'Normal'],
     'Hardcore': ['Hardcore', 'Hardcore'],
@@ -32,8 +32,8 @@ const TRADUCTIONS = {
     // ---------- Caisses, vestiaire ----------
     'CAISSE DE RAVITAILLEMENT DOUTEUSE': ['DUBIOUS SUPPLY CRATE', 'CAJA DE SUMINISTROS DUDOSA'],
     'Solde :': ['Balance:', 'Saldo:'],
-    'Une caisse = 50 💀. Que la chance soit (rarement) avec vous.': ['One crate = 50 💀. May luck be (rarely) with you.', 'Una caja = 50 💀. Que la suerte te acompañe (rara vez).'],
-    'OUVRIR (50 💀)': ['OPEN (50 💀)', 'ABRIR (50 💀)'],
+    'Une caisse = 100 💀. Que la chance soit (rarement) avec vous.': ['One crate = 100 💀. May luck be (rarely) with you.', 'Una caja = 100 💀. Que la suerte te acompañe (rara vez).'],
+    'OUVRIR (100 💀)': ['OPEN (100 💀)', 'ABRIR (100 💀)'],
     'VESTIAIRE': ['WARDROBE', 'VESTUARIO'],
     '💳 1 000 💀 pour seulement 9,99 € !': ['💳 1,000 💀 for only €9.99!', '💳 ¡1000 💀 por solo 9,99 €!'],
     'Commun': ['Common', 'Común'], 'Rare': ['Rare', 'Raro'], 'Épique': ['Epic', 'Épico'], 'Légendaire': ['Legendary', 'Legendario'], 'Mythique': ['Mythic', 'Mítico'],
@@ -44,14 +44,14 @@ const TRADUCTIONS = {
     'Rousse incendiaire': ['Fiery redhead', 'Pelirroja incendiaria'], 'Treillis': ['Fatigues', 'Uniforme de faena'], 'Gothique': ['Goth', 'Gótica'],
     'Tenue de plage': ['Beachwear', 'Ropa de playa'], 'Néon Runner': ['Neon Runner', 'Neón Runner'],
     'Renarde arctique': ['Arctic fox', 'Zorra ártica'], 'Kitsune': ['Kitsune', 'Kitsune'], 'Œil de la tempête': ['Eye of the storm', 'Ojo de la tormenta'],
-    'Pin-up': ['Pin-up', 'Pin-up'], 'Kyūbi aux neuf queues': ['Nine-tailed Kyūbi', 'Kyūbi de nueve colas'],
+    'Pin-up': ['Pin-up', 'Pin-up'], 'Kyūbi aux neuf queues': ['Nine-tailed Kyūbi', 'Kyūbi de nueve colas'], 'Prototype du labo': ['Lab prototype', 'Prototipo del laboratorio'], 'Vétéran des Trois Collines': ['Veteran of the Three Hills', 'Veterano de las Tres Colinas'], 'Kasane Teto': ['Kasane Teto', 'Kasane Teto'], 'Renarde céleste': ['Celestial fox', 'Zorra celeste'],
     'Or massif': ['Solid gold', 'Oro macizo'], 'Fantôme': ['Ghost', 'Fantasma'], 'Arc-en-ciel RGB': ['RGB rainbow', 'Arcoíris RGB'],
     'Rien': ['Nothing', 'Nada'], 'Merci de votre soutien.': ['Thank you for your support.', 'Gracias por tu apoyo.'],
     'Un caillou': ['A pebble', 'Una piedra'], 'Il ne fait rien. Il est juste là.': ['It does nothing. It\'s just there.', 'No hace nada. Solo está ahí.'],
     'Chaussette orpheline': ['Lonely sock', 'Calcetín huérfano'], 'Sa jumelle est dans une autre caisse. Peut-être.': ['Its twin is in another crate. Maybe.', 'Su pareja está en otra caja. Quizás.'],
     'Ticket « Retentez votre chance »': ['"Try again" ticket', 'Boleto «Inténtalo de nuevo»'], 'Valable sur une autre caisse. Que vous devez payer.': ['Valid on another crate. Which you have to pay for.', 'Válido para otra caja. Que tienes que pagar.'],
     'Le pigeon': ['The sucker', 'El pringado'], 'C\'est vous.': ['It\'s you.', 'Eres tú.'],
-    'Caisses ouvertes : {n} · Légendaire garanti dans {g} caisse(s) (on vous aime)': ['Crates opened: {n} · Legendary guaranteed within {g} crate(s) (we love you)', 'Cajas abiertas: {n} · Legendario garantizado en {g} caja(s) (te queremos)'],
+    'Caisses ouvertes : {n}': ['Crates opened: {n}', 'Cajas abiertas: {n}'],
     'Skin pour {perso}… que vous aviez déjà. Compensation : {n} 💀. Quelle générosité.': ['Skin for {perso}… that you already had. Compensation: {n} 💀. How generous.', 'Skin para {perso}… que ya tenías. Compensación: {n} 💀. Qué generosidad.'],
     'Nouveau skin pour {perso} ! Équipez-le dans le vestiaire.': ['New skin for {perso}! Equip it in the wardrobe.', '¡Nueva skin para {perso}! Equípala en el vestuario.'],
     'Par défaut': ['Default', 'Por defecto'],
@@ -655,5 +655,10 @@ const TRADUCTIONS = {
     'Danseur de ring': ['Ring Dancer', 'Bailarín del ring'],
     'Hôpital fermé': ['Hospital Closed', 'Hospital cerrado'],
     'Réussir « Terminus » sans qu\'un Infirmier ne soigne personne': ['Clear “Terminus” without a Nurse healing anyone', 'Superar «Terminal» sin que un Enfermero cure a nadie'],
-    'Chef de service': ['Head of Department', 'Jefe de servicio']
+    'Chef de service': ['Head of Department', 'Jefe de servicio'],
+    '×5 (500 💀)': ['×5 (500 💀)', '×5 (500 💀)'],
+    '×10 (1 000 💀)': ['×10 (1,000 💀)', '×10 (1.000 💀)'],
+    '{n} nouveau(x) skin(s) · {d} doublon(s), remboursé(s) {c} 💀': ['{n} new skin(s) · {d} duplicate(s), refunded {c} 💀', '{n} skin(s) nuevo(s) · {d} repetido(s), reembolsado(s) {c} 💀'],
+    'doublon': ['duplicate', 'repetido'],
+    'Unique': ['Unique', 'Único']
 };

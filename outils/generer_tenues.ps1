@@ -267,4 +267,104 @@ Fourrure $m 'FFF4D0' 'F2D48A' 'C8A050' 'E0C070' 'A88040' '705020'
 Tenue $m 'F8F4EC' 'D0C8B8' 'C81E1E' 'C81E1E' '8A1010' 'E84040'
 $m['F4ECE0'] = '9AF0FF'; $m['C8BCA8'] = '4AC8F0'; $m['3AD06A'] = 'FF5A3A'; $m['2A9A50'] = 'C82A1A'; $m['1E5A30'] = '6A1010'
 if (-not $seulement -or 'lassie_kyubi'.StartsWith($seulement)) { Recolor $neufQueues 'lassie_kyubi' $m $null }
+
+# ---------------- UNIQUES (rarity 'unique': one per character, never twice) ----------------
+# Small pixel drawings: a grid of letters ('.' = nothing) and a case-sensitive palette
+function Dessin($b, $x0, $y0, $grille, $couleurs) {
+    for ($y = 0; $y -lt $grille.Count; $y++) { for ($x = 0; $x -lt $grille[$y].Length; $x++) {
+        $ch = [string]$grille[$y][$x]
+        if ($ch -ne '.') { Pt $b ($x0 + $x) ($y0 + $y) $couleurs[$ch] }
+    } }
+}
+function Palette($paires) { $h = New-Object System.Collections.Hashtable ([StringComparer]::Ordinal); foreach ($p in $paires) { $h[$p[0]] = $p[1] }; $h }
+
+# Soldat, lab prototype: white armour plates, navy undersuit, cyan visor and a glowing chest core
+# (in game, a cyan halo pulses around him: 'aura' in LOOT.skins)
+$DECOS['soldat_prototype'] = { param($b, $ex, $ey)
+    Ligne $b ($ex - 7) ($ex) ($ey) '3CF0FF' -opaque; Pt $b ($ex + 1) ($ey) 'E8FFFF'
+    Po $b ($ex - 5) ($ey + 10) '3CF0FF'; Po $b ($ex - 4) ($ey + 10) 'E8FFFF'
+    Po $b ($ex - 5) ($ey + 11) '1AA8D8'; Po $b ($ex - 4) ($ey + 11) '3CF0FF'
+    for ($i = 1; $i -le 4; $i++) { Pt $b ($ex - 10) ($ey - 2 - $i) '6A7684' }
+    Pt $b ($ex - 10) ($ey - 7) '3CF0FF' }
+$script:g2 = 'C8FFFF'
+Recolor 'joueur' 'soldat_prototype' @{ $U='D8E0E8'; $D='6A7684'; $H='A8B4C2'; $V1='1E2A38'; $V2='2E4258'; $HC='3CB8FF'; $GO='3CF0FF'; 'C68556'='A8B4C2'; '8C5B3E'='6A7684' } $goggle2
+
+# Brutus, veteran of the Three Hills: khaki period uniform, maroon beret, medals,
+# and the goat that stole the Sergent's ration, perched on his shoulder
+$CHEVRE = @(
+    '.....h.h..',
+    '....KWWKK.',
+    'KKKKWWeWWK',
+    'KWWWWWWWbK',
+    'KWwwwwWKbK',
+    '.KWwwwwKK.',
+    '.KwK..KwK.',
+    '.KK...KK..'
+)
+$COUL_CHEVRE = Palette @(@('K', '050403'), @('W', 'F0ECE4'), @('w', 'C8C0B0'), @('h', '8A7A5A'), @('e', '1A1A1A'), @('b', 'D8D0C0'))
+$DECOS['brute_veteran'] = { param($b, $ex, $ey)
+    # beret, with a gold badge
+    Ligne $b ($ex - 8) ($ex - 1) ($ey - 7) '7A1A2A'
+    Ligne $b ($ex - 9) ($ex + 1) ($ey - 6) '9A2A3A'; Pt $b ($ex - 2) ($ey - 6) 'F2C230'
+    Ligne $b ($ex - 9) ($ex) ($ey - 5) '5A0A1A'
+    # three medals on the chest: ribbon, gold medal, shadow
+    $rubans = @('C81E1E', '3A6BD8', 'F2C230')
+    for ($i = 0; $i -lt 3; $i++) { $x = $ex - 6 + 2 * $i; Po $b $x ($ey + 9) $rubans[$i]; Po $b $x ($ey + 10) 'F2C230'; Po $b $x ($ey + 11) 'B8902E' }
+    # the goat, standing on his shoulder, facing forward like him
+    Dessin $b ($ex - 20) ($ey - 2) $CHEVRE $COUL_CHEVRE }
+Recolor 'brute' 'brute_veteran' @{ $TT1='B89A60'; $TT2='8A7040'; $P1='8A7A4A'; $P2='5E5232'; $P3='A8966A' } $null
+
+# Mira, Kasane Teto: short red hair with her twin drill curls, grey top, black skirt
+# with red trim, red tie and red eyes (in game, her grenades burst into glitter: 'paillettes')
+$m = HairMap @('D8203A', 'F25A6A', 'A81830', '8A1028', 'E83A50', '4A0814')
+$m['F2F2F5'] = '5A5A68'; $m['C4C4D0'] = '3E3E4A'; $m['B9B9C6'] = '3E3E4A'
+$m['3E5E92'] = '22222A'; $m['283F66'] = '16161C'; $m['5C80B8'] = '3A3A46'; $m['8FA8D0'] = 'D8203A'
+$m['22305A'] = '5A1020'; $m['3A6BD8'] = 'E8304A'; $m['2A4FA8'] = 'B02038'
+# Teto's twin drills: a spiral curl hanging beside the head (light, mid and dark bands that wind
+# diagonally, black outline, pointed tip). Widths per row, from the top down.
+$VRILLE = @(4, 5, 6, 6, 6, 6, 5, 5, 5, 4, 4, 3, 2)
+function Vrille($b, $cx, $y0, $largeurs, $teintes = @('F25A6A', 'D8203A', 'A81830')) {
+    for ($i = 0; $i -lt $largeurs.Count; $i++) {
+        $w = $largeurs[$i]; $x0 = $cx - [Math]::Floor($w / 2); $y = $y0 + $i
+        for ($x = $x0 - 1; $x -le $x0 + $w; $x++) {
+            if ($x -lt $x0 -or $x -ge $x0 + $w) { Pt $b $x $y '050403'; continue }
+            $bande = [Math]::Floor(($i * 2 + ($x - $x0)) / 2) % 3
+            $c = $teintes[$bande]
+            if ($x -eq $x0 -and $bande -eq 0) { $c = $teintes[1] }   # the edge stays in shadow
+            Pt $b $x $y $c
+        }
+    }
+    Ligne $b ($cx - 1) ($cx) ($y0 + $largeurs.Count) '050403'   # the tip
+}
+$DECOS['mira_teto'] = { param($b, $ex, $ey)
+    # the long hair down her back is gone: below the jaw, it becomes her back and shoulder again
+    $rouges = @('D8203A', 'F25A6A', 'A81830', '8A1028', 'E83A50', '4A0814')
+    for ($y = $ey + 5; $y -lt 40; $y++) { for ($x = 0; $x -le $ex - 5; $x++) {
+        if ($rouges -notcontains (Hex $b $x $y)) { continue }
+        $gauche = if ($x -gt 0) { Hex $b ($x - 1) $y } else { '' }
+        Pt $b $x $y $(if ($gauche -eq '') { '050403' } elseif ($y -lt $ey + 9) { 'C98E66' } else { 'EDB98F' })
+    } }
+    # two drills at ear height: the far one peeks out behind, the near one hangs in front of it
+    Vrille $b ($ex - 12) ($ey - 1) @(3, 4, 4, 4, 4, 4, 3, 3, 3, 2) @('D8203A', 'A81830', '8A1028')
+    Vrille $b ($ex - 6) ($ey + 1) $VRILLE
+    # the little curl sticking up on top of her head
+    Pt $b ($ex - 4) 0 'D8203A'; Pt $b ($ex - 3) 0 'D8203A'
+    # red tie
+    Po $b ($ex - 1) ($ey + 8) 'D8203A'
+    foreach ($dy in 9..12) { Po $b ($ex - 1) ($ey + $dy) 'D8203A'; Po $b ($ex - 2) ($ey + $dy) 'A81830' } }
+Recolor 'grenadier' 'mira_teto' $m $null
+
+# Lassie, celestial fox: fur like a starry night, golden eyes and trim
+# (in game, stars twinkle in her fur: 'etoiles')
+$m = @{}
+Fourrure $m '6A7AD8' '2A3272' '1A1E4A' '3A44A0' '202662' '10122C'
+Tenue $m '14142A' '0A0A18' 'FFE14D' '1A1A34' '0E0E20' '2A2A4A'
+$m['F4ECE0'] = 'B8C8FF'; $m['C8BCA8'] = '7A90E0'; $m['3AD06A'] = 'FFE14D'; $m['2A9A50'] = 'D8B020'; $m['1E5A30'] = '5A4A10'
+$DECOS['lassie_celeste'] = { param($b, $ex, $ey)
+    $nuit = @('2A3272', '1A1E4A', '3A44A0', '202662', '6A7AD8')
+    for ($y = 0; $y -lt 64; $y++) { for ($x = 0; $x -lt 64; $x++) {
+        if ($nuit -notcontains (Hex $b $x $y)) { continue }
+        if (($x * 7 + $y * 13) % 23 -eq 0) { Pt $b $x $y 'FFFFFF' } elseif (($x * 11 + $y * 5) % 31 -eq 0) { Pt $b $x $y 'FFE14D' }
+    } } }
+Recolor 'lassie' 'lassie_celeste' $m $null
 "ok"

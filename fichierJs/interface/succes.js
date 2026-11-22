@@ -189,6 +189,7 @@ const Succes = (() => {
 
     function apres_caisse(objet) {
         if (objet.rarete.id === 'mythique') SV().stats.mythiques++;
+        if (objet.rarete.id === 'unique') SV().stats.uniques = (SV().stats.uniques || 0) + 1;
         verifier();
     }
 

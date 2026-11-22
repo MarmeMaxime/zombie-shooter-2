@@ -114,7 +114,16 @@ function exploser(p) {
         const dy = Math.max(h.y - cy, 0, cy - (h.y + h.hauteur));
         if (dx * dx + dy * dy <= rayon * rayon) toucher_zombie(z, p.degats, p.tir);
     }
-    explosions.push({ x: cx, y: cy, rayon, age: 0 });
+    const skin = Loot.skin_equipe(joueur.perso);
+    if (skin && skin.paillettes) {
+        // Skin « Kasane Teto » : l'explosion part en paillettes (rose, rouge, blanc, or)
+        const paillettes = [];
+        for (let i = 0; i < 26; i++) {
+            const angle = Math.random() * Math.PI * 2, v = rayon * (0.6 + Math.random() * 1.4);
+            paillettes.push({ vx: Math.cos(angle) * v, vy: Math.sin(angle) * v - rayon * 0.4, couleur: ['#ff6ec7', '#ff2e4d', '#ffffff', '#ffe14d', '#ff9ad5'][i % 5], phase: Math.random() * 6 });
+        }
+        explosions.push({ x: cx, y: cy, rayon, age: 0, duree: 0.8, paillettes });
+    } else explosions.push({ x: cx, y: cy, rayon, age: 0 });
     Son.effet('explosion');
     Son.vibrer(0.35, 50);
 }
@@ -154,7 +163,7 @@ function update_balles(dt, largeurCanvas, hauteurCanvas) {
     });
 
     for (const e of explosions) e.age += dt;
-    explosions = explosions.filter(e => e.age < 0.4);
+    explosions = explosions.filter(e => e.age < (e.duree || 0.4));
     for (const a of arcs) a.age += dt;
     arcs = arcs.filter(a => a.age < DUREE_ARC);
 }
@@ -238,6 +247,7 @@ function draw_balles(ctx) {
     draw_arcs(ctx);
 
     for (const e of explosions) {
+        if (e.paillettes) { draw_paillettes(ctx, e); continue; }
         const progression = e.age / 0.4;
         ctx.save();
         ctx.globalAlpha = 1 - progression;
@@ -251,4 +261,28 @@ function draw_balles(ctx) {
         ctx.fill();
         ctx.restore();
     }
+}
+
+// Une explosion en paillettes : un éclair rose qui s'efface, puis des étoiles qui volent, retombent et scintillent
+function draw_paillettes(ctx, e) {
+    const p = e.age / e.duree;
+    ctx.save();
+    if (p < 0.4) {
+        ctx.globalAlpha = 0.6 * (1 - p / 0.4);
+        ctx.fillStyle = '#ff9ad5';
+        ctx.beginPath();
+        ctx.arc(e.x, e.y, e.rayon * (0.5 + p), 0, Math.PI * 2);
+        ctx.fill();
+    }
+    const taille = Math.max(2, e.rayon / 14);
+    for (const s of e.paillettes) {
+        const t = e.age;
+        const px = e.x + s.vx * t, py = e.y + s.vy * t + e.rayon * 1.2 * t * t;
+        const r = taille * (0.5 + 0.5 * Math.abs(Math.sin(t * 18 + s.phase)));
+        ctx.globalAlpha = 1 - p * p;
+        ctx.fillStyle = s.couleur;
+        ctx.fillRect(px - r, py - taille / 4, r * 2, taille / 2);
+        ctx.fillRect(px - taille / 4, py - r, taille / 2, r * 2);
+    }
+    ctx.restore();
 }

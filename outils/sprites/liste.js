@@ -61,7 +61,7 @@ async function liste_sprites() {
         une(dossier + '/touche', B.touche); une(dossier + '/victoire', B.victoire); une(dossier + '/ko', B.ko);
     };
     boxe('persos/brutus/boxe', SPRITES_BOXE.brutus_pour(await charger(A + 'persos/brutus/arret.png')));
-    for (const tenue of ['marcel', 'fonce', 'hawai', 'noel', 'catch'])
+    for (const tenue of ['marcel', 'fonce', 'hawai', 'noel', 'catch', 'veteran'])
         boxe(`skins/brutus/${tenue}/boxe`, SPRITES_BOXE.brutus_pour(await charger(A + `skins/brutus/${tenue}/arret.png`)));
     return L;
 }
