@@ -376,7 +376,7 @@ const Boxe = (() => {
         // Brutus : il recule quand il esquive ou qu'il est sonné
         const dxb = b.etat === 'esquive' ? -14 : b.etat === 'sonne' ? -18 * (1 - b.t / 0.5) : (b.etat === 'jab' || b.etat === 'direct') ? 6 : b.etat === 'uppercut' ? 10 : 0;
         // (son vrai sprite : les pieds sur la dernière ligne, le corps vers la gauche de l'image)
-        poser(ctx, image_b(), cx - 140 + (b.etat === 'ko' ? -24 : dxb), SOL - 63 * ECH_B, 64 * ECH_B);
+        poser(ctx, image_b(), cx - 140 - BOXE_MARGE * ECH_B + (b.etat === 'ko' ? -24 : dxb), SOL - BOXE_PIEDS * ECH_B, BOXE_TOILE * ECH_B);
 
         cordes(ctx, true);
         dessiner_foule(ctx, true);

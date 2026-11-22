@@ -14,6 +14,8 @@
        frappé dans le vide et part en avant), touche, rugir ×2 (il se tape
        la poitrine), et la version « bouche ouverte » de garde pour parler.
    ========================================================================= */
+// Toile des sprites de boxe de Brutus : 80×80, son sprite posé avec 8 pixels de marge, pieds sur la ligne 71
+const BOXE_TOILE = 80, BOXE_MARGE = 8, BOXE_PIEDS = 71;
 const SPRITES_BOXE = (() => {
     const { poser, ellipse, rect, trait, membre } = PixelArt;
 
@@ -57,12 +59,11 @@ const SPRITES_BOXE = (() => {
         // Le bas du gilet (caché par le fusil) : ombre à gauche, couture, reflet, contour
         for (let y = 20; y <= 31; y++) {
             const g = 12, dr = y >= 25 ? 27 : 26;                  // un peu de ventre
-            for (let x = g; x <= dr; x++) corps[y][x] = C.K;
+            // Le tissu du sprite lui-même (lignes 19-20, x 16 à 23), répété : une chemise à motifs garde ses motifs
+            for (let x = g; x <= dr; x++) corps[y][x] = px(16 + (x - g) % 8, 19 + (y % 2)) || C.K;
             corps[y][g] = C.A; corps[y][dr] = C.A;
             corps[y][g + 1] = C.M; corps[y][g + 2] = C.M;
-            corps[y][19] = C.M;                                  // l'ouverture du gilet
-            if (y % 3 === 0) corps[y][23] = C.X;                 // reflet sur le tissu
-            if (y >= 29) for (let x = g + 1; x < dr; x++) if ((x + y) % 2) corps[y][x] = C.M;   // le pli du ventre
+            if (y >= 30) for (let x = g + 1; x < dr; x++) if ((x + y) % 2) corps[y][x] = C.M;   // le pli du ventre
         }
         // La ceinture, sa boucle, et une poche de cuir sur la hanche
         for (let y = 32; y <= 33; y++) { for (let x = 11; x <= 27; x++) corps[y][x] = y === 32 ? C.B : C.b; corps[y][10] = C.A; corps[y][28] = C.A; }
@@ -100,12 +101,12 @@ const SPRITES_BOXE = (() => {
                         if (!avant || avant.morceau !== 'poing') forme.set(cle(x, y), { morceau, s, t });
                     }
             };
-            membre(epaule, coude, 5.2, 4, 'biceps');                 // le biceps : énorme, comme sur son sprite
-            membre([epaule[0] - 0.5, epaule[1]], [epaule[0] + 0.5, epaule[1] + 1], 5.4, 5.4, 'biceps');   // l'épaule
-            membre(coude, poing, 3.9, 3.4, 'avantbras');            // l'avant-bras
+            membre(epaule, coude, 4.4, 3.4, 'biceps');               // le biceps : épais, comme sur son sprite
+            membre([epaule[0] - 0.5, epaule[1]], [epaule[0] + 0.5, epaule[1] + 1], 4.6, 4.6, 'biceps');   // l'épaule
+            membre(coude, poing, 3.3, 2.9, 'avantbras');            // l'avant-bras
             // Le poing
             const fx = poing[0] - coude[0], fy = poing[1] - coude[1], fl = Math.hypot(fx, fy) || 1, vx = fx / fl, vy = fy / fl;
-            const R = 4.4;
+            const R = 3.8;
             for (let y = Math.floor(poing[1] - R); y <= Math.ceil(poing[1] + R); y++) for (let x = Math.floor(poing[0] - R); x <= Math.ceil(poing[0] + R); x++) {
                 const ox = x - poing[0], oy = y - poing[1];
                 if (ox * ox + oy * oy <= R * R) forme.set(cle(x, y), { morceau: 'poing', f: ox * vx + oy * vy, l: -ox * vy + oy * vx, s: (-ox - oy) / (R * 1.4) });
@@ -117,8 +118,8 @@ const SPRITES_BOXE = (() => {
                 if (p.morceau === 'poing') {
                     c = p.s > 0.35 ? C.J : p.s < -0.4 ? C.G : C.S;
                     // Les doigts repliés : des plis sombres à l'avant du poing, tous les deux pixels
-                    if (p.f > 1 && Math.abs(p.l) < 3.6 && Math.round(p.l + 10) % 2 === 0) c = C.G;
-                    if (p.f > 2.2 && Math.abs(p.l) < 3.6 && Math.round(p.l + 10) % 2 === 0) c = C.A;
+                    if (p.f > 0.8 && Math.abs(p.l) < 3.1 && Math.round(p.l + 10) % 2 === 0) c = C.G;
+                    if (p.f > 1.9 && Math.abs(p.l) < 3.1 && Math.round(p.l + 10) % 2 === 0) c = C.A;
                 } else if (p.morceau === 'biceps') {
                     c = p.s > 0.45 ? C.J : p.s > -0.15 ? C.S : p.s > -0.5 ? C.G : p.s > -0.68 ? C.A : C.S;
                 } else {
@@ -130,7 +131,7 @@ const SPRITES_BOXE = (() => {
             const cx = Math.round(coude[0]), cy = Math.round(coude[1]);
             for (const [x, y] of [[cx, cy], [cx + 1, cy]]) if (dans(x, y)) calque.set(cle(x, y), C.G);
             // Le poignet : un trait sombre sépare le poing de l'avant-bras
-            for (const [k, p] of forme) if (p.morceau === 'poing' && p.f < -3.2) calque.set(k, C.A);
+            for (const [k, p] of forme) if (p.morceau === 'poing' && p.f < -2.8) calque.set(k, C.A);
             // Le contour noir
             for (const k of forme.keys()) {
                 const [x, y] = k.split(',').map(Number);
@@ -140,10 +141,14 @@ const SPRITES_BOXE = (() => {
         }
 
         // 3. Une pose : le haut du corps se déplace (dx, dy), la tête peut partir en arrière,
-        // le bras du fond est dessiné derrière le corps, le bras proche par-dessus
+        // le bras du fond est dessiné derrière le corps, le bras proche par-dessus.
+        // La toile fait 80×80 : son sprite (64×64) est posé avec 8 pixels de marge
+        // (les poings levés, l'esquive en arrière ne sont jamais coupés) ; les pieds
+        // sont sur la ligne 71 (BOXE_PIEDS), les 8 dernières lignes restent vides.
+        const T = BOXE_TOILE, MG = 8;
         function pose({ dx = 0, dy = 0, tete = [0, 0], proche, loin }) {
-            const grille = Array.from({ length: N }, () => Array(N).fill(null));
-            const poserCalque = (calque, ox, oy) => { for (const [k, c] of calque) { const [x, y] = k.split(',').map(Number); const X = x + ox, Y = y + oy; if (X >= 0 && Y >= 0 && X < N && Y < N && c) grille[Y][X] = c; } };
+            const grille = Array.from({ length: T }, () => Array(T).fill(null));
+            const poserCalque = (calque, ox, oy) => { for (const [k, c] of calque) { const [x, y] = k.split(',').map(Number); const X = x + ox + MG, Y = y + oy + MG; if (X >= 0 && Y >= 0 && X < T && Y < T && c) grille[Y][X] = c; } };
             // Le bras du fond, derrière
             poserCalque(bras(...loin), dx, dy);
             // Le corps : les jambes restent plantées, le haut bouge
@@ -151,8 +156,8 @@ const SPRITES_BOXE = (() => {
                 const c = corps[y][x];
                 if (!c) continue;
                 const haut = y < 36, ox = haut ? dx + (y <= 12 ? tete[0] : 0) : 0, oy = haut ? dy + (y <= 12 ? tete[1] : 0) : 0;
-                const X = x + ox, Y = y + oy;
-                if (X >= 0 && Y >= 0 && X < N && Y < N) grille[Y][X] = c;
+                const X = x + ox + MG, Y = y + oy + MG;
+                if (X >= 0 && Y >= 0 && X < T && Y < T) grille[Y][X] = c;
             }
             // Le bras proche, devant
             poserCalque(bras(...proche), dx, dy);
@@ -160,18 +165,18 @@ const SPRITES_BOXE = (() => {
         }
 
         const en_image = grille => {
-            const t = document.createElement('canvas'); t.width = t.height = N;
+            const t = document.createElement('canvas'); t.width = t.height = T;
             const c = t.getContext('2d');
-            for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (grille[y][x]) { c.fillStyle = grille[y][x]; c.fillRect(x, y, 1, 1); }
+            for (let y = 0; y < T; y++) for (let x = 0; x < T; x++) if (grille[y][x]) { c.fillStyle = grille[y][x]; c.fillRect(x, y, 1, 1); }
             return t;
         };
-        // K.O. : la pose « touché », tournée d'un quart de tour (la tête vers la gauche), posée au sol
+        // K.O. : la pose « touché », tournée d'un quart de tour (la tête vers la gauche), posée au sol (ligne des pieds)
         const couche = grille => {
-            const r = Array.from({ length: N }, () => Array(N).fill(null));
-            for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (grille[y][x]) r[N - 1 - x][y] = grille[y][x];
-            let bas = 0; for (let y = 0; y < N; y++) if (r[y].some(Boolean)) bas = y;
-            const dec = N - 1 - bas, res = Array.from({ length: N }, () => Array(N).fill(null));
-            for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (r[y][x] && y + dec < N) res[y + dec][x] = r[y][x];
+            const r = Array.from({ length: T }, () => Array(T).fill(null));
+            for (let y = 0; y < T; y++) for (let x = 0; x < T; x++) if (grille[y][x]) r[T - 1 - x][y] = grille[y][x];
+            let bas = 0, gauche = T; for (let y = 0; y < T; y++) for (let x = 0; x < T; x++) if (r[y][x]) { bas = y; gauche = Math.min(gauche, x); }
+            const dy = BOXE_PIEDS - bas, dx = 2 - gauche, res = Array.from({ length: T }, () => Array(T).fill(null));
+            for (let y = 0; y < T; y++) for (let x = 0; x < T; x++) if (r[y][x] && y + dy >= 0 && y + dy < T && x + dx >= 0 && x + dx < T) res[y + dy][x + dx] = r[y][x];
             return res;
         };
 
@@ -328,5 +333,10 @@ const SPRITES_BOXE = (() => {
         return PixelArt.en_image(res, COULEURS_G);
     }
 
-    return { get brutus() { return sprites_brutus(); }, gorille: gg };
+    return {
+        get brutus() { return sprites_brutus(); },
+        // Pour une image donnée (une tenue) : sert aussi à vérifier chaque tenue
+        brutus_pour: img => { if (!cacheBrutus.has(img)) cacheBrutus.set(img, brutus_depuis(img)); return cacheBrutus.get(img); },
+        gorille: gg
+    };
 })();
