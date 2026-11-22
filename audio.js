@@ -1,12 +1,11 @@
 /* =========================================================================
    GESTION DU SON
-   Un seul lecteur de musique est utilisé (menu, normal, entraînement ou
-   playlist hardcore) :
+   Un seul lecteur MP3 (mode normal ou playlist hardcore) ; le menu et
+   l'entraînement ont des musiques générées (Web Audio, plus bas) :
    les gros fichiers MP3 ne sont téléchargés que lorsqu'ils sont joués.
    ========================================================================= */
 const Son = (() => {
     const PISTES = {
-        menu: { src: './assets/son/menu_theme.mp3', volume: 0.1 },
         normal: { src: './assets/son/background_sound.mp3', volume: 0.1 },
         hardcore: [
             './assets/son/hardcore_gamer_music.mp3',
@@ -60,10 +59,10 @@ const Son = (() => {
     function jouerAmbiance(nom) {
         ambiance = nom;
         arreter_piste();
-        // L'entraînement a sa propre musique, générée (plus bas), dans le style des autres
-        if (nom === 'entrainement') {
+        // Le menu et l'entraînement ont leur musique générée (plus bas)
+        if (COMPOSITIONS[nom]) {
             musique.pause();
-            if (actif) demarrer_piste();
+            if (actif) demarrer_piste(COMPOSITIONS[nom]);
             return;
         }
         if (nom === 'hardcore') {
@@ -81,8 +80,8 @@ const Son = (() => {
         arreter_piste();
     }
 
-    // Musique de l'ambiance en cours : le lecteur MP3, ou la piste générée de l'entraînement
-    function jouer() { if (ambiance === 'entrainement') demarrer_piste(); else lire(musique); }
+    // Musique de l'ambiance en cours : le lecteur MP3, ou une musique générée
+    function jouer() { if (COMPOSITIONS[ambiance]) demarrer_piste(COMPOSITIONS[ambiance]); else lire(musique); }
     function couper() { musique.pause(); arreter_piste(); }
 
     function setActif(valeur) {
@@ -311,17 +310,17 @@ const Son = (() => {
         return conv;
     }
 
-    function demarrer_piste() {
+    function demarrer_piste(compo) {
         if (piste || !actif) return;
         const c = contexte(); if (!c) return;
         // Son direct + beaucoup de réverbération, vers le volume « musique »
         const bus = c.createGain();
-        bus.gain.value = 0.16;          // même volume perçu que les MP3 du menu et du mode normal
+        bus.gain.value = compo.volume;   // réglé pour sonner aussi fort que les MP3
         const reverb = salle(c), mouille = c.createGain();
-        mouille.gain.value = 0.55;
+        mouille.gain.value = compo.reverb;
         bus.connect(sortieMusique);
         bus.connect(reverb).connect(mouille).connect(sortieMusique);
-        piste = { bus, prochain: c.currentTime + 0.1, pas: 0, minuterie: setInterval(programmer_piste, 50) };
+        piste = { compo, bus, prochain: c.currentTime + 0.1, pas: 0, minuterie: setInterval(programmer_piste, 50) };
         programmer_piste();
     }
     function arreter_piste() {
@@ -334,9 +333,10 @@ const Son = (() => {
     function programmer_piste() {
         const c = contexte(); if (!c || !piste) return;
         while (piste.prochain < c.currentTime + 0.3) {
-            jouer_double(piste.pas, piste.prochain);
-            piste.prochain += DOUBLE;
-            piste.pas = (piste.pas + 1) % (GRILLE.length * 16);
+            const { compo } = piste;
+            compo.jouer(piste.pas, piste.prochain);
+            piste.prochain += compo.double;
+            piste.pas = (piste.pas + 1) % (compo.mesures * 16);
         }
     }
 
@@ -433,6 +433,99 @@ const Son = (() => {
         }
     }
 
+    const ENTRAINEMENT = { nom: 'entrainement', double: DOUBLE, mesures: GRILLE.length, volume: 0.16, reverb: 0.55, jouer: jouer_double };
+
+    /* ---------- Musique du menu (générée, en boucle) ----------
+       Reprend l'ADN de l'ancien thème du menu : pédale grave sur sol qui
+       frissonne d'un demi-ton (fa#, sol#), la aigu tenu au-dessus de sol
+       mineur, passage vers mi bémol mineur. Mais retenue : 72 BPM, battement
+       de cœur, horloge qui fait tic-tac, piano clairsemé, montées de souffle
+       qui n'éclatent jamais… quelque chose est sur le point d'arriver.
+       32 mesures (≈ 107 s) : calme, inquiétude, tension, retombée. */
+    const M_DOUBLE = 60 / 72 / 4;
+    const M_ACCORDS = {
+        Gm: { basse: 31, nappe: [55, 58, 62, 69] },          // sol mineur, avec le la aigu (neuvième)
+        Eb: { basse: 27, nappe: [55, 58, 63, 70] },
+        Ebm: { basse: 27, nappe: [54, 58, 63, 70] },         // le sol bémol qui assombrit tout
+        Cm: { basse: 24, nappe: [55, 60, 63, 67] },
+        D: { basse: 26, nappe: [54, 57, 62, 63] }            // ré avec mi bémol : la tension qui ne se résout pas
+    };
+    const M_GRILLE = [
+        'Gm', 'Gm', 'Gm', 'Gm', 'Eb', 'Eb', 'Ebm', 'Ebm',   // calme
+        'Gm', 'Gm', 'Gm', 'Gm', 'Ebm', 'Ebm', 'D', 'D',     // inquiétude
+        'Gm', 'Gm', 'Eb', 'Eb', 'Cm', 'Cm', 'D', 'D',       // tension
+        'Ebm', 'Ebm', 'Gm', 'Gm', 'Ebm', 'Ebm', 'D', 'D'    // retombée
+    ];
+    // Motif de piano (notes MIDI, null = silence), une note par croche, sur 2 mesures
+    const M_PIANO = [69, null, 67, null, 62, null, null, null, 70, null, 69, null, 62, null, null, null];
+    const MENU = { nom: 'menu', double: M_DOUBLE, mesures: M_GRILLE.length, volume: 0.2, reverb: 0.7, jouer: jouer_menu };
+
+    // Une note de piano : attaque nette, extinction lente, un peu de corps
+    function piano(f, t, vol) {
+        const o = { sortie: piste.bus, absolu: true };
+        ton(f, t, 2.6, { type: 'triangle', vol, ...o });
+        ton(f * 2, t, 1.2, { type: 'sine', vol: vol * 0.35, ...o });
+        ton(f * 3.01, t, 0.5, { type: 'sine', vol: vol * 0.12, ...o });
+    }
+
+    function jouer_menu(i, t) {
+        const o = { sortie: piste.bus, absolu: true };
+        const mesure = Math.floor(i / 16), pos = i % 16, partie = Math.floor(mesure / 8), dansPartie = mesure % 8;
+        const nom = M_GRILLE[mesure], accord = M_ACCORDS[nom], mesureDuree = M_DOUBLE * 16;
+
+        // Pédale grave : relancée toutes les deux mesures, très sombre
+        if (pos === 0 && mesure % 2 === 0) {
+            voix(hz(accord.basse), t, mesureDuree * 2, { vol: 0.08, filtre: 220, attaque: 1.2, sortie: 1.2, desaccord: [-5, 0, 5] });
+            voix(hz(accord.basse + 12), t, mesureDuree * 2, { vol: 0.025, type: 'triangle', filtre: 500, attaque: 1.5, sortie: 1.2, desaccord: [0] });
+        }
+        // Le frisson de l'original : la basse glisse d'un demi-ton et revient (fin de chaque paire de mesures)
+        if (pos === 12 && dansPartie % 2 === 1 && partie !== 0) {
+            const voisin = accord.basse + (mesure % 4 === 1 ? 1 : -1);
+            voix(hz(voisin), t, M_DOUBLE * 4, { vol: 0.05, filtre: 260, attaque: 0.3, sortie: 0.4, desaccord: [-5, 5] });
+        }
+        // Nappe de cordes : l'accord, tenu, qui respire (avec le la aigu de l'original)
+        if (pos === 0) {
+            const vol = [0.012, 0.015, 0.019, 0.014][partie];
+            for (const n of accord.nappe) voix(hz(n), t, mesureDuree * 0.98, { vol, filtre: 900, attaque: 1.4, sortie: 1.4, vibrato: 7 });
+        }
+        // Note aiguë qui tremble au loin (trémolo de violons), à partir de l'inquiétude
+        if (partie >= 1 && partie !== 3 && pos % 2 === 0) {
+            const n = accord.nappe[3] + 12;
+            voix(hz(n), t, M_DOUBLE * 1.6, { vol: partie === 2 ? 0.009 : 0.006, filtre: 3000, attaque: 0.04, sortie: 0.1, desaccord: [-10, 10] });
+        }
+
+        // Battement de cœur : « boum-boum » une fois par mesure, plus pressant dans la tension
+        if (partie >= 1 && (pos === 0 || pos === 3 || (partie === 2 && (pos === 8 || pos === 11)))) {
+            const fort = pos === 0 || pos === 8;
+            ton(fort ? 58 : 52, t, 0.5, { vol: fort ? 0.3 : 0.2, f2: 30, ...o });
+            bruit(t, 0.05, { vol: 0.02, filtre: 300, ...o });
+        }
+        // Horloge : tic-tac discret à chaque temps (inquiétude et tension)
+        if ((partie === 1 || partie === 2) && pos % 4 === 0)
+            bruit(t, 0.025, { vol: pos % 8 === 0 ? 0.03 : 0.022, filtre: pos % 8 === 0 ? 5200 : 3800, type: 'bandpass', ...o });
+
+        // Piano clairsemé : le motif du thème, joué doucement (pas dans la toute première partie)
+        if (partie >= 1 && pos % 2 === 0) {
+            const n = M_PIANO[(mesure % 2) * 8 + pos / 2];
+            if (n) piano(hz(nom === 'D' && n === 70 ? 69 : n), t, partie === 3 ? 0.04 : 0.055);
+        }
+        if (partie === 0 && dansPartie >= 4 && pos === 0) piano(hz(accord.nappe[3]), t, 0.035);   // une seule note, qui annonce
+
+        // Montée de souffle sur les deux dernières mesures de chaque partie… qui s'arrête net
+        if (dansPartie === 6 && pos === 0) {
+            const duree = mesureDuree * 2 - M_DOUBLE * 2;
+            bruit(t, duree, { vol: partie === 2 ? 0.05 : 0.03, filtre: 300, filtreFin: 5000, type: 'bandpass', ...o });
+            voix(hz(accord.basse + 24), t, duree, { vol: 0.02, filtre: 200, filtreFin: 2500, attaque: duree * 0.9, sortie: 0.05, desaccord: [-20, -8, 8, 20] });
+        }
+        // Après la tension : un grondement lointain, étouffé (ce qui arrive est encore loin)
+        if (partie === 3 && dansPartie === 0 && pos === 0) {
+            ton(40, t, 3, { vol: 0.25, f2: 26, ...o });
+            bruit(t, 2.5, { vol: 0.04, filtre: 180, filtreFin: 60, ...o });
+        }
+    }
+
+    const COMPOSITIONS = { menu: MENU, entrainement: ENTRAINEMENT };
+
     /* Vibrations : téléphone (navigator.vibrate, Android) et manette (vibreurs).
        force de 0 à 1, duree en millisecondes. Désactivables dans le panneau du son. */
     function vibrer(force, duree) {
@@ -470,7 +563,7 @@ const Son = (() => {
         setActif,
         suspendreMusique,
         reprendreMusique,
-        pisteActive: () => Boolean(piste),   // la musique de l'entraînement joue-t-elle ?
+        pisteActive: () => (piste ? piste.compo.nom : null),   // musique générée en cours (tests)
         estActif: () => actif,
         contexte,   // contexte Web Audio partagé (aussi utilisé par les sons de lootbox)
         ton,
