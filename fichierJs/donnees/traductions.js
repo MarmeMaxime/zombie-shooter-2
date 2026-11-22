@@ -659,5 +659,6 @@ const TRADUCTIONS = {
     '×5 (500 💀)': ['×5 (500 💀)', '×5 (500 💀)'],
     '×10 (1 000 💀)': ['×10 (1,000 💀)', '×10 (1.000 💀)'],
     '{n} nouveau(x) skin(s) · {d} doublon(s), remboursé(s) {c} 💀': ['{n} new skin(s) · {d} duplicate(s), refunded {c} 💀', '{n} skin(s) nuevo(s) · {d} repetido(s), reembolsado(s) {c} 💀'],
-    'doublon': ['duplicate', 'repetido']
+    'doublon': ['duplicate', 'repetido'],
+    'Unique': ['Unique', 'Único']
 };
