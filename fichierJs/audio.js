@@ -252,58 +252,62 @@ const Son = (() => {
         succes: () => [784, 988, 1175, 1568].forEach((f, i) => ton(f, i * 0.09, 0.35, { type: 'triangle', vol: 0.15 })),
         degat: () => { ton(220, 0, 0.25, { type: 'square', vol: 0.12, f2: 90 }); bruit(0, 0.15, { vol: 0.15, filtre: 800 }); },
 
-        // Grognements de zombies, de temps en temps pendant les parties (plus graves pour les Tanks)
+        /* Grognements de zombies, de temps en temps pendant les parties (plus graves
+           pour les Tanks). Assez aigus pour passer sur des haut-parleurs de portable
+           ou de téléphone, qui ne rendent presque rien sous 150 Hz. */
         grognement: () => {
-            const f = 75 + Math.random() * 35;
-            ton(f, 0, 0.65, { type: 'sawtooth', vol: 0.035, f2: f * 0.7, attaque: 0.08 });
-            bruit(0, 0.55, { vol: 0.035, filtre: 420, filtreFin: 220, type: 'bandpass' });
+            const f = 120 + Math.random() * 50;
+            ton(f, 0, 0.6, { type: 'sawtooth', vol: 0.11, f2: f * 0.7, attaque: 0.06 });
+            ton(f * 2, 0, 0.5, { type: 'square', vol: 0.04, f2: f * 1.4, attaque: 0.06 });
+            bruit(0, 0.5, { vol: 0.14, filtre: 700, filtreFin: 350, type: 'bandpass' });
         },
         grognementTank: () => {
-            ton(52, 0, 0.9, { type: 'sawtooth', vol: 0.045, f2: 38, attaque: 0.12 });
-            bruit(0, 0.8, { vol: 0.04, filtre: 300, filtreFin: 160, type: 'bandpass' });
+            ton(85, 0, 0.85, { type: 'sawtooth', vol: 0.12, f2: 60, attaque: 0.1 });
+            ton(170, 0, 0.7, { type: 'square', vol: 0.05, f2: 120, attaque: 0.1 });
+            bruit(0, 0.8, { vol: 0.15, filtre: 500, filtreFin: 250, type: 'bandpass' });
         },
 
         /* Voix des dialogues : une « syllabe » à chaque mouvement de bouche.
            Le Sergent bougonne, le labo grésille dans son haut-parleur, l'éclaireur parle par radio. */
         voixSergent: () => {
-            const f = 95 + Math.random() * 45;
-            ton(f, 0, 0.09, { type: 'square', vol: 0.03, f2: f * 0.85 });
-            bruit(0, 0.06, { vol: 0.02, filtre: 600 });
+            const f = 150 + Math.random() * 60;
+            ton(f, 0, 0.08, { type: 'square', vol: 0.15, f2: f * 0.85 });
+            bruit(0, 0.05, { vol: 0.08, filtre: 1200 });
         },
         voixLabo: () => {
-            const f = 230 + Math.random() * 90;
-            ton(f, 0, 0.07, { type: 'square', vol: 0.018, f2: f * 1.1 });
-            bruit(0, 0.07, { vol: 0.012, filtre: 2600, type: 'highpass' });
+            const f = 320 + Math.random() * 120;
+            ton(f, 0, 0.07, { type: 'square', vol: 0.11, f2: f * 1.1 });
+            bruit(0, 0.07, { vol: 0.06, filtre: 3000, type: 'highpass' });
         },
         voixRadio: () => {
-            const f = 150 + Math.random() * 70;
-            ton(f, 0, 0.08, { type: 'sawtooth', vol: 0.016, f2: f * 0.9 });
-            bruit(0, 0.09, { vol: 0.03, filtre: 1800, type: 'bandpass' });
+            const f = 240 + Math.random() * 90;
+            ton(f, 0, 0.08, { type: 'sawtooth', vol: 0.14, f2: f * 0.9 });
+            bruit(0, 0.09, { vol: 0.2, filtre: 1800, type: 'bandpass' });
         },
         radio: () => {   // grésillement au début d'un message radio, puis le bip
-            bruit(0, 0.28, { vol: 0.08, filtre: 2200, filtreFin: 900, type: 'bandpass' });
-            ton(1400, 0.24, 0.08, { vol: 0.05 });
+            bruit(0, 0.28, { vol: 0.3, filtre: 2200, filtreFin: 900, type: 'bandpass' });
+            ton(1400, 0.24, 0.08, { vol: 0.15 });
         },
 
         // Petite fanfare de victoire (fin de mission de campagne)
         fanfare: () => {
-            [523, 659, 784].forEach((f, i) => { ton(f, i * 0.12, 0.16, { type: 'sawtooth', vol: 0.035 }); ton(f, i * 0.12, 0.16, { type: 'triangle', vol: 0.06 }); });
-            for (const f of [523, 659, 784, 1047]) { ton(f, 0.38, 0.7, { type: 'triangle', vol: 0.05, attaque: 0.02 }); ton(f, 0.38, 0.6, { type: 'sawtooth', vol: 0.018, attaque: 0.02 }); }
+            [523, 659, 784].forEach((f, i) => { ton(f, i * 0.12, 0.16, { type: 'sawtooth', vol: 0.07 }); ton(f, i * 0.12, 0.16, { type: 'triangle', vol: 0.12 }); });
+            for (const f of [523, 659, 784, 1047]) { ton(f, 0.38, 0.7, { type: 'triangle', vol: 0.1, attaque: 0.02 }); ton(f, 0.38, 0.6, { type: 'sawtooth', vol: 0.035, attaque: 0.02 }); }
         }
     };
 
-    /* Moteur (camion, jeep) : un ronronnement grave continu, qui tremble un peu.
+    /* Moteur (camion, jeep) : un ronronnement continu, qui tremble un peu.
        Renvoie de quoi l'arrêter (en douceur). Silencieux si le son est coupé. */
     function moteur(force = 1) {
         const c = contexte();
         if (!c || !actif) return { arreter() {} };
         const g = c.createGain(), fl = c.createBiquadFilter(), lfo = c.createOscillator(), prof = c.createGain();
-        fl.type = 'lowpass'; fl.frequency.value = 240;
+        fl.type = 'lowpass'; fl.frequency.value = 700;
         g.gain.setValueAtTime(0.0001, c.currentTime);
-        g.gain.exponentialRampToValueAtTime(0.07 * force, c.currentTime + 0.4);
-        lfo.frequency.value = 11; prof.gain.value = 0.025 * force;
+        g.gain.exponentialRampToValueAtTime(0.045 * force, c.currentTime + 0.4);   // continu : plus discret que les bruitages
+        lfo.frequency.value = 11; prof.gain.value = 0.015 * force;
         lfo.connect(prof).connect(g.gain);
-        const oscs = [[46, 'sawtooth'], [23, 'square'], [92, 'sawtooth']].map(([f, type]) => {
+        const oscs = [[55, 'sawtooth'], [110, 'sawtooth'], [165, 'square']].map(([f, type]) => {
             const o = c.createOscillator(); o.type = type; o.frequency.value = f; o.connect(fl); o.start(); return o;
         });
         fl.connect(g).connect(sortieEffets);
