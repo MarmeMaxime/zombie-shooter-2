@@ -50,12 +50,12 @@ const MISSIONS_CAMPAGNE = [
             y: 228,                                      // sur la piste de sable du bas
             duree: { normal: 80, hardcore: 90 },         // temps du trajet jusqu'au camp (secondes)
             depart: 3,
-            pv: { normal: 130, hardcore: 115 },          // le camion encaisse un peu plus en normal
+            pv: { normal: 130, hardcore: 125 },          // le camion encaisse un peu plus en normal
             degats: 5, degatsTank: 12                    // par seconde et par zombie agrippé
         },
         apparition: {
             normal: { depart: 1.5, min: 1.0, acceleration: 0.006, groupe: 0.1, tank: 0.18, versCamion: 0.3 },
-            hardcore: { depart: 1.4, min: 0.9, acceleration: 0.006, groupe: 0.12, tank: 0.22, versCamion: 0.4 }
+            hardcore: { depart: 1.45, min: 0.92, acceleration: 0.006, groupe: 0.11, tank: 0.21, versCamion: 0.37 }
         },
         debrief: {
             normal: 'Le camion est là. Les échantillons aussi. Et mon café. Tu viens de gagner mon respect. Un peu. Ne t\'habitue pas.',

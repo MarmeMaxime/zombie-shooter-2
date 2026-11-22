@@ -8,7 +8,7 @@ const TRADUCTIONS = {
     // ---------- Écran titre, menu ----------
     'ILS ARRIVENT…': ['THEY\'RE COMING…', 'YA VIENEN…'],
     'Survivez. Ouvrez des caisses. Regrettez.': ['Survive. Open crates. Regret it.', 'Sobrevive. Abre cajas. Arrepiéntete.'],
-    'version 1.3': ['version 1.3', 'versión 1.3'],
+    'version 1.3.1': ['version 1.3.1', 'versión 1.3.1'],
     '▶ Appuie sur une touche ou touche l\'écran ◀': ['▶ Press any key or tap the screen ◀', '▶ Pulsa una tecla o toca la pantalla ◀'],
     'Normal': ['Normal', 'Normal'],
     'Hardcore': ['Hardcore', 'Hardcore'],
