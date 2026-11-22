@@ -231,7 +231,7 @@ SCENES_CAMPAGNE.c2m1 = {
     attente: 900,
     lignes: [
         { qui: 'radio', texte: 'Éclaireur au camp. Le mouvement à l\'ouest… c\'est une horde. Elle vient droit sur nous.' },
-        { qui: 'sergent', texte: 'À l\'ouest. Évidemment. Pour une fois qu\'il ne se passait rien à l\'ouest.' },
+        { qui: 'sergent', texte: 'À l\'ouest. Évidemment. Pour une fois qu\'il ne se passait rien à l\'est.' },
         { qui: 'sergent', texte: 'Retourne-toi, Soldat. Cette fois, ils arrivent de l\'autre côté. Et le mur, de ce côté-là, est plus bas que mon moral.' },
         { qui: 'radio', texte: 'Sergent… ils courent. Ils ne regardent même pas le camp. On dirait qu\'ils fuient quelque chose.' },
         { qui: 'sergent', texte: 'Fuir ? Qu\'est-ce qui peut faire peur à un zombie ?' },
