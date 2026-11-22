@@ -159,7 +159,6 @@ const TRADUCTIONS = {
     'Rafale': ['Burst', 'Ráfaga'],
     'Tir automatique très rapide pendant 3 s : balayez les lignes.': ['Very fast automatic fire for 3 s: sweep the lanes.', 'Disparo automático muy rápido durante 3 s: barre los carriles.'],
     'Onde de choc': ['Shockwave', 'Onda expansiva'],
-    'Frappe le sol : blesse les zombies collés à lui, repousse et étourdit ceux autour.': ['Slams the ground: hurts zombies right next to him, pushes back and stuns those around.', 'Golpea el suelo: hiere a los zombis pegados a él y empuja y aturde a los de alrededor.'],
     'Tapis de bombes': ['Carpet bombing', 'Bombardeo de alfombra'],
     '6 obus tombent sur les zombies les plus proches.': ['6 shells fall on the nearest zombies.', 'Caen 6 obuses sobre los zombis más cercanos.'],
     'Orage': ['Storm', 'Tormenta'],
@@ -639,5 +638,6 @@ const TRADUCTIONS = {
     'Tout ce que vous connaissez. Les coureurs, les videuses, les infirmiers… et les femmes enceintes qui éclatent.': ['Everything you know. The runners, the bouncers, the nurses… and the pregnant ones that burst.', 'Todo lo que conocéis. Los corredores, las porteras, los enfermeros… y las embarazadas que revientan.'],
     'Le désert entier, en somme. Et tu les as tous gardés pour toi.': ['The whole desert, in short. And you kept them all to yourself.', 'Todo el desierto, vamos. Y te los quedaste todos para ti.'],
     'Le pire, c\'était le village. Tout le monde y était enterré. Et celui qui les avait enterrés creusait encore. Il m\'avait gardé une place.': ['The worst was the village. Everyone there was buried. And the one who\'d buried them was still digging. He\'d saved me a spot.', 'Lo peor era el pueblo. Todos estaban enterrados. Y el que los había enterrado seguía cavando. Me había guardado un sitio.'],
-    'Fais pas cette tête. Je suis là, non ?': ['Don\'t make that face. I\'m here, aren\'t I?', 'No pongas esa cara. Aquí estoy, ¿no?']
+    'Fais pas cette tête. Je suis là, non ?': ['Don\'t make that face. I\'m here, aren\'t I?', 'No pongas esa cara. Aquí estoy, ¿no?'],
+    'Frappe le sol : la terre se fend sur tout l\'écran ; chaque zombie est blessé, repoussé et étourdi.': ['Punches the ground: the earth splits across the whole screen; every zombie is hurt, knocked back and stunned.', 'Golpea el suelo: la tierra se parte en toda la pantalla; cada zombi queda herido, rechazado y aturdido.']
 };

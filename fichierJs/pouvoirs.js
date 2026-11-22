@@ -2,7 +2,8 @@
    POUVOIRS SPÉCIAUX
    Chaque personnage a un pouvoir lié à son arme (CONFIG.pouvoirs) :
    - Soldat, Rafale : tir automatique très rapide pendant quelques secondes
-   - Brutus, Onde de choc : blesse les zombies collés à lui, repousse et étourdit les autres
+   - Brutus, Onde de choc : il frappe le sol, la terre se fend jusqu'au bout de l'écran ;
+     chaque zombie traversé est blessé, repoussé et étourdi
    - Mira, Tapis de bombes : des obus tombent sur les zombies les plus proches
    - Lassie, Orage : la foudre frappe chaque zombie à l'écran
    La jauge se remplit en tuant des zombies ; touche E (ou Maj) ou bouton ★.
@@ -57,21 +58,11 @@ const POUVOIRS = {
         Son.effet('rafale');
     },
 
-    onde(cfg) {
+    // L'onde part de Brutus et file vers la droite (update_pouvoir la fait avancer et frapper)
+    onde() {
         const ox = joueur.x + joueur.taille / 2, oy = joueur.y + joueur.taille * 0.8;
-        pouvoir.ondes.push({ x: ox, y: oy, age: 0 });
-        compteurTirs++;
-        for (const z of zombies.slice()) {
-            const c = centre_zombie(z);
-            const d = Math.hypot((c.x - ox) / MONDE.echelleX, c.y - oy);
-            if (d > cfg.portee) continue;
-            const force = 1 - 0.5 * d / cfg.portee;            // plus fort de près
-            const lourd = z === boss ? 0.3 : 1;                 // le boss bouge à peine
-            z.x = Math.min(MONDE.largeur - z.taille * 0.5, z.x + cfg.recul * force * lourd * MONDE.echelleX);
-            z.etourdi = cfg.etourdissement * (z === boss ? 0.5 : 1);
-            if (d <= cfg.porteeDegats) toucher_zombie(z, 1, compteurTirs);
-        }
-        secouer_ecran(3);
+        pouvoir.ondes.push({ x: ox, y: oy, age: 0, front: ox, touches: new Set(), cailloux: [] });
+        secouer_ecran(4);
         Son.effet('onde');
     },
 
@@ -119,8 +110,29 @@ function update_pouvoir(dt) {
         }
     }
     pouvoir.obus = pouvoir.obus.filter(o => o.chrono > 0);
-    for (const o of pouvoir.ondes) o.age += dt;
-    pouvoir.ondes = pouvoir.ondes.filter(o => o.age < 0.5);
+    // Onde de choc : le front avance ; chaque zombie qu'il dépasse est frappé une fois
+    const onde = CONFIG.pouvoirs.onde;
+    for (const o of pouvoir.ondes) {
+        o.age += dt;
+        o.front = o.x + onde.vitesse * MONDE.echelleX * o.age;
+        for (const z of zombies.slice()) {
+            if (o.touches.has(z)) continue;
+            const c = centre_zombie(z);
+            if (c.x < o.x - z.taille * 0.3 || c.x > o.front) continue;
+            o.touches.add(z);
+            const pres = (c.x - o.x) / MONDE.echelleX < onde.porteePres;
+            const leBoss = z === boss;
+            z.x = Math.min(MONDE.largeur - z.taille * 0.5, z.x + onde.recul * (leBoss ? 0.25 : pres ? 1 : 0.7) * MONDE.echelleX);
+            z.etourdi = onde.etourdissement * (leBoss ? 0.4 : 1);
+            compteurTirs++;   // chaque zombie est un coup à part (l'Anti-émeute perd un PV)
+            toucher_zombie(z, leBoss ? onde.degatsBoss : pres ? onde.degatsPres : onde.degats, compteurTirs);
+        }
+        // Des pierres jaillissent le long de la fissure
+        if (o.front < MONDE.largeur) for (let k = 0; k < 3; k++) o.cailloux.push({ x: o.front + (Math.random() - 0.5) * 10, y: 20 + Math.random() * (MONDE.hauteur - 40), age: 0 });
+        for (const p of o.cailloux) p.age += dt;
+        o.cailloux = o.cailloux.filter(p => p.age < 0.45);
+    }
+    pouvoir.ondes = pouvoir.ondes.filter(o => o.front < MONDE.largeur + 40 || o.cailloux.length);
     pouvoir.eclair = Math.max(0, pouvoir.eclair - dt);
 }
 
@@ -135,15 +147,38 @@ function draw_pouvoir(ctx) {
         ctx.ellipse(joueur.x + joueur.taille / 2, joueur.y + joueur.taille / 2, joueur.taille * 0.6, joueur.taille * 0.7, 0, 0, Math.PI * 2);
         ctx.fill();
     }
-    // Onde de choc : un anneau de poussière qui s'élargit
+    // Onde de choc : le choc au pied de Brutus, puis la fissure qui file jusqu'au bout de l'écran
     for (const o of pouvoir.ondes) {
-        const p = o.age / 0.5;
-        ctx.globalAlpha = 1 - p;
-        ctx.strokeStyle = '#e8d2a0';
-        ctx.lineWidth = 10 * (1 - p) + 2;
-        ctx.beginPath();
-        ctx.ellipse(o.x, o.y, CONFIG.pouvoirs.onde.portee * MONDE.echelleX * p, CONFIG.pouvoirs.onde.portee * 0.45 * p, 0, 0, Math.PI * 2);
-        ctx.stroke();
+        if (o.age < 0.35) {
+            const p = o.age / 0.35;
+            ctx.globalAlpha = 1 - p;
+            ctx.strokeStyle = '#e8d2a0';
+            ctx.lineWidth = 8 * (1 - p) + 2;
+            ctx.beginPath();
+            ctx.ellipse(o.x, o.y, 90 * MONDE.echelleX * p + 10, 40 * p + 5, 0, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+        const x = Math.min(o.front, MONDE.largeur + 20);
+        // La poussière soulevée derrière le front
+        const trace = ctx.createLinearGradient(Math.max(o.x, x - 220), 0, x, 0);
+        trace.addColorStop(0, 'rgba(232, 210, 160, 0)'); trace.addColorStop(1, 'rgba(232, 210, 160, 0.35)');
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = trace;
+        ctx.fillRect(Math.max(o.x, x - 220), 0, Math.min(220, x - o.x), MONDE.hauteur);
+        // La fissure : une ligne brisée sombre, bordée de terre claire
+        if (o.front < MONDE.largeur + 20) {
+            ctx.beginPath();
+            for (let y = 0; y <= MONDE.hauteur; y += 12) ctx.lineTo(x + Math.sin(y * 0.7 + o.x) * 6, y);
+            ctx.strokeStyle = '#e8d2a0'; ctx.lineWidth = 8; ctx.globalAlpha = 0.8; ctx.stroke();
+            ctx.strokeStyle = '#2a1a10'; ctx.lineWidth = 3; ctx.globalAlpha = 1; ctx.stroke();
+        }
+        // Les pierres qui jaillissent puis retombent
+        for (const p of o.cailloux) {
+            const h = Math.sin(p.age / 0.45 * Math.PI) * 18;
+            ctx.globalAlpha = 1 - p.age / 0.45;
+            ctx.fillStyle = '#6a5a48'; ctx.fillRect(Math.round(p.x) - 3, Math.round(p.y - h) - 3, 6, 5);
+            ctx.fillStyle = '#9a8a70'; ctx.fillRect(Math.round(p.x) - 3, Math.round(p.y - h) - 3, 6, 2);
+        }
     }
     // Obus : viseur au sol, puis l'obus qui tombe
     for (const o of pouvoir.obus) {

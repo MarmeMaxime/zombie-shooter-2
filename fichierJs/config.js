@@ -35,8 +35,11 @@ const CONFIG = {
     pouvoirs: {
         rafale: { nom: 'Rafale', kills: 28, duree: 3, cadence: 0.1,
             description: 'Tir automatique très rapide pendant 3 s : balayez les lignes.' },
-        onde: { nom: 'Onde de choc', kills: 15, portee: 320, porteeDegats: 140, recul: 150, etourdissement: 2,
-            description: 'Frappe le sol : blesse les zombies collés à lui, repousse et étourdit ceux autour.' },
+        // L'onde file vers la droite sur toute la hauteur ; chaque zombie qu'elle traverse est blessé,
+        // repoussé et étourdi (plus de dégâts tout près de Brutus, moins de recul pour un boss)
+        onde: { nom: 'Onde de choc', kills: 30, vitesse: 900, degats: 2, degatsPres: 3, porteePres: 180, degatsBoss: 3,
+            recul: 140, etourdissement: 2.5,
+            description: 'Frappe le sol : la terre se fend sur tout l\'écran ; chaque zombie est blessé, repoussé et étourdi.' },
         artillerie: { nom: 'Tapis de bombes', kills: 30, obus: 6, delai: 0.7, intervalle: 0.12,
             description: '6 obus tombent sur les zombies les plus proches.' },
         orage: { nom: 'Orage', kills: 26, degats: 1, degatsBoss: 3,

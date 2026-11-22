@@ -263,12 +263,12 @@ const MISSIONS_CAMPAGNE = [
         boss: {
             type: 'fossoyeur',
             bandeau: 'IL CREUSE…',
-            avant: { normal: 90, hardcore: 120 },     // tout ce qu'il croise avant le village
+            avant: { normal: 90, hardcore: 160 },     // tout ce qu'il croise avant le village
             ralenti: { normal: 3.5, hardcore: 4 }
         },
         apparition: {
             normal: { depart: 1.35, min: 0.85, acceleration: 0.006, groupe: 0.15, tank: 0.08, joggeur: 0.08, infirmier: 0.07, pondeuse: 0.06 },
-            hardcore: { depart: 1.2, min: 0.75, acceleration: 0.007, groupe: 0.2, tank: 0.1, joggeur: 0.11, infirmier: 0.08, pondeuse: 0.07 }
+            hardcore: { depart: 1.0, min: 0.54, acceleration: 0.009, groupe: 0.32, tank: 0.15, joggeur: 0.15, infirmier: 0.1, pondeuse: 0.09 }
         },
         debut: [
             { qui: 'brutus', texte: 'Le désert. Des semaines, puis des mois. Je marchais la nuit, et je dormais le jour, à l\'ombre de ce que je trouvais.', bouton: 'Et alors ?' }
