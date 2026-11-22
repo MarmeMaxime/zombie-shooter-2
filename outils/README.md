@@ -15,7 +15,7 @@ pixel par pixel. À lancer dans cet ordre, depuis la racine du projet :
 ```
 
 Pour une nouvelle tenue : ajouter une ligne `Recolor ...` dans `generer_tenues.ps1`,
-puis la déclarer dans `LOOT.skins` (`fichierJs/lootbox.js`).
+puis la déclarer dans `LOOT.skins` (`fichierJs/interface/lootbox.js`).
 
 ```powershell
 .\outils\generer_soldat_sans_casque.ps1             # le Soldat sans casque (assets/persos/soldat/soldat-sans-casque/)

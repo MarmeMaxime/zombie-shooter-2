@@ -1,5 +1,5 @@
 /* =========================================================================
-   TUTORIEL : le Sergent (portrait : assets/campagne/portraits/)
+   TUTORIEL : le Sergent (portrait : assets/campagne/sergent/)
    - Instructeur : quand il parle, la partie se fige et son message s'affiche
      au milieu de l'écran ; on l'accepte (bouton, Entrée, Espace ou A à la
      manette), puis on joue. Il disparaît pendant qu'on joue.

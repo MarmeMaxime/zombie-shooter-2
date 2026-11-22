@@ -5,20 +5,21 @@
    - SPRITES_SERGENT : le Sergent en pied (et .pyjama, sa tenue de nuit)
    - SPRITES_INSTRUCTEUR : ses portraits dans la boîte de dialogue (et .pyjama)
    - PORTE_LABO : le « portrait » du labo (sa porte), et la porte dans le camp
-   - SPRITES_RADIO : le talkie-walkie de l'éclaireur
+   - SPRITES_RADIO : le talkie-walkie de l'éclaireur (son portrait)
+   Chaque portrait est rangé dans le dossier de son personnage (portrait-…).
    - SPRITES_CHERCHEUR : la personne du labo, sortie dans l'ombre
    - OBJETS_CAMP : tentes (dont celle de Brutus), jeep, camion
    ========================================================================= */
 const paire = (dossier, a, b) => [image(`campagne/${dossier}/${a}`), image(`campagne/${dossier}/${b}`)];
 
 const SPRITES_SERGENT = Object.assign(paire('sergent', 'repos', 'parle'), { pyjama: paire('sergent-pyjama', 'repos', 'parle') });
-const SPRITES_INSTRUCTEUR = Object.assign(paire('portraits', 'sergent-repos', 'sergent-parle'), { pyjama: paire('portraits', 'sergent-pyjama-repos', 'sergent-pyjama-parle') });
+const SPRITES_INSTRUCTEUR = Object.assign(paire('sergent', 'portrait-repos', 'portrait-parle'), { pyjama: paire('sergent-pyjama', 'portrait-repos', 'portrait-parle') });
 const PORTE_LABO = {
-    portrait: paire('portraits', 'labo-eteint', 'labo-allume'),
+    portrait: paire('labo', 'portrait-eteint', 'portrait-allume'),
     camp: image('campagne/labo/porte'),
     campAllume: image('campagne/labo/porte-allumee')
 };
-const SPRITES_RADIO = paire('portraits', 'radio-eteinte', 'radio-allumee');
+const SPRITES_RADIO = paire('radio', 'portrait-eteinte', 'portrait-allumee');
 const SPRITES_CHERCHEUR = paire('chercheur', 'repos', 'parle');
 const OBJETS_CAMP = {
     tente: image('campagne/objets/tente'),

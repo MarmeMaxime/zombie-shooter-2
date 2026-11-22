@@ -97,14 +97,22 @@ Chaque monstre rencontré rejoint le **bestiaire 📖**, avec sa fiche.
 ## Dossiers
 
 - `index.html`, `styles.css` : la page du jeu.
-- `fichierJs/` : tout le code du jeu.
+- `fichierJs/` : tout le code du jeu, rangé par sujet :
+  - `moteur/` : la boucle de jeu, le joueur, le tir, les zombies, les pouvoirs, le son, la manette, le mode Vagues ;
+  - `ennemis/` : le comportement de chaque créature spéciale (Joggeur, Fossoyeur…) ;
+  - `campagne/` : le moteur de la campagne, son histoire, le combat de boxe, l'entraînement ;
+  - `decors/` : les décors dessinés à la largeur de l'écran (désert, camp, ville, métro…) ;
+  - `interface/` : menus, options, bestiaire, succès, missions, lootbox, écran titre ;
+  - `donnees/` : réglages, sauvegarde, traductions ;
+  - `sprites/` : le chargement des PNG d'`assets/`.
 - `assets/persos/<perso>/` : les images d'un perso (`arret`, `tir`, `marche1` à `marche4`) ;
   `assets/persos/brutus/boxe/` : Brutus boxeur (« Le Ring ») ; `assets/persos/soldat/soldat-sans-casque/`.
 - `assets/skins/<perso>/<tenue>/` : les mêmes images pour chaque tenue (et `boxe/` pour Brutus).
 - `assets/monstres/<monstre>/` : les images des monstres, une par étape d'animation
   (`marche1`…, `course1`…, `charge1`…).
-- `assets/campagne/` : le Sergent, ses portraits, le labo, les objets du camp, la
-  personne du labo, Gégé et la foule de la bâtisse.
+- `assets/campagne/` : un dossier par personnage de l'histoire (le Sergent, le labo,
+  la radio de l'éclaireur, la personne du labo, Gégé), avec son portrait de dialogue
+  (`portrait-…`), plus les objets du camp et la foule de la bâtisse.
 - `assets/son/` : sons et playlist du mode hardcore.
 - `outils/` : scripts de génération des sprites et simulateurs d'équilibrage
   (`node outils/simulation.js`, `node outils/simulation_boxe.js`). Voir `outils/README.md`.

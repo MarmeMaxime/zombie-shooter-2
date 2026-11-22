@@ -1,7 +1,7 @@
 /* =========================================================================
    LA LISTE DES SPRITES À EXPORTER EN PNG (outils/sprites/exporter.html)
    Pour chaque image générée par les générateurs de ce dossier : son chemin dans
-   assets/ (sans « .png »). Le jeu charge ensuite ces PNG (fichierJs/*_sprite*.js).
+   assets/ (sans « .png »). Le jeu charge ensuite ces PNG (fichierJs/sprites/).
    Rangement : comme le reste d'assets/ — un dossier par créature ou par
    personnage, une image par étape d'animation (marche1, marche2…).
    ========================================================================= */
@@ -38,10 +38,10 @@ async function liste_sprites() {
     // ---- La campagne (assets/campagne/)
     une('campagne/sergent/repos', SPRITES_SERGENT[0]); une('campagne/sergent/parle', SPRITES_SERGENT[1]);
     une('campagne/sergent-pyjama/repos', SPRITES_SERGENT.pyjama[0]); une('campagne/sergent-pyjama/parle', SPRITES_SERGENT.pyjama[1]);
-    une('campagne/portraits/sergent-repos', SPRITES_INSTRUCTEUR[0]); une('campagne/portraits/sergent-parle', SPRITES_INSTRUCTEUR[1]);
-    une('campagne/portraits/sergent-pyjama-repos', SPRITES_INSTRUCTEUR.pyjama[0]); une('campagne/portraits/sergent-pyjama-parle', SPRITES_INSTRUCTEUR.pyjama[1]);
-    une('campagne/portraits/labo-eteint', PORTE_LABO.portrait[0]); une('campagne/portraits/labo-allume', PORTE_LABO.portrait[1]);
-    une('campagne/portraits/radio-eteinte', SPRITES_RADIO[0]); une('campagne/portraits/radio-allumee', SPRITES_RADIO[1]);
+    une('campagne/sergent/portrait-repos', SPRITES_INSTRUCTEUR[0]); une('campagne/sergent/portrait-parle', SPRITES_INSTRUCTEUR[1]);
+    une('campagne/sergent-pyjama/portrait-repos', SPRITES_INSTRUCTEUR.pyjama[0]); une('campagne/sergent-pyjama/portrait-parle', SPRITES_INSTRUCTEUR.pyjama[1]);
+    une('campagne/labo/portrait-eteint', PORTE_LABO.portrait[0]); une('campagne/labo/portrait-allume', PORTE_LABO.portrait[1]);
+    une('campagne/radio/portrait-eteinte', SPRITES_RADIO[0]); une('campagne/radio/portrait-allumee', SPRITES_RADIO[1]);
     une('campagne/labo/porte', PORTE_LABO.camp); une('campagne/labo/porte-allumee', PORTE_LABO.campAllume);
     for (const [nom, c] of [['tente', OBJETS_CAMP.tente], ['tente-commandement', OBJETS_CAMP.tenteCommandement], ['tente-brutus', OBJETS_CAMP.tenteBrutus], ['jeep', OBJETS_CAMP.jeep], ['camion', OBJETS_CAMP.camion]]) une('campagne/objets/' + nom, c);
     une('campagne/chercheur/repos', SPRITES_CHERCHEUR[0]); une('campagne/chercheur/parle', SPRITES_CHERCHEUR[1]);

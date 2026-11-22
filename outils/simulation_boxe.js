@@ -21,11 +21,11 @@ const ctx = {
     SPRITES_BOXE: { foule: { gens: [{}], dos: [{}] } }   // la foule n'a pas besoin d'images ici
 };
 vm.createContext(ctx);
-const histoire = fs.readFileSync(path.join(racine, 'campagne_histoire.js'), 'utf8');
+const histoire = fs.readFileSync(path.join(racine, 'campagne', 'campagne_histoire.js'), 'utf8');
 const debutMissions = histoire.indexOf('const MISSIONS_CAMPAGNE');
 // On ne garde que les réglages du combat (le reste du fichier a besoin du jeu)
 const reglages = vm.runInContext('(' + histoire.slice(histoire.indexOf('boxe: {', debutMissions) + 6, histoire.indexOf('        },\n        debut:', histoire.indexOf('boxe: {', debutMissions)) + 9).replace(/,\s*$/, '') + ')', ctx);
-vm.runInContext(fs.readFileSync(path.join(racine, 'boxe.js'), 'utf8') + '\nthis.Boxe = Boxe;', ctx);
+vm.runInContext(fs.readFileSync(path.join(racine, 'campagne', 'boxe.js'), 'utf8') + '\nthis.Boxe = Boxe;', ctx);
 
 const gauss = () => Math.sqrt(-2 * Math.log(1 - Math.random())) * Math.cos(2 * Math.PI * Math.random());
 
