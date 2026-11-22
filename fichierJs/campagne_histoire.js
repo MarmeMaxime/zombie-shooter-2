@@ -151,7 +151,7 @@ const MISSIONS_CAMPAGNE = [
         // L'histoire de Brutus, racontée au coin du feu : on la joue avec lui, en ville,
         // le jour où tout a commencé. Des foules entières : son fusil à pompe est fait pour ça.
         // La mariée qui « courait bien », c'est une Joggeuse ; les Videuses aussi sont sorties.
-        ville: true,
+        decor: 'ville',
         objectif: { normal: 90, hardcore: 140 },
         apparition: {
             normal: { depart: 1.25, min: 0.78, acceleration: 0.006, groupe: 0.28, joggeur: 0.12, tank: 0.1 },
@@ -174,6 +174,35 @@ const MISSIONS_CAMPAGNE = [
         texteFin: {
             victoire: 'La rue est dégagée, et le piano n\'a pas une rayure. D\'après Brutus.',
             echec: '« Non, attends. Ce n\'est pas comme ça que ça s\'est passé. » Brutus reprend son histoire depuis le début.'
+        }
+    },
+    {
+        id: 'c2m3', chapitre: 2, numero: 3, titre: 'Terminus', perso: 'brute',
+        // Brutus quitte la ville par le métro, à la lampe frontale. La ligne passe sous
+        // l'hôpital : les Infirmiers soignent encore… les zombies. Il faut les viser en premier.
+        decor: 'metro',
+        nuit: true,
+        neons: [[0.12, 40], [0.38, 40], [0.64, 40], [0.9, 40], [0.25, 362], [0.51, 362], [0.77, 362]],   // les néons du quai
+        objectif: { normal: 70, hardcore: 100 },
+        apparition: {
+            normal: { depart: 1.5, min: 0.95, acceleration: 0.006, groupe: 0.15, max: 5, joggeur: 0.06, infirmier: 0.1 },
+            hardcore: { depart: 1.35, min: 0.8, acceleration: 0.007, groupe: 0.2, max: 6, joggeur: 0.1, tank: 0.06, infirmier: 0.14 }
+        },
+        debut: [
+            { qui: 'brutus', texte: 'Le tunnel. Ma lampe. Mon carton sous le bras. Et quelque part devant, des roulettes qui grinçaient.', bouton: 'Et alors ?' }
+        ],
+        pendant: [
+            { a: 0.3, qui: 'brutus', texte: 'Station Hôpital-Central. Des blouses blanches partout. Je n\'ai jamais aimé les hôpitaux. Là, encore moins.' },
+            { a: 0.7, qui: 'brutus', texte: 'Au bout du tunnel, une lumière. Non, pas celle-là, Chef. Une vraie. La sortie.' }
+        ],
+        debriefQui: 'brutus',
+        debrief: {
+            normal: 'Au bout du terminus, le désert. Derrière moi, plus rien qui grinçait. Et le carton n\'avait pas une égratignure.',
+            hardcore: 'Ils étaient… bon, je ne vais pas dire deux fois plus. Mais beaucoup. Et les infirmiers avaient des renforts.'
+        },
+        texteFin: {
+            victoire: 'Brutus sort du tunnel, son carton sous le bras. Devant lui : le désert, et l\'ouest.',
+            echec: '« Non, attends. Je me suis trompé de station. » Brutus reprend depuis l\'entrée du tunnel.'
         }
     }
 ];
@@ -330,5 +359,27 @@ SCENES_CAMPAGNE.c2m2 = {
         { qui: 'sergent', texte: 'Pourquoi un déménageur a un fusil à pompe ?' },
         { qui: 'brutus', texte: 'Les clients ne paient pas toujours, Chef.' },
         { qui: 'brutus', texte: 'Bref. Imaginez la rue. Les sirènes. Le piano sur le trottoir. Et moi.', bouton: 'Raconte !' }
+    ]
+};
+
+/* Toujours au coin du feu : la suite de l'histoire de Brutus. */
+SCENES_CAMPAGNE.c2m3 = {
+    ...SCENES_CAMPAGNE.c2m2,
+    lignes: [
+        { qui: 'sergent', texte: 'Un piano livré au cinquième, une rue nettoyée… Et ensuite ? Tu as appelé un taxi ?' },
+        { qui: 'brutus', texte: 'Les rues étaient bouchées, Chef. Des voitures partout, des gens partout. Et des gens qui mangeaient les gens.' },
+        { qui: 'brutus', texte: 'Alors je suis descendu dans le métro. Sous terre, pas d\'embouteillage. Et les tunnels sortent tous de la ville.' },
+        { qui: 'chercheur', texte: 'Dans le noir ? Avec eux ?' },
+        { qui: 'brutus', texte: 'J\'avais ma lampe frontale. Un déménageur a toujours une lampe frontale. Les caves, les greniers…' },
+        { qui: 'sergent', texte: 'Et un fusil à pompe. Pour les clients.' },
+        { qui: 'brutus', texte: 'Voilà. Le problème, c\'est que la ligne passait sous l\'hôpital. Et à l\'hôpital, il y avait les infirmiers.' },
+        { qui: 'brutus', texte: 'Ils soignaient encore. Les zombies. Tu en abîmes un, l\'infirmier arrive, et hop : comme neuf.' },
+        { qui: 'chercheur', texte: '… Ils les soignaient ? Un zombie qui en répare un autre ?' },
+        { qui: 'chercheur', texte: 'Sergent, il faut que je retourne au labo. Tout de suite.' },
+        { qui: 'sergent', texte: 'Assieds-toi. Personne ne quitte le feu avant la fin de l\'histoire. C\'est le règlement.' },
+        { qui: 'soldat', texte: '…' },
+        { qui: 'brutus', texte: 'Et j\'avais toujours mon carton. Je ne l\'ai pas lâché de tout le tunnel.' },
+        { qui: 'sergent', texte: 'Qu\'est-ce qu\'il y a dedans ?' },
+        { qui: 'brutus', texte: 'Plus tard, Chef. Donc : le tunnel. Le noir. Et un bruit de roulettes de brancard.', bouton: 'Raconte !' }
     ]
 };

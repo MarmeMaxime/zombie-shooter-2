@@ -127,7 +127,9 @@ const Campagne = (() => {
     // Un zombie, un Tank (« a.tank ») ou un Joggeur (« a.joggeur ») ; pendant une escorte, certains visent le camion
     function apparaitre(a) {
         const r = Math.random();
-        const type = r < (a.tank || 0) ? 'tank' : r < (a.tank || 0) + (a.joggeur || 0) ? 'joggeur' : 'normal';
+        // Les types spéciaux (part de chaque apparition), sinon un zombie normal
+        let cumul = 0, type = 'normal';
+        for (const t of ['tank', 'joggeur', 'infirmier']) { cumul += a[t] || 0; if (r < cumul) { type = t; break; } }
         const z = creer_zombie(type, MONDE.largeur, MONDE.hauteur);
         if (a.panique) z.vitesse *= a.panique;   // ils fuient quelque chose : ils courent plus vite
         if (!camion) return;
@@ -375,6 +377,16 @@ const Campagne = (() => {
             { x: joueur.x + 32, y: joueur.y + 34, r: 70, force: 0.85 }
         ];
         if (joueur.animTir > 0) lumieres.push({ x: x + 30, y, r: 260, force: 0.55 });   // éclair du coup de feu
+        // Les néons du quai qui grésillent encore (mission dans le métro)
+        if (m.neons) {
+            const t = etat.temps;
+            m.neons.forEach(([fx, ny], i) => {
+                const panne = Math.sin(t * (3 + i) + i * 7) + Math.sin(t * 11.3 + i * 2) > 1.5;   // il saute de temps en temps
+                if (!panne) lumieres.push({ x: fx * MONDE.largeur, y: ny, r: 58, force: 0.55 });
+            });
+        }
+        // Un Infirmier qui soigne : la lueur de ses soins le trahit
+        for (const z of zombies) if (z.type === 'infirmier' && z.soin && z.soin.anim > 0) lumieres.push({ x: z.x + z.taille / 2, y: z.y + z.taille / 2, r: 90, force: 0.7 });
         // Nuit noire : hors de la lampe, on ne voit que les yeux
         nuit(ctx, MONDE.largeur, MONDE.hauteur, lumieres, 0.985);
         ctx.fillStyle = '#ffe070';
@@ -383,6 +395,13 @@ const Campagne = (() => {
             ctx.fillRect(ex, ey, 2, 2);
             ctx.fillRect(ex + 4, ey, 2, 2);
         }
+        // La croix rouge de l'Infirmier se voit dans le noir : on sait qui viser en premier
+        ctx.fillStyle = '#ff4040';
+        for (const z of zombies) if (z.type === 'infirmier') {
+            const cx = Math.round(z.x + z.taille * 0.47), cy = Math.round(z.y + z.taille * 0.08) - 6;
+            ctx.fillRect(cx - 1, cy - 3, 2, 6); ctx.fillRect(cx - 3, cy - 1, 6, 2);
+        }
+        ctx.fillStyle = '#ffe070';
     }
 
     // Meilleur temps (le plus court) et le plus de vies restantes, par mission et par difficulté.
@@ -701,5 +720,5 @@ const Campagne = (() => {
     }
 
     return { demarrer, arreter, maj, tue, fin, lancer, ouvrir, etape, dessiner_nuit, dessiner_sol, balle_sur_brutus, miroir: () => Boolean(m && m.miroir),
-        decor: () => (m && m.ville && typeof decor_ville === 'function' ? decor_ville() : null) };
+        decor: () => (!m || !m.decor ? null : m.decor === 'ville' ? decor_ville() : m.decor === 'metro' ? decor_metro() : null) };
 })();

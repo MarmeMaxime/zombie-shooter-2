@@ -39,7 +39,7 @@ window.addEventListener('resize', () => { maj_echelle_ui(); redimensionner(); })
 
 function dessiner() {
     // Décor en pixel art : la zone de combat (combat_decor.js), ou le camp d'entraînement pendant le tutoriel
-    // (une mission de la campagne peut avoir son propre décor : la ville, ville_decor.js)
+    // (une mission de la campagne peut avoir son propre décor : la ville, le métro…)
     const decorMission = etat.variante === 'campagne' && typeof Campagne !== 'undefined' ? Campagne.decor() : null;
     const fond = decorMission || (etat.tuto && typeof decor_entrainement === 'function' ? decor_entrainement() : decor_combat());
     ctx.setTransform(1, 0, 0, 1, 0, 0);

@@ -28,7 +28,8 @@ Au lancement d'un combat, on choisit le mode :
   Chapitre 2, « Le Cogneur » : « La Débandade », à l'ouest (l'écran est en miroir),
   une horde qui fuit quelque chose… et la rencontre avec Brutus. Puis « Déménagement
   express » : au coin du feu, Brutus raconte comment il est arrivé, et on joue son
-  histoire avec lui, en ville, le jour où tout a commencé.
+  histoire avec lui, en ville, le jour où tout a commencé. Puis « Terminus » : il quitte
+  la ville par le métro, dans le noir, et croise les Infirmiers de l'hôpital.
 
   Chaque mission garde son meilleur temps et ses vies restantes ; le chapitre se
   termine sur un épilogue. Le camp s'affiche derrière le menu et grandit avec la
