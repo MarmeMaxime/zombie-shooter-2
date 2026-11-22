@@ -185,8 +185,8 @@ const MISSIONS_CAMPAGNE = [
         neons: [[0.12, 40], [0.38, 40], [0.64, 40], [0.9, 40], [0.25, 362], [0.51, 362], [0.77, 362]],   // les néons du quai
         objectif: { normal: 70, hardcore: 100 },
         apparition: {
-            normal: { depart: 1.5, min: 0.95, acceleration: 0.006, groupe: 0.15, max: 5, joggeur: 0.06, infirmier: 0.1 },
-            hardcore: { depart: 1.35, min: 0.8, acceleration: 0.007, groupe: 0.2, max: 6, joggeur: 0.1, tank: 0.06, infirmier: 0.14 }
+            normal: { depart: 1.5, min: 0.95, acceleration: 0.006, groupe: 0.15, max: 5, joggeur: 0.06, tank: 0.1, infirmier: 0.1 },
+            hardcore: { depart: 1.35, min: 0.8, acceleration: 0.007, groupe: 0.2, max: 6, joggeur: 0.1, tank: 0.12, infirmier: 0.14 }
         },
         debut: [
             { qui: 'brutus', texte: 'Le tunnel. Ma lampe. Mon carton sous le bras. Et quelque part devant, des roulettes qui grinçaient.', bouton: 'Et alors ?' }
