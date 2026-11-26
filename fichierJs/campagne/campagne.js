@@ -47,12 +47,15 @@ const Campagne = (() => {
     let m = null, chrono = 0, tues = 0, fini = false, camion = null, chantier = null, phaseBoss = false, moteurCamion = null;
     let dits = 0, finale = null;   // répliques déjà dites pendant la vague ; arrivée de Brutus (fin de « La Débandade »)
     let soins = 0;                 // soins des Infirmiers pendant la mission (succès « Hôpital fermé »)
+    let partie = 0;                // numéro de la partie lancée : un minuteur d'une partie quittée ne joue pas dans la suivante
+    const toujours = p => p === partie && m && etat.enCours;
 
     // Camion : sa caisse dans le sprite 128×128 (x 6..122, y 54..120), et l'arrière où les zombies s'agrippent
     const CAISSE = { x: 6, y: 54, l: 116, h: 66 }, ARRIERE = 96;
 
     function demarrer() {
         m = mission(etat.mission);
+        partie++;
         chrono = 1.5;          // un court répit avant le premier zombie
         tues = 0;
         fini = false;
@@ -75,10 +78,10 @@ const Campagne = (() => {
         // Deux lignes : le numéro, puis le titre (un long titre tient même sur un petit téléphone)
         bandeau(T('MISSION {n}', { n: m.numero }) + '\n' + T(m.titre).toUpperCase());
         // Une mission racontée (un souvenir) : le narrateur pose le décor, après le bandeau
-        const mi = m;
+        const mi = m, p = partie;
         // (pour un combat de boxe : la présentation, puis la cloche)
-        const go = () => { if (mi.boxe && m === mi) Boxe.commencer(); };
-        if (m.debut) setTimeout(() => { if (m === mi && etat.enCours && !fini) dire_epilogue(mi.debut, 0, go); }, 1700);
+        const go = () => { if (mi.boxe && toujours(p)) Boxe.commencer(); };
+        if (m.debut) setTimeout(() => { if (toujours(p) && !fini) dire_epilogue(mi.debut, 0, go); }, 1700);
         else if (m.boxe) setTimeout(go, 1700);
     }
 
@@ -329,7 +332,8 @@ const Campagne = (() => {
             if (typeof Succes !== 'undefined') Succes.verifier();   // succès secret
             game_over();
         };
-        if (typeof Instructeur !== 'undefined' && document.getElementById('instructeur')) setTimeout(() => dire_epilogue(m.tirAmi.fin, 0, conclure), 900);
+        const mi = m, p = partie;   // on a pu quitter la mission pendant la courte attente
+        if (typeof Instructeur !== 'undefined' && document.getElementById('instructeur')) setTimeout(() => { if (toujours(p)) dire_epilogue(mi.tirAmi.fin, 0, conclure); }, 900);
         else conclure();
     }
     // Brutus, tourné vers le Soldat (le dessin est retourné), qui marche ou qui cogne
@@ -490,7 +494,9 @@ const Campagne = (() => {
         carte.querySelector('h2').textContent = etat.finChapitre ? T('CHAPITRE {n} TERMINÉ', { n: mi.chapitre })
             : etat.victoire ? T('MISSION ACCOMPLIE') : T('MISSION ÉCHOUÉE');
         carte.querySelector('.game-over-text').textContent = etat.finChapitre
-            ? T('Fin du chapitre {n}. La suite de l\'histoire arrive bientôt…', { n: mi.chapitre })
+            ? (CHAPITRES.some(c => c.numero > mi.chapitre)
+                ? T('Fin du chapitre {n}. Le chapitre {s} t\'attend dans la campagne.', { n: mi.chapitre, s: mi.chapitre + 1 })
+                : T('Fin du chapitre {n}. La suite de l\'histoire arrive bientôt…', { n: mi.chapitre }))
             : mi.texteFin
             ? T(etat.victoire ? mi.texteFin.victoire : mi.texteFin.echec)      // une mission qui ne se passe pas au camp
             : etat.victoire

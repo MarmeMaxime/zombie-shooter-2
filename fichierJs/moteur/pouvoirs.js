@@ -14,16 +14,17 @@ const pouvoir = {
     rafale: 0,          // temps restant de rafale
     obus: [],           // obus du tapis de bombes : { x, y, chrono }
     ondes: [],          // anneaux de l'onde de choc : { x, y, age }
-    eclair: 0           // flash blanc de l'orage
+    eclair: 0,          // flash blanc de l'orage
+    reduction: 1        // multiplicateur des victimes à faire (boutique des vagues)
 };
 
 const cfg_pouvoir = () => CONFIG.pouvoirs[pouvoir.id];
 // Victimes nécessaires pour remplir la jauge (moins avec la boutique des vagues)
-const kills_requis = () => Math.max(5, Math.round(cfg_pouvoir().kills * (pouvoir.reduction || 1)));
+const kills_requis = () => Math.max(5, Math.round(cfg_pouvoir().kills * pouvoir.reduction));
 const pouvoir_pret = () => pouvoir.charge >= kills_requis();
 
 function reset_pouvoir(perso) {
-    Object.assign(pouvoir, { id: CONFIG.personnages[perso].pouvoir, charge: 0, rafale: 0, obus: [], ondes: [], eclair: 0 });
+    Object.assign(pouvoir, { id: CONFIG.personnages[perso].pouvoir, charge: 0, rafale: 0, obus: [], ondes: [], eclair: 0, reduction: 1 });
     maj_hud_pouvoir();
 }
 

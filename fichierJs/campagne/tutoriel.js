@@ -49,8 +49,11 @@ const Instructeur = (() => {
         orateur = qui;
         bloqueJusque = performance.now() + bloque;
         $i('instructeur-nom').textContent = T(ORATEURS[qui].nom);
-        aFige = etat.enCours && !etat.pause;
-        if (aFige) mettre_en_pause(true, false);   // pause sans l'écran « PAUSE »
+        // Une réplique qui en remplace une autre encore ouverte garde la pause posée par la première
+        if (!(aFige && !boite.classList.contains('hidden'))) {
+            aFige = etat.enCours && !etat.pause;
+            if (aFige) mettre_en_pause(true, false);   // pause sans l'écran « PAUSE »
+        }
         suite = ensuite || null;
         boite.classList.remove('hidden');
         texte.textContent = message;

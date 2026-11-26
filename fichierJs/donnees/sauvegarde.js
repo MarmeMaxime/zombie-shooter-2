@@ -51,6 +51,18 @@ const Sauvegarde = (() => {
     const ecrire = (cle, valeur) => { try { localStorage.setItem(cle, valeur); return true; } catch { return false; } };
     const copie = o => JSON.parse(JSON.stringify(o));
     const estObjet = v => v !== null && typeof v === 'object' && !Array.isArray(v);
+    const numVersion = v => (Number.isInteger(v) && v >= 0 ? v : 0);
+
+    // Clés qui touchent au fonctionnement interne des objets JavaScript : jamais
+    // reprises d'un fichier (un fichier retouché pourrait s'en servir pour tout casser)
+    const CLES_INTERDITES = new Set(['__proto__', 'constructor', 'prototype']);
+    function nettoyer(v) {
+        if (Array.isArray(v)) return v.map(nettoyer);
+        if (!estObjet(v)) return v;
+        const res = {};
+        for (const cle of Object.keys(v)) if (!CLES_INTERDITES.has(cle)) res[cle] = nettoyer(v[cle]);
+        return res;
+    }
 
     // Prend les valeurs de « source » quand leur type correspond à celui du défaut.
     // Les clés absentes des défauts sont gardées telles quelles (futures versions).
@@ -60,21 +72,34 @@ const Sauvegarde = (() => {
         for (const cle of Object.keys(defaut)) {
             const d = defaut[cle], s = source[cle];
             if (estObjet(d)) res[cle] = estObjet(s) ? (Object.keys(d).length ? fusionner(d, s) : { ...s }) : copie(d);
-            else if (Array.isArray(d)) res[cle] = Array.isArray(s) ? s.slice() : copie(d);
+            // Toutes les listes de la sauvegarde sont des listes d'identifiants (texte)
+            else if (Array.isArray(d)) res[cle] = Array.isArray(s) ? s.filter(x => typeof x === 'string') : copie(d);
             else if (typeof d === 'number') res[cle] = (typeof s === 'number' && Number.isFinite(s) && s >= 0) ? s : d;
             else res[cle] = typeof s === typeof d ? s : d;
         }
         return res;
     }
 
+    // Contrôles qui dépassent le simple type : bornes et contenu des dictionnaires
+    function valider(d) {
+        d.son.musique = Math.min(1, d.son.musique);
+        d.son.effets = Math.min(1, d.son.effets);
+        const garder = (obj, test) => { for (const cle of Object.keys(obj)) if (!test(obj[cle])) delete obj[cle]; };
+        garder(d.stats.persos, estObjet);
+        garder(d.loot.equipes, v => typeof v === 'string');
+        garder(d.loot.dechets, v => Number.isFinite(v) && v >= 0);
+        garder(d.options.touches, v => Array.isArray(v) && v.every(c => typeof c === 'string'));
+        return d;
+    }
+
     function migrer(version, donnees) {
-        let v = Number.isInteger(version) ? version : 0;
-        let d = donnees;
+        let v = numVersion(version);
+        let d = nettoyer(donnees);
         while (v < VERSION) {
             v++;
             if (MIGRATIONS[v]) d = MIGRATIONS[v](d);
         }
-        return fusionner(defauts(), d);
+        return valider(fusionner(defauts(), d));
     }
 
     // Empreinte FNV-1a : détecte un fichier abîmé ou retouché à la main
@@ -90,10 +115,10 @@ const Sauvegarde = (() => {
         if (brut) {
             try {
                 const obj = JSON.parse(brut);
-                if (obj && obj.format === FORMAT) {
+                if (obj && obj.format === FORMAT && estObjet(obj.donnees)) {
                     // Sauvegarde d'une version plus récente du jeu : on lit ce qu'on comprend,
                     // et les champs inconnus restent intacts grâce à fusionner().
-                    return { version: Math.max(obj.version || 0, VERSION), donnees: migrer(Math.min(obj.version || 0, VERSION), obj.donnees) };
+                    return { version: Math.max(numVersion(obj.version), VERSION), donnees: migrer(Math.min(numVersion(obj.version), VERSION), obj.donnees) };
                 }
             } catch { /* illisible : traité juste en dessous */ }
             ecrire(CLE_CORROMPUE, brut);   // on garde une copie, au cas où
@@ -102,7 +127,7 @@ const Sauvegarde = (() => {
             try {
                 const h = JSON.parse(lire(CLE_HISTORIQUE));
                 if (Array.isArray(h) && h[0] && estObjet(h[0].donnees)) {
-                    return { version: VERSION, donnees: migrer(Math.min(h[0].version || 1, VERSION), h[0].donnees) };
+                    return { version: VERSION, donnees: migrer(Math.min(numVersion(h[0].version) || 1, VERSION), h[0].donnees) };
                 }
             } catch { /* pas d'historique exploitable */ }
         }
@@ -122,8 +147,12 @@ const Sauvegarde = (() => {
         return JSON.stringify({ format: FORMAT, version: versionFichier, modifie: new Date().toISOString(), donnees });
     }
 
+    // Navigation privée, stockage plein ou bloqué : on prévient une fois, au lieu de perdre la progression en silence
+    let averti = false;
     function sauver() {
-        ecrire(CLE, serialiser());
+        if (ecrire(CLE, serialiser()) || averti || typeof Succes === 'undefined') return;
+        averti = true;
+        Succes.notifier(T('⚠ Impossible d\'enregistrer : ta progression sera perdue en fermant le jeu. Télécharge ta sauvegarde (💾).'));
     }
 
     sauver();   // écrit tout de suite au nouveau format (migration faite une fois pour toutes)
@@ -152,7 +181,7 @@ const Sauvegarde = (() => {
         const entree = historique()[index];
         if (!entree) return false;
         point_de_restauration(typeof T === 'function' ? T('Avant restauration') : 'Avant restauration');
-        remplacer(migrer(Math.min(entree.version || 1, VERSION), entree.donnees));
+        remplacer(migrer(Math.min(numVersion(entree.version) || 1, VERSION), entree.donnees));
         return true;
     }
 
@@ -183,8 +212,8 @@ const Sauvegarde = (() => {
 
     function importer(obj) {
         point_de_restauration(typeof T === 'function' ? T('Avant import') : 'Avant import');
-        versionFichier = Math.max(obj.version || 0, VERSION);
-        remplacer(migrer(Math.min(obj.version || 0, VERSION), obj.donnees));
+        versionFichier = Math.max(numVersion(obj.version), VERSION);
+        remplacer(migrer(Math.min(numVersion(obj.version), VERSION), obj.donnees));
     }
 
     return {
