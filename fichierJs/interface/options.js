@@ -21,8 +21,12 @@ const Touches = (() => {
     const choix = Sauvegarde.donnees.options.touches;   // action -> codes choisis (absent = par défaut)
     let disposition = null;                             // code -> caractère du clavier réel
 
-    // Une action sans aucune touche (ancienne sauvegarde) reprend ses touches par défaut
-    const liste = action => (Array.isArray(choix[action]) && choix[action].length ? choix[action] : TOUCHES_DEFAUT[action]);
+    // Touches choisies explicitement pour les autres actions que « action »
+    const prises = action => Object.keys(choix).filter(b => b !== action && Array.isArray(choix[b])).flatMap(b => choix[b]);
+    // Sans choix (ou une liste vide d'une ancienne sauvegarde) : les touches par défaut,
+    // moins celles qu'une autre action a prises (une touche ne fait jamais deux choses)
+    const liste = action => (Array.isArray(choix[action]) && choix[action].length ? choix[action]
+        : TOUCHES_DEFAUT[action].filter(c => !prises(action).includes(c)));
     function action(code) {
         for (const a in TOUCHES_DEFAUT) if (liste(a).includes(code)) return a;
         return null;
@@ -47,10 +51,10 @@ const Touches = (() => {
     function changer(a, code) {
         const anciennes = liste(a).filter(c => c !== code);
         for (const b in TOUCHES_DEFAUT) {
-            if (b === a) continue;
+            if (b === a || !liste(b).includes(code)) continue;   // seule l'action qui avait cette touche change
             const reste = liste(b).filter(c => c !== code);   // la touche quitte les autres actions
             // … mais aucune action ne reste sans touche : elle prend alors l'ancienne touche de « a » (échange)
-            choix[b] = reste.length ? reste : (anciennes.length ? anciennes.slice(0, 1) : TOUCHES_DEFAUT[b].filter(c => c !== code));
+            choix[b] = reste.length ? reste : (anciennes.length ? anciennes.slice(0, 1) : TOUCHES_DEFAUT[b].filter(c => c !== code && !prises(b).includes(c)));
         }
         choix[a] = [code];
         Sauvegarde.sauver();
