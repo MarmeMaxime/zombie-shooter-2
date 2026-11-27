@@ -20,7 +20,7 @@ TYPES_ZOMBIE.infirmier = {
             s.chrono -= dt;
             if (s.chrono > 0) return;
             const cx = z.x + z.taille / 2, cy = z.y + z.taille / 2;
-            const blesses = zombies.filter(o => o !== z && o !== boss && o.pv < o.pvMax
+            const blesses = zombies.filter(o => o !== z && o !== boss && o.type !== 'tombe' && o.pv < o.pvMax
                 && Math.hypot((o.x + o.taille / 2 - cx) / MONDE.echelleX, o.y + o.taille / 2 - cy) <= cfg.rayonSoin);
             if (!blesses.length) { s.chrono = 0.3; return; }   // personne à soigner : il réessaie bientôt
             for (const o of blesses) {

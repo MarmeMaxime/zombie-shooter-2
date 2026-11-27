@@ -108,6 +108,7 @@ function mettre_en_pause(valeur, ecran = true) {
         if (ecran) Son.suspendreMusique();   // quand le Sergent parle, la musique continue
     } else {
         Son.reprendreMusique();
+        reprendre_tir_tactile();
         dernierInstant = performance.now();   // pas de « saut » de temps à la reprise
         idAnimation = requestAnimationFrame(boucle);
     }

@@ -3,6 +3,22 @@
    Sa charge : marche -> cri (« ! ») -> sprint -> essoufflé -> marche.
    Réglages : CONFIG.joggeur ; sprite : assets/monstres/joggeur/.
    ========================================================================= */
+// Sprite : assets/monstres/joggeur/ (marche, course, essoufflé)
+TYPES_ZOMBIE.joggeur = {
+    config: CONFIG.joggeur,
+    images: SPRITES_JOGGEUR.marche,
+    // En plein sprint, il s'écrase et glisse sur le ventre
+    mort: z => (z.joggeur.etat === 'course' ? { style: 'glissade', images: SPRITES_JOGGEUR.course } : {}),
+    comportement: {
+        creer(z) { z.joggeur = { etat: 'marche', chrono: 0, recharge: 0 }; },
+        maj: (z, dt) => gerer_joggeur(z, dt),
+        vitesse: z => vitesse_joggeur(z),
+        rythme: z => (z.joggeur.etat === 'course' ? 2.5 : 1),   // en course, ses jambes vont deux fois et demie plus vite
+        dessiner: (ctx, z) => dessiner_joggeur(ctx, z),
+        mort(z) { if (z.joggeur.etat === 'course' && typeof Succes !== 'undefined') Succes.compter('sprintsStoppes'); }
+    }
+};
+
 /* ---------- Charge du Joggeur ----------
    marche -> (aligné avec le joueur) cri -> course -> essoufflé -> marche */
 function gerer_joggeur(z, dt) {

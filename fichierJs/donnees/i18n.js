@@ -18,7 +18,7 @@ const LANGUES = {
 
 const Langue = (() => {
     const options = Sauvegarde.donnees.options;
-    const code = LANGUES[options.langue] ? options.langue : 'fr';
+    const code = Object.hasOwn(LANGUES, options.langue) ? options.langue : 'fr';
     const colonne = { en: 0, es: 1 }[code];
     const manquants = new Set();   // textes sans traduction (pour les tests)
 
@@ -85,7 +85,7 @@ const Langue = (() => {
     }
 
     function choisir(nouveau) {
-        if (!LANGUES[nouveau] || nouveau === code) return;
+        if (!Object.hasOwn(LANGUES, nouveau) || nouveau === code) return;
         options.langue = nouveau;
         Sauvegarde.sauver();
         location.reload();   // tout le texte est recalculé dans la nouvelle langue

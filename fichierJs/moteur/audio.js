@@ -691,9 +691,9 @@ const Son = (() => {
         const mesure = Math.floor(i / 16), pos = i % 16, mesureDuree = N_DOUBLE * 16;
         let k = N_DEBUTS.length - 1;
         while (N_DEBUTS[k] > mesure) k--;
-        const partie = N_PARTIES[k], dans = mesure - N_DEBUTS[k], T = partie.transpo;
+        const partie = N_PARTIES[k], dans = mesure - N_DEBUTS[k], transpo = partie.transpo;
         const derniere = dans === partie.mesures - 1;
-        const nappe = accord_normal(partie, mesure).map(n => n + T);
+        const nappe = accord_normal(partie, mesure).map(n => n + transpo);
 
         // Crash au début de chaque partie (sauf la toute première)
         if (pos === 0 && dans === 0 && k > 0) bruit(t, 1.4, { vol: 0.05, filtre: 6000, filtreFin: 3000, type: 'highpass', ...o });
@@ -703,13 +703,13 @@ const Son = (() => {
         if (partie.basse === 'galop') {
             // Galop : deux doubles croches + une croche, en boucle
             if (pos % 4 !== 1) {
-                const n = motif[Math.floor(pos / 2)] + T;
+                const n = motif[Math.floor(pos / 2)] + transpo;
                 voix(hz(n), t, N_DOUBLE * 0.9, { vol: pos % 4 === 0 ? 0.08 : 0.055, filtre: 700, attaque: 0.005, sortie: 0.05, desaccord: [-7, 7] });
             }
         } else if (partie.basse === 'tenue') {
-            if (pos === 0) voix(hz(motif[0] + T), t, mesureDuree * 0.98, { vol: 0.05, filtre: 300, attaque: 0.15, sortie: 0.4, desaccord: [-6, 0, 6] });
+            if (pos === 0) voix(hz(motif[0] + transpo), t, mesureDuree * 0.98, { vol: 0.05, filtre: 300, attaque: 0.15, sortie: 0.4, desaccord: [-6, 0, 6] });
         } else if (pos % 2 === 0) {
-            const n = motif[pos / 2] + T, accent = pos % 8 === 0;
+            const n = motif[pos / 2] + transpo, accent = pos % 8 === 0;
             voix(hz(n), t, N_DOUBLE * 1.7, { vol: accent ? 0.07 : 0.05, filtre: accent ? 650 : 450, attaque: 0.008, sortie: 0.07, desaccord: [-7, 7] });
             if (partie.basse !== 'pedale') voix(hz(n + 12), t, N_DOUBLE * 1.5, { vol: 0.02, type: 'square', filtre: 900, attaque: 0.008, sortie: 0.06, desaccord: [0] });
         }
@@ -718,7 +718,7 @@ const Son = (() => {
         if (pos === 0) {
             const vol = partie.basse === 'tenue' ? 0.012 : 0.011;
             for (const n of nappe) voix(hz(n), t, mesureDuree * 0.98, { vol, filtre: partie.basse === 'tenue' ? 1300 : 900, attaque: 0.25, sortie: 0.4, vibrato: 6 });
-            if (partie.basse !== 'pedale' && partie.basse !== 'tenue') voix(hz(81 + T), t, mesureDuree * 0.98, { vol: 0.006, filtre: 2600, attaque: 0.3, sortie: 0.4, desaccord: [-10, 10], vibrato: 12 });
+            if (partie.basse !== 'pedale' && partie.basse !== 'tenue') voix(hz(81 + transpo), t, mesureDuree * 0.98, { vol: 0.006, filtre: 2600, attaque: 0.3, sortie: 0.4, desaccord: [-10, 10], vibrato: 12 });
         }
 
         // Batterie (allégée au début de l'arrivée ; break à la fin de certaines phrases)
@@ -757,7 +757,7 @@ const Son = (() => {
         if (partie.theme && pos % 8 === 0) {
             const n = N_THEMES[partie.theme][(dans % 8) * 2 + pos / 8];
             if (n !== null) {
-                const note = n + T;
+                const note = n + transpo;
                 if (partie.theme === 'B') voix(hz(note - 12), t, N_DOUBLE * 7.6, { vol: 0.035, filtre: 1100, attaque: 0.12, sortie: 0.3, desaccord: [-8, 0, 8], vibrato: 10 });
                 else if (tourPair) {
                     voix(hz(note), t, N_DOUBLE * 7.4, { vol: 0.03, filtre: 1500, attaque: 0.05, sortie: 0.15, desaccord: [-7, 0, 7] });
@@ -775,7 +775,7 @@ const Son = (() => {
 
         // « Braam » au début des parties de combat et toutes les 4 mesures des thèmes
         if (pos === 0 && ((dans === 0 && partie.basse !== 'pedale' && partie.basse !== 'tenue') || (partie.theme === 'A' && dans % 4 === 0))) {
-            for (const n of [45, 52, 57]) voix(hz(n + T), t, mesureDuree * 0.9, { vol: 0.04, filtre: 180, filtreFin: 1500, attaque: 0.06, sortie: 0.6, desaccord: [-14, -5, 5, 14] });
+            for (const n of [45, 52, 57]) voix(hz(n + transpo), t, mesureDuree * 0.9, { vol: 0.04, filtre: 180, filtreFin: 1500, attaque: 0.06, sortie: 0.6, desaccord: [-14, -5, 5, 14] });
             ton(46, t, 1.3, { vol: 0.3, f2: 28, ...o });
             bruit(t, 1, { vol: 0.04, filtre: 3000, filtreFin: 200, ...o });
         }
@@ -823,23 +823,23 @@ const Son = (() => {
         while (S_DEBUTS[k] > mesure) k--;
         const partie = S_PARTIES[k].nom, dans = mesure - S_DEBUTS[k], derniere = dans === S_PARTIES[k].mesures - 1;
         // La montée fait grimper le riff toutes les 4 mesures : mi, fa, sol, la
-        const T = partie === 'montee' ? [0, 1, 3, 5][Math.floor(dans / 4)] : 0;
+        const transpo = partie === 'montee' ? [0, 1, 3, 5][Math.floor(dans / 4)] : 0;
         const accordFa = mesure % 4 === 3;                       // une mesure sur quatre, l'accord de fa qui grince
-        const nappe = (partie === 'souffle' ? S_SOUFFLE[Math.floor(dans / 2) % 4] : accordFa ? [53, 57, 60] : [52, 56, 59]).map(n => n + T);
+        const nappe = (partie === 'souffle' ? S_SOUFFLE[Math.floor(dans / 2) % 4] : accordFa ? [53, 57, 60] : [52, 56, 59]).map(n => n + transpo);
 
         if (pos === 0 && dans === 0 && k > 0) bruit(t, 1.4, { vol: 0.05, filtre: 6000, filtreFin: 3000, type: 'highpass', ...o });
 
         // Le riff grave (pas pendant la respiration ; seulement des bribes à la fin)
         const riff = partie !== 'souffle' && (partie !== 'fin' || pos < 8);
         if (riff && pos % 2 === 0) {
-            const n = S_RIFF[mesure % 2][pos / 2] + T;
+            const n = S_RIFF[mesure % 2][pos / 2] + transpo;
             const pizz = partie === 'veille';
             voix(hz(n - 12), t, S_DOUBLE * (pizz ? 1 : 1.7), { vol: pizz ? 0.05 : 0.065, filtre: pizz ? 500 : 700, attaque: 0.006, sortie: pizz ? 0.12 : 0.06, desaccord: [-7, 7] });
             if (!pizz) voix(hz(n), t, S_DOUBLE * 1.5, { vol: 0.022, type: 'square', filtre: 1000, attaque: 0.006, sortie: 0.05, desaccord: [0] });
         }
         // Pédale de mi tout au fond, et nappe
         if (pos === 0) {
-            if (partie !== 'fin') voix(hz(28 + T), t, mesureDuree * 0.98, { vol: 0.04, filtre: 180, attaque: 0.2, sortie: 0.4, desaccord: [-5, 5] });
+            if (partie !== 'fin') voix(hz(28 + transpo), t, mesureDuree * 0.98, { vol: 0.04, filtre: 180, attaque: 0.2, sortie: 0.4, desaccord: [-5, 5] });
             const vol = partie === 'souffle' ? 0.016 : 0.01;
             for (const n of nappe) voix(hz(n), t, mesureDuree * 0.98, { vol, filtre: partie === 'souffle' ? 1400 : 900, attaque: 0.3, sortie: 0.5, vibrato: 7 });
         }
@@ -867,7 +867,7 @@ const Son = (() => {
 
         // Ostinato de cordes en doubles croches (cuivres et final) : mi-fa-mi-sol#
         if ((partie === 'cuivres' || partie === 'final') && pos % 2 === 0) {
-            const n = [64, 65, 64, 68][(pos / 2) % 4] + T;
+            const n = [64, 65, 64, 68][(pos / 2) % 4] + transpo;
             voix(hz(n), t, S_DOUBLE * 1.4, { vol: 0.014, filtre: 2200, attaque: 0.005, sortie: 0.05, desaccord: [-7, 7] });
         }
         // Contre-riff aigu, un tour sur deux pendant le riff
@@ -893,7 +893,7 @@ const Son = (() => {
 
         // « Braams » : début du riff, toutes les 4 mesures des cuivres et du final, à chaque marche de la montée
         if (pos === 0 && ((partie === 'riff' && dans === 0) || ((partie === 'cuivres' || partie === 'final') && dans % 4 === 0) || (partie === 'montee' && dans % 4 === 0))) {
-            for (const n of [40, 47, 52]) voix(hz(n + T), t, mesureDuree * 0.9, { vol: 0.04, filtre: 180, filtreFin: 1500, attaque: 0.06, sortie: 0.6, desaccord: [-14, -5, 5, 14] });
+            for (const n of [40, 47, 52]) voix(hz(n + transpo), t, mesureDuree * 0.9, { vol: 0.04, filtre: 180, filtreFin: 1500, attaque: 0.06, sortie: 0.6, desaccord: [-14, -5, 5, 14] });
             ton(44, t, 1.3, { vol: 0.3, f2: 26, ...o });
             bruit(t, 1, { vol: 0.04, filtre: 3000, filtreFin: 200, ...o });
         }

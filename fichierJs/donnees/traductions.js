@@ -476,6 +476,8 @@ const TRADUCTIONS = {
     'Réussir « Couvre-feu » sans perdre une vie': ['Complete "Curfew" without losing a life', 'Supera «Toque de queda» sin perder una vida'],
     'Insomniaque': ['Insomniac', 'Insomne'],
     'CHAPITRE {n} TERMINÉ': ['CHAPTER {n} COMPLETE', 'CAPÍTULO {n} COMPLETADO'],
+    '⚠ Impossible d\'enregistrer : ta progression sera perdue en fermant le jeu. Télécharge ta sauvegarde (💾).': ['⚠ Unable to save: your progress will be lost when you close the game. Download your save (💾).', '⚠ No se puede guardar: perderás tu progreso al cerrar el juego. Descarga tu partida (💾).'],
+    'Fin du chapitre {n}. Le chapitre {s} t\'attend dans la campagne.': ['End of chapter {n}. Chapter {s} awaits you in the campaign.', 'Fin del capítulo {n}. El capítulo {s} te espera en la campaña.'],
     'Fin du chapitre {n}. La suite de l\'histoire arrive bientôt…': ['End of chapter {n}. The story continues soon…', 'Fin del capítulo {n}. La historia continúa pronto…'],
     'Fin du chapitre 1': ['End of chapter 1', 'Fin del capítulo 1'],
     'Bon. Le mur tient, la mutante est tombée, et le labo a ses échantillons. Enfin, ce qu\'il en reste.': ['Right. The wall holds, the mutant is down, and the lab has its samples. Well, what\'s left of them.', 'Bien. El muro aguanta, la mutante ha caído y el laboratorio tiene sus muestras. Bueno, lo que queda de ellas.'],

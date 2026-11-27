@@ -75,7 +75,7 @@ function rafraichir_cartes_persos() {
 rafraichir_cartes_persos();
 
 // Un perso retiré par une mise à jour, ou pas encore débloqué ? On retombe sur le soldat.
-choisir_perso(CONFIG.personnages[Sauvegarde.donnees.perso] && Deblocage.est_debloque(Sauvegarde.donnees.perso) ? Sauvegarde.donnees.perso : 'soldat');
+choisir_perso(Object.hasOwn(CONFIG.personnages, Sauvegarde.donnees.perso) && Deblocage.est_debloque(Sauvegarde.donnees.perso) ? Sauvegarde.donnees.perso : 'soldat');
 
 /* ---------- Boutons (son de clic + perte du focus) ---------- */
 document.querySelectorAll('button').forEach(bouton => {

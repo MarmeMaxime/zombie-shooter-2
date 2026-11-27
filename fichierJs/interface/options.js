@@ -21,7 +21,8 @@ const Touches = (() => {
     const choix = Sauvegarde.donnees.options.touches;   // action -> codes choisis (absent = par défaut)
     let disposition = null;                             // code -> caractère du clavier réel
 
-    const liste = action => (Array.isArray(choix[action]) ? choix[action] : TOUCHES_DEFAUT[action]);
+    // Une action sans aucune touche (ancienne sauvegarde) reprend ses touches par défaut
+    const liste = action => (Array.isArray(choix[action]) && choix[action].length ? choix[action] : TOUCHES_DEFAUT[action]);
     function action(code) {
         for (const a in TOUCHES_DEFAUT) if (liste(a).includes(code)) return a;
         return null;
@@ -44,7 +45,13 @@ const Touches = (() => {
     const libelle = (a, toutes = false) => (liste(a).length ? (toutes ? [...new Set(liste(a).map(nom))].join(' / ') : nom(liste(a)[0])) : '—');   // Maj gauche et droite : un seul « Maj »
 
     function changer(a, code) {
-        for (const b in TOUCHES_DEFAUT) choix[b] = liste(b).filter(c => c !== code);   // la touche quitte les autres actions
+        const anciennes = liste(a).filter(c => c !== code);
+        for (const b in TOUCHES_DEFAUT) {
+            if (b === a) continue;
+            const reste = liste(b).filter(c => c !== code);   // la touche quitte les autres actions
+            // … mais aucune action ne reste sans touche : elle prend alors l'ancienne touche de « a » (échange)
+            choix[b] = reste.length ? reste : (anciennes.length ? anciennes.slice(0, 1) : TOUCHES_DEFAUT[b].filter(c => c !== code));
+        }
         choix[a] = [code];
         Sauvegarde.sauver();
         maj_affichages();

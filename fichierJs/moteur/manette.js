@@ -53,13 +53,13 @@ const Manette = (() => {
             if (Object.keys(BOUTONS).some(appui)) document.dispatchEvent(new KeyboardEvent('keydown', { code: 'Enter' }));
             return;
         }
+        if (visible('boutique-overlay')) {   // boutique des vagues (la partie y est en pause, donc avant la pause) : A ou Start pour la vague suivante
+            if (appui('a') || appui('start')) Vagues.vague_suivante();
+            return;
+        }
         if (etat.enCours && etat.pause) {
             if (appui('start') || appui('a')) mettre_en_pause(false);
             else if (appui('b')) cliquer('btn-pause-menu');
-            return;
-        }
-        if (visible('boutique-overlay')) {   // boutique des vagues : A ou Start pour la vague suivante
-            if (appui('a') || appui('start')) Vagues.vague_suivante();
             return;
         }
         if (visible('game-over-overlay')) {
@@ -68,10 +68,12 @@ const Manette = (() => {
             else if (appui('b')) cliquer('btn-return-menu');
             return;
         }
+        // Ces deux écrans sont aussi dans ECRANS (B pour revenir) : leurs autres boutons passent avant
+        const choix = visible('choix-variante') && (appui('a') ? 'btn-classique' : appui('x') ? 'btn-vagues' : appui('y') ? 'btn-campagne' : null);
+        if (choix) { cliquer(choix); return; }
+        if (visible('campagne-overlay') && appui('a')) { const d = document.getElementById('campagne-liste').dataset.derniere; if (d) Campagne.lancer(d); return; }
         const ouvert = ECRANS.find(([ecran]) => visible(ecran));
         if (ouvert) { if (appui('b')) cliquer(ouvert[1]); return; }
-        if (visible('choix-variante')) { if (appui('a')) cliquer('btn-classique'); else if (appui('x')) cliquer('btn-vagues'); else if (appui('y')) cliquer('btn-campagne'); return; }
-        if (visible('campagne-overlay')) { const d = document.getElementById('campagne-liste').dataset.derniere; if (appui('a') && d) Campagne.lancer(d); return; }
         if (visible('main-menu') && (appui('a') || appui('start'))) cliquer('btn-start');
     }
 
