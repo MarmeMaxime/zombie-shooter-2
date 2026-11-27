@@ -10,7 +10,28 @@ TYPES_ZOMBIE.boss = {
     config: CONFIG.boss,
     images: SPRITES_BOSS.marche,
     imagesCharge: SPRITES_BOSS.charge,
-    estBoss: true
+    estBoss: true,
+    mort: { style: 'colosse' },
+    comportement: {
+        // Avant de cracher : gueule ouverte, pustules allumées, il gonfle et tremble
+        dessiner(ctx, z) {
+            const charge = z.charge;
+            const gonfle = charge ? 1 + 0.05 * Math.sin(performance.now() / 40) : 1;
+            const t = z.taille * gonfle;
+            const img = (charge ? SPRITES_BOSS.charge : SPRITES_BOSS.marche)[z.etape];
+            if (charge) {
+                // halo d'acide autour de la gueule
+                ctx.save();
+                ctx.globalAlpha = 0.35 + 0.2 * Math.sin(performance.now() / 60);
+                ctx.fillStyle = '#b8ff4a';
+                ctx.beginPath();
+                ctx.ellipse(z.x + z.taille * 0.14, z.y + z.taille * 0.45, 22, 16, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+            ctx.drawImage(img, z.x - (t - z.taille) / 2, z.y - (t - z.taille), t, t);
+        }
+    }
 };
 const est_boss = type => Boolean(TYPES_ZOMBIE[type] && TYPES_ZOMBIE[type].estBoss);
 

@@ -79,3 +79,22 @@ function draw_eclats(ctx) {
     }
     ctx.restore();
 }
+
+// Sprite : assets/monstres/emeute/ (bouclier levé, puis brisé)
+TYPES_ZOMBIE.emeute = {
+    config: CONFIG.emeute,
+    images: SPRITES_EMEUTE.garde,
+    mort: z => ({ style: 'dos', images: images_emeute(z) }),   // projeté en arrière
+    comportement: {
+        creer(z) { z.emeute = nouvel_emeute(); },
+        vitesse: z => vitesse_emeute(z),
+        // Un seul PV par tir, quelle que soit l'arme (une salve de plombs = un tir)
+        degats(z, degats, tir) {
+            if (tir !== undefined && z.emeute.dernierTir === tir) return null;
+            z.emeute.dernierTir = tir;
+            return 1;
+        },
+        blesse: z => emeute_blesse(z),
+        dessiner: (ctx, z) => dessiner_emeute(ctx, z)
+    }
+};

@@ -139,9 +139,9 @@ const Sauvegarde = (() => {
         return { version: VERSION, donnees: migrer(0, ancien) };
     }
 
-    const etat = charger();
-    let versionFichier = etat.version;
-    const donnees = etat.donnees;
+    const lu = charger();
+    let versionFichier = lu.version;
+    const donnees = lu.donnees;
 
     function serialiser() {
         return JSON.stringify({ format: FORMAT, version: versionFichier, modifie: new Date().toISOString(), donnees });

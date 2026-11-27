@@ -97,9 +97,9 @@ TYPES_ZOMBIE.tombe = {
         vitesse: () => 0,
         // Fissurée quand elle est touchée, une main sort juste avant l'ouverture
         dessiner(ctx, z) {
-            const etat = z.ouverture < 1 ? 2 : z.pv < z.pvMax ? 1 : 0;
+            const stade = z.ouverture < 1 ? 2 : z.pv < z.pvMax ? 1 : 0;   // intacte, fissurée, main qui sort
             const tremble = z.ouverture < 1 ? (Math.random() - 0.5) * 2 : 0;
-            ctx.drawImage(SPRITES_FOSSOYEUR.tombe[etat], z.x + tremble, z.y, z.taille, z.taille);
+            ctx.drawImage(SPRITES_FOSSOYEUR.tombe[stade], z.x + tremble, z.y, z.taille, z.taille);
         }
     }
 };
