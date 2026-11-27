@@ -517,9 +517,28 @@ const Campagne = (() => {
             const blocs = 8, l = (xD - xG + 40) / blocs;
             ctx.save();
             ctx.globalAlpha = Math.min(1, e * 3);
-            rect(xG - 20, PONT.haut - 2, xD - xG + 40, PONT.bas - PONT.haut + 4, '#2a5a6a');
-            for (let k = 0; k < 8; k++) rect(xG + ((k * 97 + t * 60) % (xD - xG)), PONT.haut + 20 + k * 44, 18, 1, '#4a8696');
+            rect(xG - 20, PONT.haut - 2, xD - xG + 40, PONT.bas - PONT.haut + 4, '#2c5e6e');
+            // Le courant qui file vers la droite
+            for (let k = 0; k < 40; k++) {
+                const y = PONT.haut + 4 + ((k * 53) % (PONT.bas - PONT.haut - 8)), lx = 10 + (k * 7) % 22;
+                rect(xG - 20 + ((k * 131 + t * (30 + (k % 5) * 8)) % (xD - xG + 40 - lx)), y, lx, 1, k % 3 ? '#3a7484' : '#cfe6ea');
+            }
             ctx.restore();
+            // Les bouts du tablier restés accrochés aux culées, cassés en dents de scie
+            const fond = decor_pont(), h = 6;
+            for (let y = PONT.haut - 2; y < PONT.bas + 2; y += h) {
+                const lG = 14 + Math.round(8 + Math.sin(y * 0.37) * 6 + Math.sin(y * 1.3) * 3), lD = 14 + Math.round(8 + Math.sin(y * 0.29 + 2) * 6 + Math.sin(y * 1.7) * 3);
+                ctx.drawImage(fond, xG - 20, y, lG, h, xG - 20, y, lG, h);
+                ctx.drawImage(fond, xD + 20 - lD, y, lD, h, xD + 20 - lD, y, lD, h);
+                rect(xG - 20 + lG, y, 1, h, '#3a3a3e'); rect(xD + 19 - lD, y, 1, h, '#3a3a3e');   // la cassure, plus sombre
+            }
+            // Des débris qui dérivent : morceaux d'asphalte et un plot orange
+            if (e > 0.8) for (let k = 0; k < 7; k++) {
+                const dx = (e - 0.8) * (8 + k * 3), x = xG + 40 + k * (xD - xG - 80) / 7 + dx, y = PONT.haut + 40 + ((k * 89) % (PONT.bas - PONT.haut - 80)) + Math.sin(t * 2 + k) * 1.5;
+                if (k === 3) { rect(x, y, 6, 6, '#e86a1a'); rect(x + 2, y + 2, 2, 2, '#f0f0e8'); continue; }
+                rect(x, y, 10 + (k % 3) * 4, 5 + (k % 2) * 3, k % 2 ? '#4a4c52' : '#8e8a82');
+                rect(x - 2, y + 6 + (k % 2) * 3, 14 + (k % 3) * 4, 1, '#cfe6ea');   // l'écume autour
+            }
             for (let b = 0; b < blocs; b++) {
                 const pb = Math.min(1, Math.max(0, p * 1.4 - (b % 3) * 0.15));
                 if (pb >= 1) continue;
