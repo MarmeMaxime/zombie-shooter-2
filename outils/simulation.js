@@ -36,7 +36,7 @@ const chemin_script = f => {
     for (const d of fs.readdirSync(racine)) { const p = path.join(racine, d, f); if (fs.existsSync(p)) return p; }
     throw new Error('script introuvable : ' + f);
 };
-for (const f of ['config.js', 'sauvegarde.js', 'traductions.js', 'i18n.js', 'audio.js', 'options.js', 'images.js', 'creatures_sprites.js', 'combat_decor.js', 'campagne_sprites.js', 'camp_decor.js', 'ville_decor.js', 'metro_decor.js', 'arene_decor.js', 'boxe_sprites.js', 'deplacement_joueur.js', 'tir_joueur.js', 'zombie.js', 'boss.js', 'joggeur.js', 'emeute.js', 'morts.js', 'pondeuse.js', 'infirmier.js', 'boxeur.js', 'fossoyeur.js', 'pouvoirs.js', 'nuit.js', 'main.js', 'lootbox.js', 'succes.js', 'missions.js', 'vagues.js', 'menu.js', 'campagne_histoire.js', 'campagne.js', 'boxe.js']) {
+for (const f of ['config.js', 'sauvegarde.js', 'traductions.js', 'i18n.js', 'audio.js', 'options.js', 'images.js', 'creatures_sprites.js', 'combat_decor.js', 'campagne_sprites.js', 'camp_decor.js', 'ville_decor.js', 'metro_decor.js', 'arene_decor.js', 'pont_decor.js', 'caserne_decor.js', 'boxe_sprites.js', 'deplacement_joueur.js', 'tir_joueur.js', 'zombie.js', 'boss.js', 'joggeur.js', 'emeute.js', 'morts.js', 'pondeuse.js', 'infirmier.js', 'boxeur.js', 'fossoyeur.js', 'pouvoirs.js', 'nuit.js', 'main.js', 'lootbox.js', 'succes.js', 'missions.js', 'vagues.js', 'menu.js', 'campagne_histoire.js', 'campagne.js', 'boxe.js']) {
     vm.runInContext(fs.readFileSync(chemin_script(f), 'utf8'), ctx, { filename: f });
 }
 

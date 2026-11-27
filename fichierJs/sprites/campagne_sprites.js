@@ -8,6 +8,7 @@
    - SPRITES_RADIO : le talkie-walkie de l'éclaireur (son portrait)
    Chaque portrait est rangé dans le dossier de son personnage (portrait-…).
    - SPRITES_CHERCHEUR : la personne du labo, sortie dans l'ombre
+   - SPRITES_COMMANDANT : le supérieur de Mira, à la caserne (et .portrait)
    - OBJETS_CAMP : tentes (dont celle de Brutus), jeep, camion
    ========================================================================= */
 const paire = (dossier, a, b) => [image(`campagne/${dossier}/${a}`), image(`campagne/${dossier}/${b}`)];
@@ -21,6 +22,7 @@ const PORTE_LABO = {
 };
 const SPRITES_RADIO = paire('radio', 'portrait-eteinte', 'portrait-allumee');
 const SPRITES_CHERCHEUR = paire('chercheur', 'repos', 'parle');
+const SPRITES_COMMANDANT = Object.assign(paire('commandant', 'repos', 'parle'), { portrait: paire('commandant', 'portrait-repos', 'portrait-parle') });
 const OBJETS_CAMP = {
     tente: image('campagne/objets/tente'),
     tenteCommandement: image('campagne/objets/tente-commandement'),

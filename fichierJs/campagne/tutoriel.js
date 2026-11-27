@@ -27,7 +27,11 @@ const Instructeur = (() => {
         chercheur: { nom: 'Labo', image: ouvert => SPRITES_CHERCHEUR[ouvert ? 1 : 0], cadre: [20, 2, 24, 24] },   // sorti du labo, dans l'ombre
         // Gégé, le gorille (« Le Ring ») : un inconnu, jusqu'à ce que Brutus le reconnaisse
         gorilleInconnu: { nom: '???', image: ouvert => SPRITES_BOXE.gorille.portrait[ouvert ? 1 : 0], cadre: [8, 9, 30, 30] },
-        gorille: { nom: 'Gégé', image: ouvert => SPRITES_BOXE.gorille.portrait[ouvert ? 1 : 0], cadre: [8, 9, 30, 30] }
+        gorille: { nom: 'Gégé', image: ouvert => SPRITES_BOXE.gorille.portrait[ouvert ? 1 : 0], cadre: [8, 9, 30, 30] },
+        // Chapitre 3 : Mira, son Commandant (caserne du génie), et le Sergent qu'on n'entend que par radio
+        mira: { nom: 'Mira', image: () => Loot.sprites('grenadier').arret, cadre: [3, 0, 22, 22] },
+        commandant: { nom: 'Commandant', image: ouvert => SPRITES_COMMANDANT.portrait[ouvert ? 1 : 0] },
+        sergentRadio: { nom: 'Sergent (radio)', image: ouvert => SPRITES_RADIO[ouvert ? 1 : 0] }
     };
     let orateur = 'sergent';
 
@@ -66,8 +70,8 @@ const Instructeur = (() => {
         parleJusque = performance.now() + Math.min(2600, 400 + message.length * 30);
         clearInterval(animation);
         let ouvert = false;
-        const VOIX = { sergent: 'voixSergent', sergentPyjama: 'voixSergent', labo: 'voixLabo', radio: 'voixRadio', brutus: 'voixBrutus', chercheur: 'voixLabo', gorilleInconnu: 'voixBrutus', gorille: 'voixBrutus' };   // le Soldat ne dit rien
-        if (qui === 'radio') Son.effet('radio');
+        const VOIX = { sergent: 'voixSergent', sergentPyjama: 'voixSergent', labo: 'voixLabo', radio: 'voixRadio', brutus: 'voixBrutus', chercheur: 'voixLabo', gorilleInconnu: 'voixBrutus', gorille: 'voixBrutus', mira: 'voixMira', commandant: 'voixCommandant', sergentRadio: 'voixRadio' };   // le Soldat ne dit rien
+        if (qui === 'radio' || qui === 'sergentRadio') Son.effet('radio');
         animation = setInterval(() => {
             ouvert = performance.now() < parleJusque && !ouvert;
             if (ouvert && VOIX[orateur]) Son.effet(VOIX[orateur]);

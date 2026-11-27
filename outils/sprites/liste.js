@@ -45,6 +45,8 @@ async function liste_sprites() {
     une('campagne/labo/porte', PORTE_LABO.camp); une('campagne/labo/porte-allumee', PORTE_LABO.campAllume);
     for (const [nom, c] of [['tente', OBJETS_CAMP.tente], ['tente-commandement', OBJETS_CAMP.tenteCommandement], ['tente-brutus', OBJETS_CAMP.tenteBrutus], ['jeep', OBJETS_CAMP.jeep], ['camion', OBJETS_CAMP.camion]]) une('campagne/objets/' + nom, c);
     une('campagne/chercheur/repos', SPRITES_CHERCHEUR[0]); une('campagne/chercheur/parle', SPRITES_CHERCHEUR[1]);
+    une('campagne/commandant/repos', SPRITES_COMMANDANT[0]); une('campagne/commandant/parle', SPRITES_COMMANDANT[1]);
+    une('campagne/commandant/portrait-repos', SPRITES_COMMANDANT.portrait[0]); une('campagne/commandant/portrait-parle', SPRITES_COMMANDANT.portrait[1]);
 
     // ---- Le combat de boxe : Gégé, la foule, Brutus dans chaque tenue
     const G = SPRITES_BOXE.gorille;

@@ -10,10 +10,12 @@
      mission déjà vue, et l'outro (débriefing, épilogue) d'une mission réussie.
    - Mission : une partie avec ses propres apparitions et un objectif parmi
      « objectif » (zombies à repousser), « camion » (escorte), « chantier »
-     (couvrir une réparation), « boss » (une horde, puis le boss) ou « boxe »
-     (un combat de boxe, boxe.js). Elle peut avoir son décor (ville, métro,
-     arène), se jouer de nuit ou en miroir, et être racontée par Brutus (le
-     chapitre 2 est son histoire). Elle se joue en normal comme en hardcore et
+     (couvrir une réparation), « boss » (une horde, puis le boss), « boxe »
+     (un combat de boxe, boxe.js) ou « charges » (le spécial pose des charges
+     sur un pont, puis il saute). Elle peut avoir son décor (ville, métro,
+     arène, pont), se jouer de nuit ou en miroir, et être racontée par Brutus
+     (le chapitre 2 est son histoire). Le chapitre 3 est celui de Mira : son
+     intro se passe loin du camp, à la caserne du génie. Elle se joue en normal comme en hardcore et
      se débloque avec la précédente. La dernière d'un chapitre a un épilogue.
    Sauvegarde : Sauvegarde.donnees.campagne = { intros: { id: true }, missions: { id: { normal, hardcore } },
                 meilleurs: { id: { normal: { temps, vies } } },   (meilleur temps et le plus de vies restantes)
@@ -47,6 +49,8 @@ const Campagne = (() => {
     let m = null, chrono = 0, tues = 0, fini = false, camion = null, chantier = null, phaseBoss = false, moteurCamion = null;
     let dits = 0, finale = null;   // répliques déjà dites pendant la vague ; arrivée de Brutus (fin de « La Débandade »)
     let soins = 0;                 // soins des Infirmiers pendant la mission (succès « Hôpital fermé »)
+    let charges = null;            // « Mèche courte » : charges posées, en vol, compte à rebours, effondrement du pont
+    let sousTitre = null;          // ce que dit un perso sans arrêter le jeu : { qui, texte, t }
     let partie = 0;                // numéro de la partie lancée : un minuteur d'une partie quittée ne joue pas dans la suivante
     const toujours = p => p === partie && m && etat.enCours;
 
@@ -66,6 +70,8 @@ const Campagne = (() => {
         dits = 0;
         soins = 0;
         finale = null;
+        charges = m.charges ? { posees: 0, vols: [], compte: null, effondre: 0, dit: false, eclats: [] } : null;
+        sousTitre = null;
         if (m.camion) {
             const c = m.camion;
             camion = { x: MONDE.largeur + 30, y: c.y, pv: c.pv[etat.mode], pvMax: c.pv[etat.mode], vitesse: (MONDE.largeur + 170) / c.duree[etat.mode], depart: c.depart, detruit: false };
@@ -73,6 +79,7 @@ const Campagne = (() => {
         }
         $c('hud-mission').classList.remove('hidden');
         maj_hud_mission();
+        if (typeof maj_hud_pouvoir === 'function') maj_hud_pouvoir();   // la jauge suit la mission (charges)
         // Un combat de boxe (boxe.js) : pas d'objectif à afficher, la vie des deux boxeurs suffit
         if (m.boxe) { $c('hud-mission').classList.add('hidden'); Boxe.demarrer(m.boxe[etat.mode]); }
         // Deux lignes : le numéro, puis le titre (un long titre tient même sur un petit téléphone)
@@ -101,6 +108,8 @@ const Campagne = (() => {
         camion = null;
         if (moteurCamion) { moteurCamion.arreter(); moteurCamion = null; }
         chantier = null;
+        charges = null;
+        sousTitre = null;
         $c('hud-mission').classList.add('hidden');
         $c('bandeau-vague').classList.remove('bandeau-mission');
     }
@@ -120,6 +129,10 @@ const Campagne = (() => {
             $c('hud-mission').textContent = '🎯 ' + Math.min(tues, m.boss.avant[etat.mode]) + ' / ' + m.boss.avant[etat.mode];
             return;
         }
+        if (charges) {
+            $c('hud-mission').textContent = T('💣 Charges : {n} / {total}', { n: charges.posees, total: m.charges.nombre });
+            return;
+        }
         if (chantier) {
             $c('hud-mission').textContent = T('🔨 Mur : {n} %', { n: Math.floor(100 * chantier.avance) }) + (chantier.arret ? ' ' + T('⏸ à l\'abri !') : '');
             return;
@@ -131,6 +144,8 @@ const Campagne = (() => {
     function maj(dt) {
         if (!m || fini) return;
         if (finale) return maj_finale(dt);   // la vague est finie : Brutus arrive, plus personne n'apparaît
+        if (sousTitre && (sousTitre.t += dt) > 4.5) sousTitre = null;
+        if (charges && maj_charges(dt)) return;   // compte à rebours, puis le pont saute : plus personne n'apparaît
         if (camion) maj_camion(dt);
         if (chantier) maj_chantier(dt);
         // Elle a traversé l'écran sans tomber : elle est dans le camp
@@ -201,9 +216,82 @@ const Campagne = (() => {
         if (chantier.avance >= 1) terminer(true);
     }
 
+    /* ---------- « Mèche courte » : les charges sur le pont ----------
+       Le spécial de Mira ne lance pas le Tapis de bombes : sa jauge (plus courte,
+       m.charges.kills) envoie une charge qui vole jusqu'au parapet et s'y colle.
+       À la dernière, le compte à rebours ; puis le pont saute, avec la horde. */
+    function place_charge(i) {
+        const [f, cote] = m.charges.places[i];
+        const xG = PONT.riveG, xD = MONDE.largeur - PONT.riveD;
+        // Sur la chaussée, au-dessus d'une pile (pas contre les parapets : la barre du haut et les sous-titres les cacheraient)
+        return { x: xG + (xD - xG) * f, y: cote === 'haut' ? 112 : 292 };
+    }
+    // Pour pouvoirs.js : la jauge et l'effet du spécial pendant cette mission
+    function pouvoir_mission() {
+        if (!m || !m.charges) return null;
+        return {
+            kills: m.charges.kills[etat.mode],
+            peut: () => Boolean(charges && !fini && charges.compte === null && charges.posees + charges.vols.length < m.charges.nombre),
+            activer: () => {
+                const i = charges.posees + charges.vols.length, cible = place_charge(i);
+                charges.vols.push({ i, x0: joueur.x + CONFIG.canon.x, y0: joueur.y + CONFIG.canon.y, ...cible, t: 0, duree: 0.7 });
+                joueur.animTir = CONFIG.joueur.dureeAnimTir;
+                Son.effet('grenade');
+            }
+        };
+    }
+    // Renvoie true quand plus personne ne doit apparaître (compte à rebours, explosion)
+    function maj_charges(dt) {
+        for (const v of charges.vols) v.t += dt;
+        for (const v of charges.vols.filter(v => v.t >= v.duree)) {
+            charges.posees++;
+            Son.effet('coupBloque');   // elle se colle au béton
+            sousTitre = { qui: 'mira', texte: m.charges.repliques[v.i], t: 0 };
+            maj_hud_mission();
+            if (charges.posees >= m.charges.nombre) { charges.compte = 0; $c('hud-mission').textContent = T('💣 Charges : {n} / {total}', { n: charges.posees, total: m.charges.nombre }) + ' · ' + T('ÇA VA SAUTER !'); }
+        }
+        charges.vols = charges.vols.filter(v => v.t < v.duree);
+        if (charges.compte === null) return false;
+        // Le compte à rebours : les voyants clignotent, et ça bipe de plus en plus vite
+        const avant = charges.compte;
+        charges.compte += dt;
+        const bip = c => Math.floor(c * (2 + c * 3));
+        if (!charges.effondre && bip(charges.compte) !== bip(avant)) Son.ton(1400, 0, 0.05, { type: 'square', vol: 0.05 });
+        if (!charges.effondre && charges.compte >= m.charges.compte) faire_sauter();
+        if (charges.effondre) {
+            charges.effondre += dt;
+            for (const e of charges.eclats) { e.x += e.vx * dt; e.y += e.vy * dt; e.vy += 300 * dt; e.age += dt; }
+            charges.eclats = charges.eclats.filter(e => e.age < e.duree);
+            // Le pont est tombé, la poussière retombe : Mira commente, puis le débriefing
+            if (charges.effondre > 2 && !charges.dit) {
+                charges.dit = true;
+                sousTitre = null;
+                if (typeof Instructeur !== 'undefined' && document.getElementById('instructeur')) dire_epilogue(m.charges.boum, 0, () => terminer(true));
+                else terminer(true);
+            }
+        }
+        return true;
+    }
+    function faire_sauter() {
+        charges.effondre = 0.001;
+        Son.effet('explosion');
+        Son.effet('eclatement');
+        secouer_ecran(6);
+        Son.vibrer(1, 400);
+        // Des éclats de béton et des gerbes d'eau partout sur le pont ; la horde tombe à l'eau
+        for (let i = 0; i < m.charges.nombre; i++) {
+            const p = place_charge(i);
+            for (let k = 0; k < 18; k++) charges.eclats.push({ x: p.x, y: p.y, vx: (Math.random() - 0.5) * 260, vy: -60 - Math.random() * 200, age: 0, duree: 0.8 + Math.random() * 0.6, eau: k % 3 === 0 });
+        }
+        for (const z of zombies) for (let k = 0; k < 4; k++) charges.eclats.push({ x: z.x + z.taille / 2, y: z.y + z.taille * 0.7, vx: (Math.random() - 0.5) * 80, vy: -80 - Math.random() * 120, age: 0, duree: 0.7, eau: true });
+        zombies.length = 0;
+        if (boss) fin_boss();
+        sousTitre = null;
+    }
+
     // Un zombie est tombé : objectif atteint ?
     function tue(z) {
-        if (!m || fini || camion || chantier) return;
+        if (!m || fini || camion || chantier || charges) return;
         if (m.boss) {
             if (phaseBoss) { if (z && est_boss(z.type)) terminer(true); return; }
             tues++;
@@ -401,6 +489,7 @@ const Campagne = (() => {
     // Le camion et sa barre de vie (dessinés sous les zombies)
     function dessiner_sol(ctx) {
         dessiner_brutus(ctx);
+        if (m && m.decor === 'pont') dessiner_pont(ctx);
         if (!camion || camion.detruit) return;
         const x = Math.round(camion.x), y = Math.round(camion.y);
         ctx.drawImage(OBJETS_CAMP.camion, x, y + (Math.floor(etat.temps * 8) % 2));   // le moteur fait vibrer la caisse
@@ -410,6 +499,104 @@ const Campagne = (() => {
         ctx.fillStyle = part > 0.5 ? '#4ad060' : part > 0.25 ? '#e8c24a' : '#e83a3a';
         ctx.fillRect(x + 31, y + 45, Math.round(68 * part), 4);
     }
+
+    /* Le pont de « Mèche courte » : la jeep en panne qui fume, les charges collées aux
+       parapets (leur voyant clignote, de plus en plus vite pendant le compte à rebours),
+       puis l'effondrement du tablier dans la rivière. */
+    function dessiner_pont(ctx) {
+        const t = etat.temps, rect = (x, y, l, h, c) => { ctx.fillStyle = c; ctx.fillRect(Math.round(x), Math.round(y), l, h); };
+        ctx.drawImage(OBJETS_CAMP.jeep, -8, 300);
+        for (let k = 0; k < 4; k++) { const a = (t * 0.7 + k / 4) % 1; ctx.globalAlpha = 0.5 * (1 - a); rect(62 + Math.sin(t * 2 + k) * 3 + a * 6, 330 - a * 34, 3 + a * 4, 3 + a * 4, '#9a9a9a'); }
+        ctx.globalAlpha = 1;
+        if (!charges) return;
+        const xG = PONT.riveG, xD = MONDE.largeur - PONT.riveD;
+        const e = charges.effondre;
+        if (e > 0) {
+            // Le tablier s'effondre par blocs, qui s'enfoncent et s'assombrissent ; l'eau reprend sa place
+            const p = Math.min(1, e / 1.3);
+            const blocs = 8, l = (xD - xG + 40) / blocs;
+            ctx.save();
+            ctx.globalAlpha = Math.min(1, e * 3);
+            rect(xG - 20, PONT.haut - 2, xD - xG + 40, PONT.bas - PONT.haut + 4, '#2a5a6a');
+            for (let k = 0; k < 8; k++) rect(xG + ((k * 97 + t * 60) % (xD - xG)), PONT.haut + 20 + k * 44, 18, 1, '#4a8696');
+            ctx.restore();
+            for (let b = 0; b < blocs; b++) {
+                const pb = Math.min(1, Math.max(0, p * 1.4 - (b % 3) * 0.15));
+                if (pb >= 1) continue;
+                const x = xG - 20 + b * l, ech = 1 - pb * 0.5;
+                ctx.save();
+                ctx.translate(x + l / 2, (PONT.haut + PONT.bas) / 2 + pb * 20);
+                ctx.rotate((b % 2 ? 1 : -1) * pb * 0.25);
+                ctx.scale(ech, ech);
+                ctx.globalAlpha = 1 - pb;
+                rect(-l / 2 + 2, -(PONT.bas - PONT.haut) / 2, l - 4, PONT.bas - PONT.haut, pb > 0.4 ? '#5e5a54' : '#8e8a82');
+                ctx.restore();
+            }
+            // Le souffle des quatre charges
+            if (e < 0.6) for (let i = 0; i < m.charges.nombre; i++) {
+                const c = place_charge(i), r = 20 + e * 160;
+                ctx.globalAlpha = 1 - e / 0.6;
+                ctx.fillStyle = '#ffd060'; ctx.beginPath(); ctx.arc(c.x, c.y, r, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#ff7a2a'; ctx.beginPath(); ctx.arc(c.x, c.y, r * 0.6, 0, Math.PI * 2); ctx.fill();
+            }
+            ctx.globalAlpha = 1;
+            for (const c of charges.eclats) { ctx.globalAlpha = 1 - c.age / c.duree; rect(c.x, c.y, 3, 3, c.eau ? '#d8eef0' : '#8e8a82'); }
+            ctx.globalAlpha = Math.min(1, Math.max(0, (e - 1) * 2));
+            // Ce qui reste : le haut des piles qui dépasse de l'eau, avec un peu d'écume autour
+            for (let i = 0; i < m.charges.nombre; i++) {
+                const c = place_charge(i), x = Math.round(c.x) - 9, y = Math.round(c.y) - 6;
+                rect(x - 3, y + 12, 24, 2, '#d8eef0');
+                rect(x, y, 18, 12, '#6e6a62'); rect(x, y, 18, 2, '#9e9a90'); rect(x + 4, y - 3, 4, 3, '#6e6a62'); rect(x + 12, y - 2, 3, 2, '#6e6a62');
+            }
+            ctx.globalAlpha = 1;
+            return;
+        }
+        // Les charges posées : une bombe ronde (comme Ginette), voyant rouge qui clignote
+        const vitesse = charges.compte === null ? 2 : 4 + charges.compte * 8;
+        for (let i = 0; i < charges.posees; i++) dessiner_charge(ctx, place_charge(i), Math.floor(t * vitesse + i) % 2 === 0);
+    }
+    function dessiner_charge(ctx, p, allume) {
+        ctx.save();
+        ctx.translate(Math.round(p.x), Math.round(p.y));
+        // Un halo rouge quand le voyant s'allume : on les repère de loin, même au milieu de la horde
+        if (allume) { ctx.globalAlpha = 0.35; ctx.fillStyle = '#ff3a2a'; ctx.beginPath(); ctx.arc(0, 0, 17, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; }
+        ctx.scale(1.2, 1.2);
+        dessiner_bombe(ctx, 0, 0, etat.temps, false);
+        ctx.fillStyle = allume ? '#ff3a2a' : '#5a1a14';
+        ctx.fillRect(-2, -2, 4, 4);
+        ctx.restore();
+    }
+
+    // Par-dessus tout le reste : les charges en vol, et ce que dit un perso sans arrêter le jeu
+    function dessiner_dessus(ctx) {
+        if (charges) for (const v of charges.vols) {
+            const k = Math.min(1, v.t / v.duree);
+            const x = v.x0 + (v.x - v.x0) * k, y = v.y0 + (v.y - v.y0) * k - Math.sin(k * Math.PI) * 60;   // en cloche
+            dessiner_charge(ctx, { x, y }, true);
+        }
+        if (!sousTitre) return;
+        // Sous-titre en bas de l'écran : « Mira : … », sur deux lignes au plus
+        const e = MONDE.echelle, W = ctx.canvas.width;
+        ctx.save();
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.font = 'bold ' + Math.max(11, Math.round(12 * e)) + 'px monospace';
+        // Espaces insécables de la typographie française : « », ! ? : ; ne restent jamais seuls en début de ligne
+        const texte = (T(ORATEUR_NOMS[sousTitre.qui] || sousTitre.qui) + ' : « ' + T(sousTitre.texte) + ' »').replace(/ ([!?:;»])/g, '\u00a0$1').replace(/« /g, '«\u00a0');
+        const maxL = Math.min(W - 40, 760 * e), mots = texte.split(' '), lignes = [''];
+        for (const mot of mots) { const l = lignes[lignes.length - 1]; if (ctx.measureText(l + ' ' + mot).width > maxL && l) lignes.push(mot); else lignes[lignes.length - 1] = l ? l + ' ' + mot : mot; }
+        const h = Math.max(14, Math.round(16 * e)), y0 = ctx.canvas.height - MONDE.decalageY - (lignes.length * h + 16 * e);
+        const alpha = Math.min(1, sousTitre.t * 4, (4.5 - sousTitre.t) * 2);
+        ctx.globalAlpha = alpha * 0.7;
+        ctx.fillStyle = '#000';
+        ctx.fillRect(W / 2 - maxL / 2 - 10, y0 - 6, maxL + 20, lignes.length * h + 12);
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = '#ffe8f4';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        lignes.forEach((l, i) => ctx.fillText(l, W / 2, y0 + i * h));
+        ctx.restore();
+    }
+    const ORATEUR_NOMS = { mira: 'Mira' };
 
     // Mission de nuit : à la lampe (nuit.js), avec les néons du quai dans le métro
     function dessiner_nuit(ctx) {
@@ -516,7 +703,7 @@ const Campagne = (() => {
         scene.ligne = i;
         if (l.action === 'coup') { scene.secousse = performance.now(); Son.effet('impactTerre'); }
         if (l.action === 'sirene') { scene.sirene = performance.now(); sirene(); }
-        const qui = l.qui === 'sergent' && scene.cfg.sergent.pyjama ? 'sergentPyjama' : l.qui;
+        const qui = l.qui === 'sergent' && scene.cfg.sergent && scene.cfg.sergent.pyjama ? 'sergentPyjama' : l.qui;
         Instructeur.parler(T(l.texte), T(l.bouton || 'Suite ▶'), () => dire(i + 1), qui, LECTURE);
     }
 
@@ -589,6 +776,7 @@ const Campagne = (() => {
         c.fillRect(0, 0, toile.width, toile.height);   // sous le monde (écran en hauteur) : du noir
         c.setTransform(echelle, 0, 0, echelle, sx * echelle, (sy - haut) * echelle);
         c.imageSmoothingEnabled = false;
+        if (cfg.lieu === 'caserne') return dessiner_caserne(c, L, t, instant);
         c.drawImage(decor_camp(L, 400, etape()), 0, 0);
         if (cfg.breche) dessiner_breche(c);
         else dessiner_feu(c, t);
@@ -660,6 +848,35 @@ const Campagne = (() => {
         }
     }
 
+    /* La caserne du génie (intro du chapitre 3) : le Commandant derrière son bureau,
+       la radio qui grésille quand le Sergent parle, et Mira au fond, assise sur une
+       caisse, qui astique Ginette (caserne_decor.js). */
+    function dessiner_caserne(c, L, t, instant) {
+        const ligne = scene.cfg.lignes[scene.ligne];
+        const parle = qui => ligne && ligne.qui === qui && Instructeur.parleEncore();
+        c.drawImage(decor_caserne(L, 400), 0, 0);
+        const C = CASERNE.commandant;
+        c.drawImage(SPRITES_COMMANDANT[parle('commandant') && Math.floor(instant / 140) % 2 ? 1 : 0], C.x, C.y + Math.round((Math.sin(t * 1.2) + 1) / 2));
+        dessiner_bureau(c, parle('sergentRadio') && Math.floor(instant / 120) % 2);
+        // Mira, assise sur une caisse, tournée vers sa bombe ; elle sautille quand elle parle
+        const mx = L - CASERNE.mira.droite, my = CASERNE.mira.y;
+        c.fillStyle = 'rgba(26, 24, 20, 0.3)'; c.fillRect(mx + 8, my + 60, 60, 6);
+        c.fillStyle = '#8a6a3e'; c.fillRect(mx + 14, my + 44, 36, 20); c.fillStyle = '#b83a2a'; c.fillRect(mx + 15, my + 51, 34, 5);
+        const saut = parle('mira') ? Math.round(Math.abs(Math.sin(t * 10)) * 2) : Math.round((Math.sin(t * 1.5) + 1) / 2);
+        c.save();
+        const filtre = Loot.filtre('grenadier', t);
+        if (filtre) c.filter = filtre;
+        c.drawImage(Loot.sprites('grenadier').arret, mx, my - 12 - saut, 64, 64);
+        c.restore();
+        dessiner_bombe(c, mx + 76, my + 52, t, !parle('mira'));
+        // Un petit cœur au-dessus de Ginette quand Mira lui parle
+        if (ligne && ligne.qui === 'mira' && scene.ligne === 2) {
+            const y = my + 30 - ((t * 20) % 20);
+            c.fillStyle = '#f07ab0';
+            c.fillRect(mx + 72, y, 2, 2); c.fillRect(mx + 76, y, 2, 2); c.fillRect(mx + 72, y + 2, 6, 2); c.fillRect(mx + 74, y + 4, 2, 2);
+        }
+    }
+
     /* ---------- Écran de la campagne ---------- */
     function ouvrir() {
         cacher_ecrans();
@@ -698,7 +915,7 @@ const Campagne = (() => {
                 const coche = mode => (reussie(mi.id, mode) ? '✔ ' : '✗ ') + T(mode === 'normal' ? 'Normal' : 'Hardcore');
                 texte.append(el('strong', '', (mi.nuit ? '🌙 ' : '') + T('Mission {n} — {titre}', { n: mi.numero, titre: T(mi.titre) })),
                     el('small', '', ouverte
-                        ? (mi.camion ? T('Escorter le camion jusqu\'au camp') : mi.chantier ? T('Couvrir la réparation du mur') : mi.boss ? T('Repousser la horde, puis l\'abattre') : T('Repousser {n} zombies', { n: mi.objectif[difficulte_choisie] })) + ' · ' + coche('normal') + ' · ' + coche('hardcore')
+                        ? (mi.charges ? T('Poser {n} charges sur le pont, puis le faire sauter', { n: mi.charges.nombre }) : mi.camion ? T('Escorter le camion jusqu\'au camp') : mi.chantier ? T('Couvrir la réparation du mur') : mi.boss ? T('Repousser la horde, puis l\'abattre') : T('Repousser {n} zombies', { n: mi.objectif[difficulte_choisie] })) + ' · ' + coche('normal') + ' · ' + coche('hardcore')
                         : T('🔒 Réussis la mission précédente pour la débloquer')));
                 const record = S().meilleurs && S().meilleurs[mi.id] && S().meilleurs[mi.id][difficulte_choisie];
                 if (record) texte.append(el('small', 'campagne-record', T('🏅 {temps} · ❤ {vies}', { temps: duree(record.temps), vies: record.vies })));
@@ -757,8 +974,9 @@ const Campagne = (() => {
         });
     }
 
-    return { demarrer, arreter, maj, tue, fin, lancer, ouvrir, etape, dessiner_nuit, dessiner_sol, balle_sur_brutus, miroir: () => Boolean(m && m.miroir),
-        decor: () => (!m || !m.decor ? null : m.decor === 'ville' ? decor_ville() : m.decor === 'metro' ? decor_metro() : m.decor === 'arene' ? decor_arene() : null),
+    return { demarrer, arreter, maj, tue, fin, lancer, ouvrir, etape, dessiner_nuit, dessiner_sol, dessiner_dessus, balle_sur_brutus, miroir: () => Boolean(m && m.miroir),
+        decor: () => (!m || !m.decor ? null : ({ ville: decor_ville, metro: decor_metro, arene: decor_arene, pont: decor_pont }[m.decor] || (() => null))()),
+        pouvoir: pouvoir_mission,
         // Fin d'un combat de boxe (boxe.js) : comme la fin d'une vague
         fin_boxe,
         soin: () => { soins++; } };

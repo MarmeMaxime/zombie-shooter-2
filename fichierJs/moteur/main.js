@@ -66,6 +66,7 @@ function dessiner() {
     draw_pouvoir(ctx);
     draw_joueur(ctx);
     if (etat.variante === 'campagne' && typeof Campagne !== 'undefined') Campagne.dessiner_nuit(ctx);   // mission de nuit
+    if (etat.variante === 'campagne' && typeof Campagne !== 'undefined') Campagne.dessiner_dessus(ctx);   // charges en vol, sous-titres
     Nuit.dessiner(ctx);   // Classique et Vagues : la nuit qui tombe de temps en temps
     draw_flash_pouvoir(ctx);
 }

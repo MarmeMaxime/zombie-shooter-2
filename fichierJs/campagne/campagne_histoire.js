@@ -13,7 +13,8 @@
    ========================================================================= */
 const CHAPITRES = [
     { numero: 1, titre: 'La Recrue' },
-    { numero: 2, titre: 'Le Cogneur' }
+    { numero: 2, titre: 'Le Cogneur' },
+    { numero: 3, titre: 'L\'Artificière' }
 ];
 
 /* Les champs d'une mission :
@@ -301,6 +302,47 @@ const MISSIONS_CAMPAGNE = [
             victoire: 'Le Fossoyeur est enterré. À l\'horizon : un mur de sacs de sable. Le camp.',
             echec: '« Non, attends, il ne m\'a pas enterré. » Brutus reprend la route depuis le début.'
         }
+    },
+    {
+        id: 'c3m1', chapitre: 3, numero: 1, titre: 'Mèche courte', perso: 'grenadier',
+        // Mira, démineuse envoyée par le génie, tombe en panne d'essence devant un pont, une horde
+        // aux trousses. Son spécial ne lance pas le Tapis de bombes : chaque fois, une charge part
+        // se coller au pont (elle a besoin de toutes ses bombes). Quatre charges, et le pont saute.
+        decor: 'pont',
+        charges: {
+            nombre: 4,
+            kills: { normal: 20, hardcore: 25 },                       // victimes pour remplir la jauge, par charge
+            // Où chacune se colle : fraction de la longueur du tablier, parapet du haut ou du bas
+            places: [[0.3, 'haut'], [0.45, 'bas'], [0.6, 'haut'], [0.75, 'bas']],
+            compte: 2.4,                                               // secondes entre la 4e charge et l'explosion
+            // Ce que dit Mira quand chaque charge est posée (sans arrêter le jeu)
+            repliques: [
+                'Ginette, tu tiens la pile de gauche. Ne bouge pas, ma belle.',
+                'Bernadette ! Colle-toi bien. Non, pas sur le zombie. Sur le pont.',
+                'Josiane… ne les regarde pas. Ils sont jaloux.',
+                'Huguette, ma grosse, pour la fin. Tout le monde est en place ? On fait le bouquet !'
+            ],
+            boum: [{ qui: 'mira', texte: 'BOUM. … Pardon. C\'est toujours plus beau quand on le dit.' }]
+        },
+        apparition: {
+            normal: { depart: 1.6, min: 1.05, acceleration: 0.006, groupe: 0.16, tank: 0.07, pondeuse: 0.06 },
+            hardcore: { depart: 1.45, min: 0.92, acceleration: 0.007, groupe: 0.2, tank: 0.1, pondeuse: 0.08 }
+        },
+        debut: [
+            { qui: 'mira', texte: 'Plus d\'essence. Au milieu de nulle part. Et derrière moi… oh. Des invités.' },
+            { qui: 'mira', texte: 'Une rivière, un pont, une horde. Pas de feu d\'artifice gratuit aujourd\'hui : chaque bombe va sur une pile du pont. Ginette, Bernadette, Josiane, Huguette… au travail, mes chéries !', bouton: 'Au boulot !' }
+        ],
+        debriefQui: 'mira',
+        debrief: {
+            normal: 'Un pont de moins, une horde de moins. Adieu, mes chéries. Vous étiez magnifiques.',
+            hardcore: 'Ils étaient deux fois plus, et le pont deux fois plus solide. Mes filles l\'ont eu quand même. Il va me falloir de nouvelles amies.'
+        },
+        echec: 'Bon. Le pont tient, et moi, presque plus. On recommence, mes chéries.',
+        echecBouton: 'On recommence',
+        texteFin: {
+            victoire: 'Le pont est au fond de la rivière, et la horde avec. Mira continue à pied, vers l\'est.',
+            echec: 'La horde a traversé le pont. Mira recharge, et recommence.'
+        }
     }
 ];
 
@@ -412,6 +454,24 @@ SCENES_CAMPAGNE.c2m1 = {
         { qui: 'sergent', texte: 'Fuir ? Qu\'est-ce qui peut faire peur à un zombie ?' },
         { qui: 'soldat', texte: '…' },
         { qui: 'sergent', texte: 'C\'est bien ce que je pensais : toi non plus, tu n\'en sais rien. En position !', action: 'sirene', bouton: 'À mon poste !' }
+    ]
+};
+
+/* Chapitre 3 : à la caserne du génie, loin du camp. Le Sergent demande des démineurs par radio ;
+   le Commandant n'a plus que Mira, qui astique Ginette au fond du hangar (caserne_decor.js). */
+SCENES_CAMPAGNE.c3m1 = {
+    lieu: 'caserne',
+    attente: 900,
+    lignes: [
+        { qui: 'sergentRadio', texte: 'Ici le camp du désert. Je demande une équipe de démineurs. Des gens qui savent se servir d\'explosifs. Et qui ne posent pas de questions.' },
+        { qui: 'commandant', texte: 'Une équipe… Sergent, mes démineurs sont tous partis au nord. Il ne me reste que…' },
+        { qui: 'mira', texte: 'Mais oui, ma Ginette. Mais oui. C\'est toi la plus belle.' },
+        { qui: 'commandant', texte: '… Il me reste quelqu\'un. Une seule. Mais elle en vaut une équipe. Au moins.' },
+        { qui: 'sergentRadio', texte: 'J\'avais demandé une équipe. … C\'est toujours comme ça, avec vous. Envoyez.' },
+        { qui: 'commandant', texte: 'Mira ! Tu pars dans le désert. Un camp, des zombies, et plein de choses à faire sauter.' },
+        { qui: 'mira', texte: 'Des choses à faire sauter ? Combien ?' },
+        { qui: 'commandant', texte: 'Prends la jeep. Prends tes… amies. Et ne reviens pas trop vite.' },
+        { qui: 'mira', texte: 'Tu entends, Ginette ? On part en vacances ! Va réveiller tes sœurs.', bouton: 'En route !' }
     ]
 };
 

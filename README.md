@@ -41,6 +41,12 @@ Au lancement d'un combat, on choisit le mode :
   5. « La Longue Marche » : des mois dans le désert, puis le Fossoyeur. Le lendemain,
      Brutus voit le mur du camp : la boucle se referme sur « La Débandade ».
 
+  Chapitre 3, « L'Artificière » (en cours) : le Sergent demande des démineurs, le
+  génie n'a plus que Mira, qui donne un nom à chacune de ses bombes.
+  1. « Mèche courte » : en panne d'essence devant un pont, une horde aux trousses.
+     Le spécial de Mira ne lance pas le Tapis de bombes : chaque fois, une charge
+     se colle au pont. Quatre charges, et le pont saute avec la horde.
+
   Chaque mission garde son meilleur temps et ses vies restantes ; on peut revoir son
   intro et, une fois réussie, son outro. Chaque chapitre se termine sur un épilogue.
   Le camp s'affiche derrière le menu et grandit avec la campagne (palissade et tour
@@ -106,7 +112,7 @@ Chaque monstre rencontré rejoint le **bestiaire 📖**, avec sa fiche.
   - `moteur/` : la boucle de jeu, le joueur, le tir, les zombies, les pouvoirs, le son, la manette, le mode Vagues ;
   - `ennemis/` : le comportement de chaque créature spéciale (Joggeur, Fossoyeur…) ;
   - `campagne/` : le moteur de la campagne, son histoire, le combat de boxe, l'entraînement ;
-  - `decors/` : les décors dessinés à la largeur de l'écran (désert, camp, ville, métro…) ;
+  - `decors/` : les décors dessinés à la largeur de l'écran (désert, camp, ville, métro, pont, caserne…) ;
   - `interface/` : menus, options, bestiaire, succès, missions, lootbox, écran titre ;
   - `donnees/` : réglages, sauvegarde, traductions ;
   - `sprites/` : le chargement des PNG d'`assets/`.

@@ -19,8 +19,10 @@ const pouvoir = {
 };
 
 const cfg_pouvoir = () => CONFIG.pouvoirs[pouvoir.id];
+// Une mission de la campagne peut remplacer le spécial (« Mèche courte » : il pose des charges sur le pont)
+const pouvoir_mission = () => (etat.variante === 'campagne' && typeof Campagne !== 'undefined' && Campagne.pouvoir ? Campagne.pouvoir() : null);
 // Victimes nécessaires pour remplir la jauge (moins avec la boutique des vagues)
-const kills_requis = () => Math.max(5, Math.round(cfg_pouvoir().kills * pouvoir.reduction));
+const kills_requis = () => { const pm = pouvoir_mission(); return pm ? pm.kills : Math.max(5, Math.round(cfg_pouvoir().kills * pouvoir.reduction)); };
 const pouvoir_pret = () => pouvoir.charge >= kills_requis();
 
 function reset_pouvoir(perso) {
@@ -42,9 +44,11 @@ function pouvoir_zombie_tue() {
 function activer_pouvoir() {
     if (typeof Boxe !== 'undefined' && Boxe.actif()) { if (partie_en_cours()) Boxe.super(); return; }   // l'uppercut de Brutus
     if (!partie_en_cours() || !pouvoir_pret()) return;
+    const pm = pouvoir_mission();
+    if (pm && !pm.peut()) return;   // la mission ne veut pas de spécial maintenant (toutes les charges sont parties)
     pouvoir.charge = 0;
     maj_hud_pouvoir();
-    POUVOIRS[pouvoir.id](cfg_pouvoir());
+    if (pm) pm.activer(); else POUVOIRS[pouvoir.id](cfg_pouvoir());
     Son.vibrer(0.6, 120);
     if (typeof Succes !== 'undefined' && !etat.tuto) Succes.compter('pouvoirs');
     if (typeof statsPerso !== 'undefined' && !etat.tuto) statsPerso(etat.perso).pouvoirs++;   // missions « utiliser N fois »

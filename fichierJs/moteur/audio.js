@@ -291,6 +291,16 @@ const Son = (() => {
             ton(f, 0, 0.07, { type: 'square', vol: 0.055, f2: f * 1.1 });
             bruit(0, 0.07, { vol: 0.03, filtre: 3000, type: 'highpass' });
         },
+        voixMira: () => {   // aiguë et pétillante : la voix monte à chaque syllabe
+            const f = 380 + Math.random() * 140;
+            ton(f, 0, 0.07, { type: 'triangle', vol: 0.08, f2: f * 1.25 });
+            bruit(0, 0.03, { vol: 0.02, filtre: 2600 });
+        },
+        voixCommandant: () => {   // lente, nasale, fatiguée : elle retombe
+            const f = 170 + Math.random() * 40;
+            ton(f, 0, 0.12, { type: 'square', vol: 0.06, f2: f * 0.75 });
+            bruit(0, 0.04, { vol: 0.03, filtre: 1500 });
+        },
         voixRadio: () => {
             const f = 240 + Math.random() * 90;
             ton(f, 0, 0.08, { type: 'sawtooth', vol: 0.07, f2: f * 0.9 });
