@@ -229,13 +229,19 @@ function lier_bouton_maintenu(id, action) {
 }
 
 lier_bouton_maintenu('btn-touch-shoot', 'tir');
+// Doigt posé sur TIR : une pause (ou une réplique du Sergent) relâche les commandes,
+// mais si le doigt est toujours là à la reprise, le tir automatique repart tout seul
+let doigtSurTir = false;
 {
     const btnTir = document.getElementById('btn-touch-shoot');
-    btnTir.addEventListener('pointerdown', () => { commandes.tirAuto = true; });
+    btnTir.addEventListener('pointerdown', () => { commandes.tirAuto = true; doigtSurTir = true; });
     // Au relâchement, le clavier retrouve son mode « un tir par appui »
     for (const evt of ['pointerup', 'pointercancel', 'lostpointercapture']) {
-        btnTir.addEventListener(evt, () => { commandes.tirAuto = false; });
+        btnTir.addEventListener(evt, () => { commandes.tirAuto = false; doigtSurTir = false; });
     }
+}
+function reprendre_tir_tactile() {
+    if (doigtSurTir) commandes.tir = commandes.tirAuto = true;
 }
 
 /* ---------- Joystick virtuel ----------

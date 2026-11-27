@@ -119,7 +119,8 @@ function intervalle_apparition(type, tempsJeu) {
 /* Un ennemi spécial remplace un zombie normal (le prochain normal est repoussé
    d'autant) et leur nombre à l'écran est plafonné : quand le plafond est atteint,
    le suivant attend qu'une place se libère. Les larves ne comptent pas. */
-const est_special = z => z.type !== 'normal' && z.type !== 'larve' && z !== boss;
+// Les tombes laissées par un Fossoyeur vaincu ne comptent pas : elles ne doivent pas bloquer les autres spéciaux
+const est_special = z => z.type !== 'normal' && z.type !== 'larve' && z !== boss && !(z.type === 'tombe' && !boss);
 
 function gerer_apparitions(dt, largeurCanvas, hauteurCanvas, tempsJeu) {
     let speciaux = zombies.filter(est_special).length;

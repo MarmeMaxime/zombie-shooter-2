@@ -61,10 +61,9 @@ window.addEventListener('resize', placer_barre_boss);
 
 function fin_boss() {
     boss = null;
-    // Le Fossoyeur vaincu : sa terre encore en vol et ses tombes disparaissent avec lui
-    // (sinon une pelletée coûtait une vie après sa mort, et les tombes bloquaient les ennemis spéciaux)
+    // Le Fossoyeur vaincu : sa terre encore en vol retombe sans effet (sinon une pelletée
+    // coûtait une vie après sa mort). Ses tombes restent : elles s'ouvriront quand même.
     pelletees = [];
-    for (const z of zombies) if (z.type === 'tombe') z.retirer = true;
     prochainBoss = etat.temps + CONFIG.boss.intervalle;
     ui_boss.barre.classList.add('hidden');
 }
