@@ -201,7 +201,7 @@ function toucher_zombie(z, degats = 1, tir) {
     if (etat.tues) etat.tues[z.type] = (etat.tues[z.type] || 0) + 1;   // bilan de fin de partie
     ajouter_cadavre(z);
     if (comp.mort) comp.mort(z);
-    ajouter_score(TYPES_ZOMBIE[z.type].config.points);
+    ajouter_score(Math.round(TYPES_ZOMBIE[z.type].config.points * Nuit.bonus()));   // la nuit rapporte plus
     pouvoir_zombie_tue();
     Son.effet('mort');
     if (z === boss) {

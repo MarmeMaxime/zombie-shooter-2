@@ -4,13 +4,15 @@
      quand tout est tué ; la partie se fige et la boutique s'ouvre.
    - Les espèces spéciales arrivent au fil des vagues (CONFIG.vagues), un boss
      toutes les 5 vagues (Mastodonte et Fossoyeur à tour de rôle, boss.js).
+   - Le décor change après chaque boss (désert, ville, métro) ; certaines
+     vagues se jouent de nuit, à la lampe (nuit.js).
    - Boutique : on dépense ses points en améliorations, valables jusqu'à la
      fin de la partie (cadence, vitesse, recharge du pouvoir) ou en vies.
    Réglages : CONFIG.vagues.
    ========================================================================= */
 const Vagues = (() => {
     const $v = id => document.getElementById(id);
-    let numero = 0, file = [], chrono = 0, boutique = false;
+    let numero = 0, file = [], chrono = 0, boutique = false, deNuit = false;
     let niveaux = {};   // niveau de chaque amélioration achetée
 
     // Composition de la vague n (mélangée), boss en tête toutes les X vagues
@@ -30,6 +32,14 @@ const Vagues = (() => {
         if (bossVague) liste.unshift('boss');
         return liste;
     }
+
+    // Décor de la vague en cours : il change après chaque boss
+    const NOMS_DECORS = { desert: 'LE DÉSERT', ville: 'LA VILLE', metro: 'LE MÉTRO' };
+    const nom_decor = () => {
+        const liste = CONFIG.vagues.decors;
+        return liste[Math.floor(Math.max(0, numero - 1) / CONFIG.vagues.bossToutesLes) % liste.length];
+    };
+    const decor = () => ({ ville: decor_ville, metro: decor_metro }[nom_decor()] || decor_combat)();
 
     const intervalle = () => Math.max(CONFIG.vagues.intervalle.min, CONFIG.vagues.intervalle.depart - CONFIG.vagues.intervalle.parVague * numero);
 
@@ -52,10 +62,16 @@ const Vagues = (() => {
         file = composer(numero);
         chrono = -CONFIG.vagues.pause;
         boutique = false;
-        // Bandeau « VAGUE n » au centre de l'écran
+        // De nuit ? Jamais une vague de boss
+        const n = CONFIG.nuit.vagues;
+        deNuit = file[0] !== 'boss' && numero >= n.premiere && Math.random() < n.chance;
+        Nuit.regler(deNuit, nom_decor() === 'metro' ? NEONS_METRO : null);
+        // Bandeau « VAGUE n » au centre de l'écran (avec le nouveau décor à la première vague d'une série)
         const b = $v('bandeau-vague');
-        b.textContent = file[0] === 'boss' ? T('VAGUE {n} · BOSS', { n: numero }) : T('VAGUE {n}', { n: numero });
-        b.classList.remove('hidden', 'anime');
+        const lieu = (numero - 1) % CONFIG.vagues.bossToutesLes === 0 && numero > 1 ? T(NOMS_DECORS[nom_decor()]) : '';
+        b.textContent = [file[0] === 'boss' ? T('VAGUE {n} · BOSS', { n: numero }) : T('VAGUE {n}', { n: numero }),
+            lieu, deNuit ? T('🌙 DE NUIT') : ''].filter(Boolean).join(' · ');
+        b.classList.remove('hidden', 'anime', 'bandeau-mission');
         void b.offsetWidth;   // relance l'animation
         b.classList.add('anime');
         maj_hud_vague();
@@ -190,7 +206,7 @@ const Vagues = (() => {
     }
 
     return {
-        demarrer, maj, arreter, vague_suivante, achats_automatiques,
+        demarrer, maj, arreter, vague_suivante, achats_automatiques, decor,
         enBoutique: () => boutique,
         numero: () => numero
     };

@@ -45,12 +45,25 @@ const CONFIG = {
             description: 'La foudre frappe chaque zombie à l\'écran une fois.' }
     },
 
+    /* La nuit à la lampe hors campagne (nuit.js), en secondes.
+       Classique : premier soir entre 2 et 3 min, puis une nuit toutes les 2 min 30 à 4 min.
+       Vagues : à partir de la vague « premiere », une vague sur « chance » se joue de nuit. */
+    nuit: {
+        duree: 40,                 // Classique : durée d'une nuit
+        transition: 3,             // la nuit tombe (et le jour se lève) en douceur
+        premiere: [120, 180],
+        entre: [150, 240],
+        vagues: { premiere: 3, chance: 0.25 },
+        bonusPoints: 1.5           // une victime de nuit rapporte 50 % de points en plus
+    },
+
     /* Mode Vagues (vagues.js) : composition des vagues et boutique.
        speciaux : espèce -> [première vague, nombre en plus par vague, maximum]. */
     vagues: {
         pause: 2.5,                // secondes avant le premier monstre (bandeau « VAGUE n »)
         viesDepart: 5,             // les points servent aussi à la boutique : plus de vies au départ
         bossToutesLes: 5,
+        decors: ['desert', 'ville', 'metro'],   // le décor change après chaque boss (toutes les 5 vagues)
         normaux: { base: 8, parVague: 3 },
         speciaux: {
             tank: [2, 0.5, 6], joggeur: [3, 0.4, 5], emeute: [4, 0.35, 4], pondeuse: [5, 0.35, 4],

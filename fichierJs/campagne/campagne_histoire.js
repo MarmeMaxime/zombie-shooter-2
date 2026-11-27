@@ -195,7 +195,7 @@ const MISSIONS_CAMPAGNE = [
         // l'hôpital : les Infirmiers soignent encore… les zombies. Il faut les viser en premier.
         decor: 'metro',
         nuit: true,
-        neons: [[0.12, 40], [0.38, 40], [0.64, 40], [0.9, 40], [0.25, 362], [0.51, 362], [0.77, 362]],   // les néons du quai
+        neons: NEONS_METRO,   // les néons du quai (nuit.js)
         objectif: { normal: 70, hardcore: 100 },
         apparition: {
             normal: { depart: 1.5, min: 0.95, acceleration: 0.006, groupe: 0.15, max: 5, joggeur: 0.06, tank: 0.1, infirmier: 0.1 },

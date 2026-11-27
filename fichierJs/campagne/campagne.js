@@ -411,56 +411,9 @@ const Campagne = (() => {
         ctx.fillRect(x + 31, y + 45, Math.round(68 * part), 4);
     }
 
-    /* La nuit pendant une mission : tout est noir sauf le faisceau de la lampe
-       du Soldat et un halo autour de lui ; chaque tir éclaire le terrain un
-       instant. Les yeux des zombies brillent dans le noir. */
+    // Mission de nuit : à la lampe (nuit.js), avec les néons du quai dans le métro
     function dessiner_nuit(ctx) {
-        if (!m || !m.nuit) return;
-        const x = joueur.x + CONFIG.canon.x, y = joueur.y + CONFIG.canon.y;
-        const lumieres = [
-            { cone: true, x, y, longueur: MONDE.largeur * 0.62, angle: 0.34, force: 1 },
-            { x: joueur.x + 32, y: joueur.y + 34, r: 70, force: 0.85 }
-        ];
-        if (joueur.animTir > 0) lumieres.push({ x: x + 30, y, r: 260, force: 0.55 });   // éclair du coup de feu
-        // Les néons du quai qui grésillent encore (mission dans le métro)
-        if (m.neons) {
-            const t = etat.temps;
-            m.neons.forEach(([fx, ny], i) => {
-                const panne = Math.sin(t * (3 + i) + i * 7) + Math.sin(t * 11.3 + i * 2) > 1.5;   // il saute de temps en temps
-                if (!panne) lumieres.push({ x: fx * MONDE.largeur, y: ny, r: 58, force: 0.55 });
-            });
-        }
-        // Un Infirmier qui soigne : la lueur de ses soins le trahit
-        for (const z of zombies) if (z.type === 'infirmier' && z.soin && z.soin.anim > 0) lumieres.push({ x: z.x + z.taille / 2, y: z.y + z.taille / 2, r: 90, force: 0.7 });
-        // Nuit noire : hors de la lampe, on ne voit que les yeux
-        nuit(ctx, MONDE.largeur, MONDE.hauteur, lumieres, 0.985);
-        ctx.fillStyle = '#ffe070';
-        for (const z of zombies) for (const [ex, ey] of yeux(z)) ctx.fillRect(Math.round(z.x + ex), Math.round(z.y + ey), 2, 2);
-        // La croix rouge de l'Infirmier (sur sa coiffe) se voit dans le noir : on sait qui viser en premier
-        ctx.fillStyle = '#ff4040';
-        for (const z of zombies) if (z.type === 'infirmier') {
-            const cx = Math.round(z.x + 28), cy = Math.round(z.y + 5);
-            ctx.fillRect(cx - 1, cy - 3, 2, 6); ctx.fillRect(cx - 3, cy - 1, 6, 2);
-        }
-        ctx.fillStyle = '#ffe070';
-    }
-
-    /* Où briller dans le noir : les yeux de chaque sprite (en pixels du sprite, coin haut
-       gauche). Le zombie et le Tank sont de face (deux yeux) ; les sprites générés sont de
-       profil, tournés vers la gauche (un seul œil, là où leur sprite le dessine). */
-    function yeux(z) {
-        const t = z.taille;
-        switch (z.type) {
-            case 'joggeur': {
-                const e = z.joggeur && z.joggeur.etat;
-                return e === 'course' || e === 'cri' ? [[17, 14]] : e === 'essouffle' ? [[16, 29]] : [[23, 12]];
-            }
-            case 'infirmier': return [[24, 11]];
-            case 'emeute': return [[25, 14]];
-            case 'pondeuse': return [[25, 15]];
-            case 'larve': return [[7, 28]];
-            default: return [[t * 0.42, t * 0.08], [t * 0.42 + 4, t * 0.08]];
-        }
+        if (m && m.nuit) dessiner_lampe(ctx, m.neons, 1);
     }
 
     // Meilleur temps (le plus court) et le plus de vies restantes, par mission et par difficulté.

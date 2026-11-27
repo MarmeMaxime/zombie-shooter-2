@@ -13,9 +13,12 @@ réimportée depuis le menu 💾.
 Au lancement d'un combat, on choisit le mode :
 
 - **♾ Classique** : les zombies arrivent sans fin, de plus en plus nombreux. Les
-  points achètent des vies en cours de partie (touche V).
+  points achètent des vies en cours de partie (touche V). De temps en temps, la
+  nuit tombe : 40 s à la lampe torche, où chaque victime rapporte 50 % de points en plus.
 - **🌊 Vagues** : une vague à la fois, une boutique entre chaque vague (vie,
   cadence de tir, vitesse, recharge du pouvoir), un boss toutes les 5 vagues.
+  Après chaque boss, le décor change (désert, ville, métro), et certaines vagues
+  se jouent de nuit, à la lampe (+50 % de points).
 - **📖 Campagne** : l'histoire du camp que le soldat protège, avec sous terre un
   labo qui cherche un remède. Chapitre 1, « La Recrue », en cinq missions, chacune
   avec son intro dans le camp et jouable en normal comme en hardcore :
