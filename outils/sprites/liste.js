@@ -47,6 +47,11 @@ async function liste_sprites() {
     une('campagne/chercheur/repos', SPRITES_CHERCHEUR[0]); une('campagne/chercheur/parle', SPRITES_CHERCHEUR[1]);
     une('campagne/commandant/repos', SPRITES_COMMANDANT[0]); une('campagne/commandant/parle', SPRITES_COMMANDANT[1]);
     une('campagne/commandant/portrait-repos', SPRITES_COMMANDANT.portrait[0]); une('campagne/commandant/portrait-parle', SPRITES_COMMANDANT.portrait[1]);
+    // Mira assise (intro du chapitre 3), faite à partir de son sprite debout : pour le perso et chaque tenue
+    for (const dossier of ['persos/mira', ...['rousse', 'treillis', 'gothique', 'plage', 'cyber', 'teto'].map(t => 'skins/mira/' + t)]) {
+        const m = MIRA_ASSISE.depuis(await charger(A + dossier + '/arret.png'));
+        une(dossier + '/assise', m.corps); une(dossier + '/assise-bras1', m.bras[0]); une(dossier + '/assise-bras2', m.bras[1]);
+    }
 
     // ---- Le combat de boxe : Gégé, la foule, Brutus dans chaque tenue
     const G = SPRITES_BOXE.gorille;

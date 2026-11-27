@@ -505,6 +505,7 @@ const Campagne = (() => {
        puis l'effondrement du tablier dans la rivière. */
     function dessiner_pont(ctx) {
         const t = etat.temps, rect = (x, y, l, h, c) => { ctx.fillStyle = c; ctx.fillRect(Math.round(x), Math.round(y), l, h); };
+        dessiner_eau(ctx, t);
         ctx.drawImage(OBJETS_CAMP.jeep, -8, 300);
         for (let k = 0; k < 4; k++) { const a = (t * 0.7 + k / 4) % 1; ctx.globalAlpha = 0.5 * (1 - a); rect(62 + Math.sin(t * 2 + k) * 3 + a * 6, 330 - a * 34, 3 + a * 4, 3 + a * 4, '#9a9a9a'); }
         ctx.globalAlpha = 1;
@@ -518,8 +519,8 @@ const Campagne = (() => {
             ctx.save();
             ctx.globalAlpha = Math.min(1, e * 3);
             rect(xG - 20, PONT.haut - 2, xD - xG + 40, PONT.bas - PONT.haut + 4, '#2c5e6e');
-            // Le courant qui file vers la droite
-            for (let k = 0; k < 40; k++) {
+            // Le courant qui file vers la droite, là où était le pont
+            for (let k = 0; k < 60; k++) {
                 const y = PONT.haut + 4 + ((k * 53) % (PONT.bas - PONT.haut - 8)), lx = 10 + (k * 7) % 22;
                 rect(xG - 20 + ((k * 131 + t * (30 + (k % 5) * 8)) % (xD - xG + 40 - lx)), y, lx, 1, k % 3 ? '#3a7484' : '#cfe6ea');
             }
@@ -574,6 +575,42 @@ const Campagne = (() => {
         const vitesse = charges.compte === null ? 2 : 4 + charges.compte * 8;
         for (let i = 0; i < charges.posees; i++) dessiner_charge(ctx, place_charge(i), Math.floor(t * vitesse + i) % 2 === 0);
     }
+    /* La rivière qui coule, de part et d'autre du tablier : des filets de courant qui
+       filent vers la droite (chacun à sa vitesse), des reflets qui scintillent, et
+       l'écume qui ondule contre les piles. Dessinée par-dessus l'eau du décor. */
+    function dessiner_eau(ctx, t) {
+        const xG = PONT.riveG, xD = MONDE.largeur - PONT.riveD, l = xD - xG;
+        ctx.save();
+        for (const [y0, y1] of [[0, PONT.haut - 1], [PONT.bas + 1, MONDE.hauteur]]) {
+            ctx.beginPath(); ctx.rect(xG, y0, l, y1 - y0); ctx.clip();
+            for (let k = 0; k < Math.round(l / 9); k++) {
+                const lg = 6 + (k * 7) % 18, v = 14 + (k % 5) * 6;
+                const x = xG - lg + ((k * 131 + t * v) % (l + lg)), y = y0 + (k * 11) % Math.max(1, y1 - y0);
+                ctx.globalAlpha = 0.55;
+                ctx.fillStyle = k % 4 === 0 ? '#cfe6ea' : k % 2 ? '#4a8494' : '#1e4652';
+                ctx.fillRect(Math.round(x), y, lg, 1);
+            }
+            // Des reflets qui s'allument et s'éteignent
+            for (let k = 0; k < Math.round(l / 40); k++) {
+                const a = Math.sin(t * 3 + k * 1.7);
+                if (a < 0.6) continue;
+                ctx.globalAlpha = (a - 0.6) * 2.5;
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(Math.round(xG + ((k * 173 + t * 10) % l)), y0 + (k * 13) % Math.max(1, y1 - y0), 2, 1);
+            }
+            ctx.restore(); ctx.save();
+        }
+        // L'écume qui ondule contre les piles (une pile tous les 150, sous le tablier)
+        ctx.fillStyle = '#e8f4f4';
+        for (let x = xG + 70; x < xD - 30; x += 150) for (const y of [PONT.haut - 9, PONT.bas + 8]) {
+            for (let k = 0; k < 5; k++) {
+                ctx.globalAlpha = 0.5 + 0.3 * Math.sin(t * 4 + k + x);
+                ctx.fillRect(Math.round(x - 6 + k * 4 + Math.sin(t * 2.5 + k) * 2), y + Math.round(Math.sin(t * 3 + k * 2)), 3, 1);
+            }
+        }
+        ctx.restore();
+    }
+
     function dessiner_charge(ctx, p, allume) {
         ctx.save();
         ctx.translate(Math.round(p.x), Math.round(p.y));
@@ -877,22 +914,35 @@ const Campagne = (() => {
         const C = CASERNE.commandant;
         c.drawImage(SPRITES_COMMANDANT[parle('commandant') && Math.floor(instant / 140) % 2 ? 1 : 0], C.x, C.y + Math.round((Math.sin(t * 1.2) + 1) / 2));
         dessiner_bureau(c, parle('sergentRadio') && Math.floor(instant / 120) % 2);
-        // Mira, assise sur une caisse, tournée vers sa bombe ; elle sautille quand elle parle
-        const mx = L - CASERNE.mira.droite, my = CASERNE.mira.y;
-        c.fillStyle = 'rgba(26, 24, 20, 0.3)'; c.fillRect(mx + 8, my + 60, 60, 6);
-        c.fillStyle = '#8a6a3e'; c.fillRect(mx + 14, my + 44, 36, 20); c.fillStyle = '#b83a2a'; c.fillRect(mx + 15, my + 51, 34, 5);
-        const saut = parle('mira') ? Math.round(Math.abs(Math.sin(t * 10)) * 2) : Math.round((Math.sin(t * 1.5) + 1) / 2);
+        // Mira, assise sur une caisse de TNT, Ginette sur les genoux : elle l'astique au chiffon,
+        // et s'arrête pour parler (elle sautille un peu quand elle parle)
+        const mx = L - CASERNE.mira.droite, my = CASERNE.mira.y - 10;
+        const rect = (x, y, l, h, couleur) => { c.fillStyle = couleur; c.fillRect(x, y, l, h); };
+        rect(mx + 4, my + 62, 40, 4, 'rgba(26, 24, 20, 0.3)');
+        rect(mx + 6, my + 43, 30, 21, '#9a7646'); rect(mx + 6, my + 43, 30, 1, '#b89262'); rect(mx + 35, my + 43, 1, 21, '#6e5230');
+        for (let k = 47; k < 63; k += 5) rect(mx + 7, my + k, 28, 1, '#866438');
+        rect(mx + 7, my + 50, 28, 5, '#b8342a');
+        const parleM = parle('mira');
+        const saut = parleM ? Math.round(Math.abs(Math.sin(t * 10)) * 1.5) : 0;
+        const assise = sprites_mira_assise();
         c.save();
         const filtre = Loot.filtre('grenadier', t);
         if (filtre) c.filter = filtre;
-        c.drawImage(Loot.sprites('grenadier').arret, mx, my - 12 - saut, 64, 64);
+        c.drawImage(assise.corps, mx, my - saut);
         c.restore();
-        dessiner_bombe(c, mx + 76, my + 52, t, !parle('mira'));
-        // Un petit cœur au-dessus de Ginette quand Mira lui parle
+        c.save();
+        c.translate(mx + MIRA_BOMBE.x, my + MIRA_BOMBE.y - saut);
+        c.scale(MIRA_BOMBE.echelle, MIRA_BOMBE.echelle);
+        dessiner_bombe(c, 0, 0, t, false);
+        c.restore();
+        c.save();
+        if (filtre) c.filter = filtre;
+        c.drawImage(assise.bras[!parleM && Math.floor(t * 6) % 2 ? 1 : 0], mx, my - saut);   // le chiffon tourne
+        c.restore();
+        // Un petit cœur qui s'envole de Ginette quand Mira lui parle
         if (ligne && ligne.qui === 'mira' && scene.ligne === 2) {
-            const y = my + 30 - ((t * 20) % 20);
-            c.fillStyle = '#f07ab0';
-            c.fillRect(mx + 72, y, 2, 2); c.fillRect(mx + 76, y, 2, 2); c.fillRect(mx + 72, y + 2, 6, 2); c.fillRect(mx + 74, y + 4, 2, 2);
+            const x = mx + MIRA_BOMBE.x + 4, y = my + 18 - ((t * 16) % 16);
+            rect(x, y, 2, 2, '#f07ab0'); rect(x + 4, y, 2, 2, '#f07ab0'); rect(x, y + 2, 6, 2, '#f07ab0'); rect(x + 2, y + 4, 2, 2, '#f07ab0');
         }
     }
 

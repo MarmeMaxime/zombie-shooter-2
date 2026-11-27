@@ -44,8 +44,8 @@ const decor_pont = (() => {
         /* ---------- La rivière ---------- */
         rect(0, 0, W, H, '#2c5e6e');
         // Le courant : de longs filets clairs et sombres qui filent vers la droite
-        for (let i = 0; i < W * 0.9; i++) rect(r() * W, r() * H, 8 + r() * 26, 1, choix(['#3a7484', '#24505e', '#336a7a', '#467e8e']));
-        for (let i = 0; i < W * 0.12; i++) alpha(0.6, () => rect(r() * W, r() * H, 2 + r() * 8, 1, '#cfe6ea'));
+        // (le courant lui-même, qui bouge, est dessiné par-dessus : dessiner_eau dans campagne.js)
+        for (let i = 0; i < W * 0.4; i++) rect(r() * W, r() * H, 8 + r() * 26, 1, choix(['#336a7a', '#2a5866', '#3a7080']));
         // L'ombre du pont sur l'eau, juste au bord des parapets
         alpha(0.4, () => { rect(x0, yH - 6, x1 - x0, 6, '#0e2630'); rect(x0, yB, x1 - x0, 7, '#0e2630'); });
         // De l'écume qui tourbillonne contre les piles (on devine les piles sous le tablier)

@@ -25,7 +25,8 @@ puis la déclarer dans `LOOT.skins` (`fichierJs/interface/lootbox.js`).
 
 Les créatures (Mastodonte, Joggeur, Anti-émeute, Pondeuse et larves, Infirmier,
 Boxeur, Fossoyeur et tombes, zombie attaché de l'entraînement), la campagne
-(Sergent, portraits, labo, objets du camp, personne du labo) et le combat de
+(Sergent, portraits, labo, objets du camp, personne du labo, Commandant, Mira
+assise — faite depuis son sprite debout, pour chaque tenue) et le combat de
 boxe (Gégé, la foule, Brutus boxeur dans chaque tenue) sont dessinés par du code
 en pixel art (`pixel_art.js` et un générateur par sujet). Le jeu, lui, charge
 leurs PNG dans `assets/`. Pour les réécrire après avoir modifié un générateur :

@@ -13,7 +13,7 @@
 const CASERNE = {
     commandant: { x: 64, y: 150 },        // debout derrière son bureau (64×64)
     bureau: { x: 40, y: 196 },            // le bureau, devant lui (112×40)
-    mira: { droite: 150, y: 214 }         // assise sur une caisse, à « droite » pixels du bord droit
+    mira: { droite: 170, y: 262 }         // assise sur une caisse, à « droite » pixels du bord droit (sous la boîte de dialogue)
 };
 
 const decor_caserne = (() => {
